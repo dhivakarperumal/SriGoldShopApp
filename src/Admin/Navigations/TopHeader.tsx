@@ -30,6 +30,8 @@ export type AdminRoute =
   | 'addCategory'
   | 'editCategory'
   | 'metalTypes'
+  | 'dailyGoldRates'
+  | 'addGoldrate'
   | 'more';
 
 type AppHeaderProps = {

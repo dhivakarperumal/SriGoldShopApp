@@ -18,6 +18,8 @@ import Products from './src/Admin/Screens/Products';
 import CategoriesAll, { type Category } from './src/Admin/Categories/CategoriesAll';
 import AddCategories from './src/Admin/Categories/Addcategories';
 import MetalType from './src/Admin/Categories/MetalType';
+import AllGoldRate from './src/Admin/DailyGoldRate/AllGoldRate';
+import AddGoldrate from './src/Admin/DailyGoldRate/AddGoldrate';
 import More from './src/Admin/Screens/More';
 import AdminLayout from './src/Admin/Navigations/AdminLayout';
 import type { AdminRoute } from './src/Admin/Navigations/TopHeader';
@@ -180,9 +182,23 @@ function App() {
                   )
               : adminRoute === 'metalTypes'
                 ? <MetalType onBack={() => navigateAdmin('more')} />
-                : adminRoute === 'more'
-                  ? <More onNavigate={navigateAdmin} />
-                  : <AdminHome user={user} onNavigate={navigateAdmin} />
+                : adminRoute === 'dailyGoldRates'
+                  ? (
+                    <AllGoldRate
+                      onBack={() => navigateAdmin('more')}
+                      onAddRate={() => navigateAdmin('addGoldrate')}
+                    />
+                  )
+                  : adminRoute === 'addGoldrate'
+                    ? (
+                      <AddGoldrate
+                        onCancel={() => navigateAdmin('dailyGoldRates')}
+                        onSaved={() => navigateAdmin('dailyGoldRates')}
+                      />
+                    )
+                    : adminRoute === 'more'
+                      ? <More onNavigate={navigateAdmin} />
+                      : <AdminHome user={user} onNavigate={navigateAdmin} />
     : null;
 
   return (

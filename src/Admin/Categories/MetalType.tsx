@@ -4,7 +4,6 @@ import {
   Animated,
   Alert,
   Image,
-  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -60,7 +59,7 @@ function MetalType({ onBack }: { onBack: () => void }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState('');
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingMetal, setEditingMetal] = useState<Metal | null>(null);
   const [form, setForm] = useState<MetalFormData>(EMPTY_FORM);
   const [selectedImage, setSelectedImage] = useState<MetalImageSelection | null>(null);
@@ -130,7 +129,7 @@ function MetalType({ onBack }: { onBack: () => void }) {
     setEditingMetal(null);
     setForm(EMPTY_FORM);
     setSelectedImage(null);
-    setIsModalVisible(true);
+    setIsFormVisible(true);
   };
 
   const openEditModal = (metal: Metal) => {
@@ -143,12 +142,12 @@ function MetalType({ onBack }: { onBack: () => void }) {
       status: metal.status || 'Active',
     });
     setSelectedImage(null);
-    setIsModalVisible(true);
+    setIsFormVisible(true);
   };
 
   const closeModal = () => {
     if (isSaving) return;
-    setIsModalVisible(false);
+    setIsFormVisible(false);
     setEditingMetal(null);
     setForm(EMPTY_FORM);
     setSelectedImage(null);
@@ -242,7 +241,7 @@ function MetalType({ onBack }: { onBack: () => void }) {
         setMetals(current => [data, ...current]);
         Alert.alert('Metal added', 'Metal was added successfully.');
       }
-      setIsModalVisible(false);
+      setIsFormVisible(false);
       setEditingMetal(null);
       setForm(EMPTY_FORM);
       setSelectedImage(null);
@@ -273,6 +272,27 @@ function MetalType({ onBack }: { onBack: () => void }) {
       },
     ]);
   };
+
+  if (isFormVisible) {
+    return (
+      <AddMetaltype
+        form={form}
+        editing={Boolean(editingMetal)}
+        saving={isSaving}
+        selectedImage={selectedImage}
+        onChange={(field, value) =>
+          setForm(current => ({ ...current, [field]: value }))
+        }
+        onSelectImage={selectImage}
+        onRemoveImage={() => {
+          setSelectedImage(null);
+          setForm(current => ({ ...current, imagePath: '' }));
+        }}
+        onCancel={closeModal}
+        onSave={saveMetal}
+      />
+    );
+  }
 
   return (
     <View className="flex-1 bg-background">
@@ -498,30 +518,6 @@ function MetalType({ onBack }: { onBack: () => void }) {
         </View>
       </View>
 
-      <Modal
-        visible={isModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={closeModal}
-        statusBarTranslucent
-      >
-        <AddMetaltype
-          form={form}
-          editing={Boolean(editingMetal)}
-          saving={isSaving}
-          selectedImage={selectedImage}
-          onChange={(field, value) =>
-            setForm(current => ({ ...current, [field]: value }))
-          }
-          onSelectImage={selectImage}
-          onRemoveImage={() => {
-            setSelectedImage(null);
-            setForm(current => ({ ...current, imagePath: '' }));
-          }}
-          onCancel={closeModal}
-          onSave={saveMetal}
-        />
-      </Modal>
     </View>
   );
 }
