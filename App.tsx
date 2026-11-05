@@ -6,8 +6,8 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
-import { Alert, Pressable, StatusBar, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, StatusBar, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Login, { type AuthenticatedUser } from './src/Admin/Auth/Login';
 import AdminHome from './src/Admin/Screens/Home';
@@ -18,12 +18,13 @@ import Products from './src/Admin/Screens/Products';
 import More from './src/Admin/Screens/More';
 import AdminLayout from './src/Admin/Navigations/AdminLayout';
 import type { AdminRoute } from './src/Admin/Navigations/TopHeader';
-import { clearTokenCache } from './src/api';
+import { clearTokenCache, setTokenCache } from './src/api';
 
 function App() {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [adminRoute, setAdminRoute] = useState<AdminRoute>('home');
+  const isLoggingOut = useRef(false);
 
   useEffect(() => {
     const restoreSession = async () => {
@@ -32,18 +33,40 @@ function App() {
         const token = values.userToken;
         const savedUser = values.authUser;
 
-        if (token && savedUser) {
-          const parsedUser = JSON.parse(savedUser) as AuthenticatedUser;
-          if (typeof parsedUser.role === 'string') {
-            setUser(parsedUser);
-          } else {
-            await AsyncStorage.removeMany(['userToken', 'authUser']);
+        if (token) {
+          setTokenCache(token);
+          let restoredUser: AuthenticatedUser = { role: 'customer' };
+          if (savedUser) {
+            try {
+              const parsedUser: unknown = JSON.parse(savedUser);
+              if (
+                typeof parsedUser === 'object' &&
+                parsedUser !== null &&
+                'role' in parsedUser &&
+                typeof parsedUser.role === 'string'
+              ) {
+                restoredUser = {
+                  role: parsedUser.role,
+                  name:
+                    'name' in parsedUser && typeof parsedUser.name === 'string'
+                      ? parsedUser.name
+                      : undefined,
+                  email:
+                    'email' in parsedUser && typeof parsedUser.email === 'string'
+                      ? parsedUser.email
+                      : undefined,
+                };
+              }
+            } catch {
+              // Keep the saved token and restore a limited session if user data is malformed.
+            }
           }
+          setUser(restoredUser);
         }
       } catch {
         Alert.alert(
           'Session error',
-          'Your saved login could not be restored. Please sign in again.',
+          'Your saved session could not be read. Please check your device storage and try again.',
         );
       } finally {
         setIsRestoringSession(false);
@@ -54,6 +77,10 @@ function App() {
   }, []);
 
   const handleLogout = async () => {
+    if (isLoggingOut.current) {
+      return;
+    }
+    isLoggingOut.current = true;
     try {
       await AsyncStorage.removeMany(['userToken', 'authUser']);
       clearTokenCache();
@@ -61,6 +88,8 @@ function App() {
       setAdminRoute('home');
     } catch {
       Alert.alert('Sign out failed', 'Please try again.');
+    } finally {
+      isLoggingOut.current = false;
     }
   };
 
@@ -98,7 +127,12 @@ function App() {
   return (
     <SafeAreaProvider>
       <StatusBar barStyle="dark-content" />
-      {isRestoringSession ? null : user ? (
+      {isRestoringSession ? (
+        <View className="flex-1 items-center justify-center bg-background">
+          <ActivityIndicator size="large" color="#004D40" />
+          <Text className="mt-3 text-sm font-medium text-muted">Restoring your session…</Text>
+        </View>
+      ) : user ? (
         isAdmin ? (
           <AdminLayout
             user={user}

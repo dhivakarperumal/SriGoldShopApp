@@ -46,7 +46,7 @@ type ProductResponse = {
 
 type StockFilter = '' | 'in-stock' | 'low-stock' | 'out-of-stock';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 100;
 
 const getErrorMessage = (error: unknown, fallback: string): string => {
   if (typeof error === 'object' && error !== null && 'message' in error) {
@@ -70,8 +70,6 @@ function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [stats, setStats] = useState({ total: 0, active: 0, lowStock: 0, outOfStock: 0 });
-  const [totalPages, setTotalPages] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -94,7 +92,6 @@ function Products() {
   useEffect(() => {
     const timeout = setTimeout(() => {
       setDebouncedSearch(search.trim());
-      setCurrentPage(1);
     }, 300);
     return () => clearTimeout(timeout);
   }, [search]);
@@ -107,25 +104,70 @@ function Products() {
     }
 
     try {
-      const response = await api.get('/products', {
-        params: {
-          page: currentPage,
-          limit: PAGE_SIZE,
-          search: debouncedSearch,
-          status: 'All',
-          category: selectedCategory,
-          stockStatus: stockFilter,
-          sortBy: 'created_at',
-          sortOrder: 'desc',
-        },
-      });
-      const data = response.data as Product[] | ProductResponse;
-      const payload: ProductResponse = Array.isArray(data)
-        ? { products: data, pagination: { total: data.length, totalPages: 1 } }
-        : data;
+      const params = {
+        limit: PAGE_SIZE,
+        search: debouncedSearch,
+        status: 'All',
+        category: selectedCategory,
+        stockStatus: stockFilter,
+        sortBy: 'created_at',
+        sortOrder: 'desc',
+      };
+      const response = await api.get('/products', { params: { ...params, page: 1 } });
+      const responseData = response.data as Product[] | ProductResponse;
+      const payload: ProductResponse = Array.isArray(responseData)
+        ? { products: responseData }
+        : responseData;
+      const allProducts = Array.isArray(payload.products) ? [...payload.products] : [];
+      const productIds = new Set(allProducts.map(product => String(product.id)));
+      const reportedPages = Math.floor(getNumber(payload.pagination?.totalPages));
+      const reportedTotal = Math.floor(getNumber(payload.pagination?.total));
+      const pageCount = reportedPages || Math.ceil(reportedTotal / PAGE_SIZE);
 
-      setProducts(Array.isArray(payload.products) ? payload.products : []);
-      setTotalPages(Math.max(1, getNumber(payload.pagination?.totalPages) || 1));
+      for (let page = 2; page <= pageCount; page += 1) {
+        const pageResponse = await api.get('/products', { params: { ...params, page } });
+        const pageData = pageResponse.data as Product[] | ProductResponse;
+        const pageItems = Array.isArray(pageData) ? pageData : pageData.products ?? [];
+        if (pageItems.length === 0) {
+          break;
+        }
+        for (const product of pageItems) {
+          const id = String(product.id);
+          if (!productIds.has(id)) {
+            productIds.add(id);
+            allProducts.push(product);
+          }
+        }
+      }
+
+      if (
+        pageCount === 0 &&
+        !Array.isArray(responseData) &&
+        allProducts.length === PAGE_SIZE
+      ) {
+        for (let page = 2; ; page += 1) {
+          const pageResponse = await api.get('/products', { params: { ...params, page } });
+          const pageData = pageResponse.data as Product[] | ProductResponse;
+          const pageItems = Array.isArray(pageData) ? pageData : pageData.products ?? [];
+          if (pageItems.length === 0) {
+            break;
+          }
+          let foundNewProduct = false;
+          for (const product of pageItems) {
+            const id = String(product.id);
+            if (!productIds.has(id)) {
+              productIds.add(id);
+              allProducts.push(product);
+              foundNewProduct = true;
+            }
+          }
+          if (!foundNewProduct || pageItems.length < PAGE_SIZE) {
+            break;
+          }
+        }
+      }
+
+      setProducts(allProducts);
       setStats({
         total: getNumber(payload.stats?.total),
         active: getNumber(payload.stats?.active),
@@ -140,7 +182,7 @@ function Products() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [currentPage, debouncedSearch, selectedCategory, stockFilter]);
+  }, [debouncedSearch, selectedCategory, stockFilter]);
 
   useEffect(() => {
     fetchProducts();
@@ -164,11 +206,7 @@ function Products() {
             try {
               await api.delete(`/products/${product.id}`);
               Alert.alert('Product deleted', 'The product was removed from inventory.');
-              if (products.length === 1 && currentPage > 1) {
-                setCurrentPage(page => page - 1);
-              } else {
-                setRefreshVersion(version => version + 1);
-              }
+              setRefreshVersion(version => version + 1);
             } catch (error) {
               console.error('Error deleting product:', error);
               Alert.alert('Delete failed', getErrorMessage(error, 'Could not delete the product.'));
@@ -228,7 +266,6 @@ function Products() {
       setNewProductName('');
       setNewProductPrice('');
       setIsAddModalVisible(false);
-      setCurrentPage(1);
       setRefreshVersion(version => version + 1);
       Alert.alert('Product added', 'The product was added to your inventory.');
     } catch (error) {
@@ -290,14 +327,25 @@ function Products() {
             <Text className="text-xl font-bold text-primary-dark">Products</Text>
             <Text className="mt-1 text-xs text-muted">Inventory and stock management</Text>
           </View>
-          <Pressable
-            onPress={() => setIsAddModalVisible(true)}
-            className="flex-row items-center rounded-xl bg-primary px-3.5 py-3"
-            accessibilityRole="button"
-          >
-            <ProductIcon name="plus" color="#FFFFFF" />
-            <Text className="ml-1.5 text-xs font-bold text-white">Add product</Text>
-          </Pressable>
+          <View className="flex-row items-center gap-2">
+            <Pressable
+              onPress={refreshPrices}
+              disabled={isRefreshingPrices}
+              className="h-11 w-11 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 active:bg-primary/20"
+              accessibilityRole="button"
+              accessibilityLabel="Refresh product prices"
+            >
+              <ProductIcon name="refresh" color="#004D40" />
+            </Pressable>
+            <Pressable
+              onPress={() => setIsAddModalVisible(true)}
+              className="flex-row items-center rounded-xl bg-primary px-3.5 py-3"
+              accessibilityRole="button"
+            >
+              <ProductIcon name="plus" color="#FFFFFF" />
+              <Text className="ml-1.5 text-xs font-bold text-white">Add product</Text>
+            </Pressable>
+          </View>
         </View>
 
         <View className="mb-4 flex-row flex-wrap justify-between">
@@ -364,22 +412,6 @@ function Products() {
           <ProductIcon name="chevron" color="#64748B" />
         </Pressable>
 
-        <Pressable
-          onPress={refreshPrices}
-          disabled={isRefreshingPrices}
-          className="mb-4 flex-row items-center justify-center rounded-xl border border-accent/40 bg-accent/10 px-4 py-3"
-          accessibilityRole="button"
-        >
-          {isRefreshingPrices ? (
-            <ActivityIndicator size="small" color="#A66B00" />
-          ) : (
-            <ProductIcon name="refresh" color="#A66B00" />
-          )}
-          <Text className="ml-2 text-xs font-bold text-accent-dark">
-            {isRefreshingPrices ? 'Refreshing prices…' : 'Refresh prices from daily rates'}
-          </Text>
-        </Pressable>
-
         {loadError ? (
           <View className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-4">
             <Text className="text-sm font-semibold text-rose-800">Could not load products</Text>
@@ -425,33 +457,6 @@ function Products() {
           </View>
         )}
 
-        {totalPages > 1 ? (
-          <View className="mt-4 flex-row items-center justify-between rounded-xl border border-border bg-surface px-3 py-2">
-            <Pressable
-              onPress={() => setCurrentPage(page => Math.max(1, page - 1))}
-              disabled={currentPage <= 1 || isLoading}
-              className="rounded-lg px-3 py-2"
-              accessibilityRole="button"
-            >
-              <Text className={`text-xs font-bold ${currentPage <= 1 ? 'text-slate-300' : 'text-primary'}`}>
-                Previous
-              </Text>
-            </Pressable>
-            <Text className="text-xs font-semibold text-slate-600">
-              Page {currentPage} of {totalPages}
-            </Text>
-            <Pressable
-              onPress={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
-              disabled={currentPage >= totalPages || isLoading}
-              className="rounded-lg px-3 py-2"
-              accessibilityRole="button"
-            >
-              <Text className={`text-xs font-bold ${currentPage >= totalPages ? 'text-slate-300' : 'text-primary'}`}>
-                Next
-              </Text>
-            </Pressable>
-          </View>
-        ) : null}
       </ScrollView>
 
       <Modal
@@ -471,7 +476,6 @@ function Products() {
                   key={category || 'all-categories'}
                   onPress={() => {
                     setSelectedCategory(category);
-                    setCurrentPage(1);
                     setIsCategoryPickerVisible(false);
                   }}
                   className={`mb-2 flex-row items-center justify-between rounded-xl border px-4 py-3 ${
@@ -551,7 +555,6 @@ function Products() {
                   key={option.value || 'all-stock'}
                   onPress={() => {
                     setStockFilter(option.value);
-                    setCurrentPage(1);
                     setIsStockPickerVisible(false);
                   }}
                   className={`mb-2 flex-row items-center justify-between rounded-xl border px-4 py-3 ${

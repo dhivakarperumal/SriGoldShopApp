@@ -28,7 +28,6 @@ function Login({ onLoginSuccess }: LoginProps) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -54,14 +53,10 @@ function Login({ onLoginSuccess }: LoginProps) {
         throw new Error('The server returned an invalid login response.');
       }
 
-      if (rememberMe) {
-        await AsyncStorage.setMany({
-          userToken: token,
-          authUser: JSON.stringify(user),
-        });
-      } else {
-        await AsyncStorage.removeMany(['userToken', 'authUser']);
-      }
+      await AsyncStorage.setMany({
+        userToken: token,
+        authUser: JSON.stringify(user),
+      });
       setTokenCache(token);
       onLoginSuccess(user);
     } catch (error) {
@@ -176,23 +171,14 @@ function Login({ onLoginSuccess }: LoginProps) {
               </View>
 
               <View className="my-5 flex-row items-center justify-between px-1">
-                <Pressable
-                  className="flex-row items-center"
-                  onPress={() => setRememberMe(!rememberMe)}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: rememberMe }}
-                >
-                  <View className="mr-2.5 h-5 w-5 items-center justify-center rounded border-2 border-primary">
-                    {rememberMe ? (
-                      <Text className="-mt-1 text-base font-bold text-primary">
-                        ✓
-                      </Text>
-                    ) : null}
+                <View className="flex-row items-center">
+                  <View className="mr-2.5 h-5 w-5 items-center justify-center rounded border-2 border-primary bg-primary/10">
+                    <Text className="-mt-1 text-base font-bold text-primary">✓</Text>
                   </View>
                   <Text className="text-sm font-medium text-slate-800">
-                    Remember me
+                    Stay signed in
                   </Text>
-                </Pressable>
+                </View>
                 <Pressable accessibilityRole="button">
                   <Text className="text-sm font-bold text-primary">
                     Forgot Password?
