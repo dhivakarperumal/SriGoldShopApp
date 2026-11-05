@@ -400,11 +400,8 @@ function DrawerItem({
 const styles = StyleSheet.create({
   headerBar: {
     backgroundColor: '#004D40',
-    shadowColor: '#001A16',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 6,
+    elevation: 0,
+    shadowOpacity: 0,
   },
   drawerPanel: {
     shadowColor: '#002F28',

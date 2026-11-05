@@ -102,7 +102,7 @@ function App() {
                 ? <Products />
                 : adminRoute === 'more'
                   ? <More />
-                  : <AdminHome user={user} />
+                  : <AdminHome user={user} onNavigate={navigateAdmin} />
     : null;
 
   return (

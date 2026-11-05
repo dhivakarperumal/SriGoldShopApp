@@ -26,6 +26,7 @@ function AdminLayout({
   ordersEndpoint,
 }: AdminLayoutProps) {
   const activeRoute = route || currentRoute;
+  const showBottomNav = activeRoute ? isMainTab(activeRoute) : false;
 
   return (
     <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
@@ -38,12 +39,12 @@ function AdminLayout({
         ordersEndpoint={ordersEndpoint}
       />
       <SafeAreaView
-        className="flex-1 bg-surface"
-        edges={['bottom', 'left', 'right']}
+        className="flex-1 bg-background"
+        edges={showBottomNav ? ['left', 'right'] : ['bottom', 'left', 'right']}
       >
         <View className="flex-1">
           {children}
-          {activeRoute && isMainTab(activeRoute) ? (
+          {showBottomNav && activeRoute && isMainTab(activeRoute) ? (
             <BottomNavigation
               activeRoute={activeRoute}
               onSelect={tabRoute => onNavigate(tabRoute)}

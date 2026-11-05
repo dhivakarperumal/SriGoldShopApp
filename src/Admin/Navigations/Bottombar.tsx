@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { Animated, Pressable, Text, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import type { AdminRoute } from './TopHeader';
 import AddBotton from '../Componets/AddBotton';
@@ -26,8 +27,20 @@ type BottomNavigationProps = {
 };
 
 function BottomNavigation({ activeRoute, onSelect }: BottomNavigationProps) {
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, 6);
+
   return (
-    <View className="h-[68px] flex-row border-t border-navigation-border bg-surface shadow-lg">
+    <View
+      style={[
+        styles.bottomNavContainer,
+        {
+          paddingBottom: bottomPadding,
+          height: 60 + bottomPadding,
+        },
+      ]}
+      className="flex-row bg-primary"
+    >
       {MAIN_TABS.map(tab => (
         <TabButton
           key={tab.route}
@@ -64,7 +77,7 @@ function TabButton({ label, icon, isActive, onPress }: TabButtonProps) {
 
   return (
     <Pressable
-      className="flex-1 items-center pt-1"
+      className="flex-1 items-center pt-1.5"
       onPress={onPress}
       accessibilityRole="tab"
       accessibilityLabel={label}
@@ -72,7 +85,7 @@ function TabButton({ label, icon, isActive, onPress }: TabButtonProps) {
     >
       <View className="mb-1 h-1 w-6 items-center justify-center">
         {isActive ? (
-          <View className="h-1 w-5 rounded-full bg-navigation-active" />
+          <View className="h-1 w-5 rounded-full bg-accent" />
         ) : null}
       </View>
       <Animated.View style={{ transform: [{ scale }] }}>
@@ -85,8 +98,8 @@ function TabButton({ label, icon, isActive, onPress }: TabButtonProps) {
       <Text
         className={`mt-1 text-[10px] ${
           isActive
-            ? 'font-semibold text-navigation-active'
-            : 'font-medium text-navigation-inactive'
+            ? 'font-bold text-accent-light'
+            : 'font-medium text-[#8DBDB4]'
         }`}
       >
         {label}
@@ -139,5 +152,20 @@ function TabIcon({ name, active }: { name: TabIconName; active: boolean }) {
     </Svg>
   );
 }
+
+const styles = StyleSheet.create({
+  bottomNavContainer: {
+    backgroundColor: '#004D40',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(212, 160, 23, 0.3)',
+    shadowColor: '#001A16',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+});
 
 export default BottomNavigation;
