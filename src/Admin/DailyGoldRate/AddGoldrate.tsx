@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
+import type { CurrentRateSet } from './AllGoldRate';
 
 const RATE_FIELDS = [
   { key: 'gold_999', label: 'Gold 24K (999)', metal: 'Gold', purity: '999', unit: 'gram' },
@@ -43,6 +44,7 @@ type RateForm = {
 type Props = {
   onCancel: () => void;
   onSaved: () => void;
+  initialRateSet?: CurrentRateSet;
 };
 
 const localDate = (date: Date) => {
@@ -71,6 +73,54 @@ const createBlankForm = (): RateForm => {
   };
 };
 
+const normalizePurity = (value: string) => {
+  const purity = value.trim().toUpperCase().replace(/\s+/g, '');
+  const karatPurities: Record<string, string> = {
+    '24K': '999',
+    '22K': '916',
+    '20K': '833',
+    '18K': '750',
+    '14K': '585',
+  };
+  return karatPurities[purity] ?? purity;
+};
+
+const createFormFromRateSet = (rateSet?: CurrentRateSet): RateForm => {
+  const form = createBlankForm();
+  if (!rateSet) return form;
+
+  const effectiveDate = rateSet.effective_from ? new Date(rateSet.effective_from) : null;
+  return {
+    ...form,
+    rate_date: rateSet.rate_date?.slice(0, 10) ?? form.rate_date,
+    effective_from:
+      effectiveDate && !Number.isNaN(effectiveDate.getTime())
+        ? localDateTime(effectiveDate)
+        : form.effective_from,
+    making_charge_type:
+      rateSet.making_charge_type === 'Fixed Amount' ? 'Fixed Amount' : 'Percentage',
+    making_charge_value:
+      rateSet.making_charge_value == null ? '' : String(rateSet.making_charge_value),
+    wastage_percentage:
+      rateSet.wastage_percentage == null ? '' : String(rateSet.wastage_percentage),
+    rates: Object.fromEntries(
+      RATE_FIELDS.map(field => {
+        const existingRate = rateSet.rates.find(
+          rate =>
+            rate.metal_type.toLowerCase() === field.metal.toLowerCase() &&
+            normalizePurity(rate.purity) === normalizePurity(field.purity),
+        );
+        return [
+          field.key,
+          existingRate
+            ? String(existingRate.rate_per_unit ?? existingRate.rate_per_gram ?? '')
+            : '',
+        ];
+      }),
+    ) as Record<RateKey, string>,
+  };
+};
+
 const getErrorMessage = (error: unknown, fallback: string): string => {
   if (typeof error !== 'object' || error === null) return fallback;
   if ('response' in error && typeof error.response === 'object' && error.response !== null) {
@@ -88,8 +138,9 @@ const getErrorMessage = (error: unknown, fallback: string): string => {
   return 'message' in error && typeof error.message === 'string' ? error.message : fallback;
 };
 
-function AddGoldrate({ onCancel, onSaved }: Props) {
-  const [form, setForm] = useState<RateForm>(createBlankForm);
+function AddGoldrate({ onCancel, onSaved, initialRateSet }: Props) {
+  const isEditing = Boolean(initialRateSet);
+  const [form, setForm] = useState<RateForm>(() => createFormFromRateSet(initialRateSet));
   const [saving, setSaving] = useState(false);
 
   const setField = <K extends keyof Omit<RateForm, 'rates'>>(field: K, value: RateForm[K]) => {
@@ -131,7 +182,7 @@ function AddGoldrate({ onCancel, onSaved }: Props) {
     }
 
     Alert.alert(
-      'Activate rate set?',
+      isEditing ? 'Activate updated rate set?' : 'Activate rate set?',
       'These rates will be used for new product price calculations. Previously issued invoices will keep their saved prices.',
       [
         { text: 'Cancel', style: 'cancel' },
@@ -182,7 +233,7 @@ function AddGoldrate({ onCancel, onSaved }: Props) {
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View className="h-14 flex-row items-center border-b border-[#00382E] bg-primary px-4">
+        <View className="mb-2 h-10 flex-row items-center bg-primary px-4">
           <Pressable
             className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-emerald-700/60 bg-emerald-900/40 active:bg-emerald-900/70"
             onPress={onCancel}
@@ -202,7 +253,7 @@ function AddGoldrate({ onCancel, onSaved }: Props) {
           </Pressable>
           <View className="flex-1">
             <Text className="text-base font-extrabold tracking-wide text-white">
-              Add Daily Rates
+              {isEditing ? 'Edit Daily Rates' : 'Add Daily Rates'}
             </Text>
             <Text className="text-[10px] font-medium text-emerald-200">
               Sri Golds Jewellery
@@ -342,7 +393,7 @@ function AddGoldrate({ onCancel, onSaved }: Props) {
             >
               {saving ? <ActivityIndicator size="small" color="#FFFFFF" /> : null}
               <Text className="font-bold text-white">
-                {saving ? 'Saving…' : 'Save & Activate'}
+                {saving ? 'Saving…' : isEditing ? 'Save & Activate Updates' : 'Save & Activate'}
               </Text>
             </Pressable>
           </View>

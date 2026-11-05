@@ -18,7 +18,9 @@ import Products from './src/Admin/Screens/Products';
 import CategoriesAll, { type Category } from './src/Admin/Categories/CategoriesAll';
 import AddCategories from './src/Admin/Categories/Addcategories';
 import MetalType from './src/Admin/Categories/MetalType';
-import AllGoldRate from './src/Admin/DailyGoldRate/AllGoldRate';
+import AllGoldRate, {
+  type CurrentRateSet,
+} from './src/Admin/DailyGoldRate/AllGoldRate';
 import AddGoldrate from './src/Admin/DailyGoldRate/AddGoldrate';
 import More from './src/Admin/Screens/More';
 import AdminLayout from './src/Admin/Navigations/AdminLayout';
@@ -31,6 +33,7 @@ function App() {
   const [adminRoute, setAdminRoute] = useState<AdminRoute>('home');
   const [newCategoryId, setNewCategoryId] = useState('CAT001');
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingGoldRateSet, setEditingGoldRateSet] = useState<CurrentRateSet | null>(null);
   const isLoggingOut = useRef(false);
 
   useEffect(() => {
@@ -186,14 +189,29 @@ function App() {
                   ? (
                     <AllGoldRate
                       onBack={() => navigateAdmin('more')}
-                      onAddRate={() => navigateAdmin('addGoldrate')}
+                      onAddRate={() => {
+                        setEditingGoldRateSet(null);
+                        navigateAdmin('addGoldrate');
+                      }}
+                      onEditRate={rateSet => {
+                        setEditingGoldRateSet(rateSet);
+                        navigateAdmin('addGoldrate');
+                      }}
                     />
                   )
                   : adminRoute === 'addGoldrate'
                     ? (
                       <AddGoldrate
-                        onCancel={() => navigateAdmin('dailyGoldRates')}
-                        onSaved={() => navigateAdmin('dailyGoldRates')}
+                        key={editingGoldRateSet?.updated_at ?? 'new-rate-set'}
+                        initialRateSet={editingGoldRateSet ?? undefined}
+                        onCancel={() => {
+                          setEditingGoldRateSet(null);
+                          navigateAdmin('dailyGoldRates');
+                        }}
+                        onSaved={() => {
+                          setEditingGoldRateSet(null);
+                          navigateAdmin('dailyGoldRates');
+                        }}
                       />
                     )
                     : adminRoute === 'more'

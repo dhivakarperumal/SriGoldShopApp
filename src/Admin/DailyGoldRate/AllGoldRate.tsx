@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
 
-type GoldRate = {
+export type GoldRate = {
   metal_type: string;
   purity: string;
   rate_per_gram?: number | string;
@@ -21,7 +21,7 @@ type GoldRate = {
   rate_unit?: string;
 };
 
-type CurrentRateSet = {
+export type CurrentRateSet = {
   rates: GoldRate[];
   rate_date?: string;
   effective_from?: string;
@@ -36,6 +36,7 @@ type CurrentRateSet = {
 type Props = {
   onBack: () => void;
   onAddRate: () => void;
+  onEditRate: (rateSet: CurrentRateSet) => void;
 };
 
 const METAL_ORDER = ['Gold', 'Silver', 'Platinum', 'Diamond'];
@@ -105,7 +106,7 @@ const formatAmount = (value?: number | string) => {
     : 'Not set';
 };
 
-function AllGoldRate({ onBack, onAddRate }: Props) {
+function AllGoldRate({ onBack, onAddRate, onEditRate }: Props) {
   const [current, setCurrent] = useState<CurrentRateSet | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -160,11 +161,6 @@ function AllGoldRate({ onBack, onAddRate }: Props) {
     fetchCurrentRates();
   }, [fetchCurrentRates]);
 
-  const scale = addButtonPulse.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 1.08],
-  });
-
   return (
     <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
       <StatusBar barStyle="light-content" />
@@ -202,23 +198,46 @@ function AllGoldRate({ onBack, onAddRate }: Props) {
           }
         >
           <View className="rounded-2xl bg-primary p-5 shadow-sm">
-            <Text className="text-xs font-bold uppercase tracking-wider text-emerald-200">
-              Today’s applied rate set
-            </Text>
-            <Text className="mt-2 text-xl font-extrabold text-white">
-              {current ? formatDate(current.rate_date) : 'Precious Metal Rates'}
-            </Text>
-            {current?.effective_from ? (
-              <Text className="mt-1 text-xs text-emerald-100">
-                Effective {new Date(current.effective_from).toLocaleString()}
-              </Text>
-            ) : null}
-            {current?.updated_by_name || current?.updated_by ? (
-              <Text className="mt-1 text-xs text-emerald-100">
-                Updated by {current.updated_by_name || `Admin ${current.updated_by}`}
-                {current.updated_at ? ` · ${new Date(current.updated_at).toLocaleString()}` : ''}
-              </Text>
-            ) : null}
+            <View className="flex-row items-start justify-between gap-3">
+              <View className="flex-1">
+                <Text className="text-xs font-bold uppercase tracking-wider text-emerald-200">
+                  Today’s applied rate set
+                </Text>
+                <Text className="mt-2 text-xl font-extrabold text-white">
+                  {current ? formatDate(current.rate_date) : 'Precious Metal Rates'}
+                </Text>
+                {current?.effective_from ? (
+                  <Text className="mt-1 text-xs text-emerald-100">
+                    Effective {new Date(current.effective_from).toLocaleString()}
+                  </Text>
+                ) : null}
+                {current?.updated_by_name || current?.updated_by ? (
+                  <Text className="mt-1 text-xs text-emerald-100">
+                    Updated by {current.updated_by_name || `Admin ${current.updated_by}`}
+                    {current.updated_at ? ` · ${new Date(current.updated_at).toLocaleString()}` : ''}
+                  </Text>
+                ) : null}
+              </View>
+              {current && !isLoading ? (
+                <Pressable
+                  className="flex-row items-center gap-1.5 rounded-xl border border-white/25 bg-white/10 px-3 py-2 active:bg-white/20"
+                  onPress={() => onEditRate(current)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Edit current rate set"
+                >
+                  <Svg width={15} height={15} viewBox="0 0 24 24" fill="none">
+                    <Path
+                      d="m16 4 4 4M4 20l4.5-1 11-11a2.1 2.1 0 0 0-3-3l-11 11L4 20Z"
+                      stroke="#FFFFFF"
+                      strokeWidth={1.8}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </Svg>
+                  <Text className="text-xs font-bold text-white">Edit</Text>
+                </Pressable>
+              ) : null}
+            </View>
           </View>
 
           {isLoading ? (
@@ -308,26 +327,36 @@ function AllGoldRate({ onBack, onAddRate }: Props) {
           )}
         </ScrollView>
 
-        <Animated.View
-          className="absolute bottom-6 right-5"
-          style={{ transform: [{ scale }] }}
-        >
-          <Pressable
-            className="h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-accent shadow-lg"
-            onPress={onAddRate}
-            accessibilityRole="button"
-            accessibilityLabel="Add daily gold rates"
-          >
-            <Svg width={25} height={25} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M12 5v14m-7-7h14"
-                stroke="#003B32"
-                strokeWidth={2.5}
-                strokeLinecap="round"
-              />
-            </Svg>
-          </Pressable>
-        </Animated.View>
+        <View className="absolute bottom-5 right-5 items-end">
+          <View className="h-14 w-14 items-center justify-center">
+            <Animated.View
+              pointerEvents="none"
+              className="absolute h-14 w-14 rounded-full bg-accent"
+              style={{
+                opacity: addButtonPulse.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.35, 0],
+                }),
+                transform: [
+                  {
+                    scale: addButtonPulse.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 1.22],
+                    }),
+                  },
+                ],
+              }}
+            />
+            <Pressable
+              className="h-14 w-14 items-center justify-center rounded-full border-2 border-accent-light bg-primary shadow-lg"
+              onPress={onAddRate}
+              accessibilityRole="button"
+              accessibilityLabel="Add daily gold rates"
+            >
+              <Text className="text-2xl font-bold text-white">+</Text>
+            </Pressable>
+          </View>
+        </View>
       </SafeAreaView>
     </SafeAreaView>
   );
