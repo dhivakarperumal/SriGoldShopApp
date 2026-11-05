@@ -16,6 +16,7 @@ import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
 import { getProductImageUrl } from '../../utils/productImage';
 import AddProducts from '../AddProducts/Addproducts';
+import ProductDetails from '../AddProducts/ProductsDetails';
 
 type Product = Record<string, unknown> & {
   id: string | number;
@@ -87,6 +88,7 @@ function Products() {
   const [newStock, setNewStock] = useState('');
   const [isUpdatingStock, setIsUpdatingStock] = useState(false);
   const [isAddProductFormVisible, setIsAddProductFormVisible] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [isFabMenuOpen, setIsFabMenuOpen] = useState(false);
   const addButtonPulse = useRef(new Animated.Value(0)).current;
@@ -441,6 +443,7 @@ function Products() {
               <ProductCard
                 key={String(product.id)}
                 product={product}
+                onPressDetails={() => setSelectedProductId(String(product.id))}
                 onUpdateStock={() => {
                   setStockProduct(product);
                   setNewStock(String(product.total_stock ?? 0));
@@ -664,6 +667,24 @@ function Products() {
           }}
         />
       </Modal>
+
+      <Modal
+        visible={selectedProductId !== null}
+        animationType="slide"
+        onRequestClose={() => setSelectedProductId(null)}
+        statusBarTranslucent
+      >
+        {selectedProductId ? (
+          <ProductDetails
+            productId={selectedProductId}
+            onBack={() => setSelectedProductId(null)}
+            onDeleted={() => {
+              setSelectedProductId(null);
+              setRefreshVersion(version => version + 1);
+            }}
+          />
+        ) : null}
+      </Modal>
     </View>
   );
 }
@@ -811,10 +832,12 @@ function StatCard({
 
 function ProductCard({
   product,
+  onPressDetails,
   onUpdateStock,
   onDelete,
 }: {
   product: Product;
+  onPressDetails: () => void;
   onUpdateStock: () => void;
   onDelete: () => void;
 }) {
@@ -830,7 +853,12 @@ function ProductCard({
 
   return (
     <View className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
-      <View className="flex-row p-3.5">
+      <Pressable
+        onPress={onPressDetails}
+        className="flex-row p-3.5"
+        accessibilityRole="button"
+        accessibilityLabel={`View details for ${product.name || 'product'}`}
+      >
         <ProductThumbnail imageUrl={getProductImageUrl(product)} name={product.name} />
         <View className="min-w-0 flex-1 justify-center">
           <Text className="text-sm font-bold text-slate-800" numberOfLines={2}>
@@ -849,8 +877,8 @@ function ProductCard({
               <Text className="text-[9px] font-bold">{stockLabel}</Text>
             </View>
           </View>
-        </View>
-      </View>
+          </View>
+        </Pressable>
       <View className="flex-row items-center justify-between border-t border-slate-100 bg-slate-50/70 px-3.5 py-2.5">
         <View className="min-w-0 flex-1 pr-2">
           <Text className="text-[10px] text-slate-500" numberOfLines={1}>
