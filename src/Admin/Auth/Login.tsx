@@ -1,5 +1,7 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState } from 'react';
 import {
+  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -10,12 +12,71 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import api, { setTokenCache } from '../../api';
 
-function Login() {
+export type AuthenticatedUser = {
+  role: string;
+  name?: string;
+  email?: string;
+};
+
+type LoginProps = {
+  onLoginSuccess: (user: AuthenticatedUser) => void;
+};
+
+function Login({ onLoginSuccess }: LoginProps) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleLogin = async () => {
+    const trimmedIdentifier = identifier.trim();
+    if (!trimmedIdentifier || !password) {
+      setErrorMessage('Enter your username and password.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage('');
+
+    try {
+      const response = await api.post('/auth/login', {
+        identifier: trimmedIdentifier,
+        password,
+      });
+      const user = response.data?.user as AuthenticatedUser | undefined;
+      const token = response.data?.token as string | undefined;
+
+      if (!user || typeof user.role !== 'string' || !token) {
+        throw new Error('The server returned an invalid login response.');
+      }
+
+      if (rememberMe) {
+        await AsyncStorage.setMany({
+          userToken: token,
+          authUser: JSON.stringify(user),
+        });
+      } else {
+        await AsyncStorage.removeMany(['userToken', 'authUser']);
+      }
+      setTokenCache(token);
+      onLoginSuccess(user);
+    } catch (error) {
+      const message =
+        typeof error === 'object' &&
+        error !== null &&
+        'message' in error &&
+        typeof error.message === 'string'
+          ? error.message
+          : 'Login failed. Please try again.';
+      setErrorMessage(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View className="flex-1 bg-white">
@@ -35,11 +96,11 @@ function Login() {
             contentContainerClassName="grow justify-center px-6 py-8"
             keyboardShouldPersistTaps="handled"
           >
-            <View className="z-10 mb-10 w-full self-center">
+            <View className="z-10 mb-[100px] w-full self-center">
               <View className="mb-6 items-center">
                 <Image
                   source={require('../../Images/logo.png')}
-                  className="h-[88px] w-32 self-center"
+                  className="h-[100px] w-60 self-center mb-2"
                   resizeMode="contain"
                   accessibilityLabel="Sri Golds"
                 />
@@ -51,14 +112,14 @@ function Login() {
                   <View className="ml-2 h-0.5 w-6 bg-accent" />
                 </View>
                 <Text className="mt-5 text-2xl font-bold text-slate-950">
-                  Admin Login
+                 Login
                 </Text>
               </View>
 
               <View className="gap-y-3">
                 <View>
                   <Text className="mb-1.5 ml-1 text-sm font-semibold text-slate-700">
-                    Username / Email
+                    Username
                   </Text>
                   <View className="h-14 flex-row items-center rounded-2xl border border-slate-200 bg-white px-4 shadow-sm">
                     <Text className="mr-4 text-2xl text-slate-800">✉</Text>
@@ -71,7 +132,7 @@ function Login() {
                       autoCapitalize="none"
                       autoCorrect={false}
                       keyboardType="email-address"
-                      accessibilityLabel="Username or email"
+                      accessibilityLabel="Username or email or mobile number"
                       returnKeyType="next"
                     />
                   </View>
@@ -139,14 +200,34 @@ function Login() {
                 </Pressable>
               </View>
 
-              <Pressable
-                className="h-14 flex-row items-center justify-center rounded-full bg-primary px-6 shadow-lg"
-                accessibilityRole="button"
-              >
-                <Text className="mr-3 text-2xl font-semibold text-white">
-                  ↪
+              {errorMessage ? (
+                <Text
+                  className="mb-3 text-center text-sm text-red-600"
+                  accessibilityRole="alert"
+                >
+                  {errorMessage}
                 </Text>
-                <Text className="text-lg font-bold text-white">Login</Text>
+              ) : null}
+
+              <Pressable
+                className={`h-14 flex-row items-center justify-center rounded-full bg-primary px-6 shadow-lg ${
+                  isLoading ? 'opacity-70' : ''
+                }`}
+                onPress={handleLogin}
+                disabled={isLoading}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: isLoading, busy: isLoading }}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Text className="mr-3 text-2xl font-semibold text-white">
+                      ↪
+                    </Text>
+                    <Text className="text-lg font-bold text-white">Login</Text>
+                  </>
+                )}
               </Pressable>
             </View>
           </ScrollView>

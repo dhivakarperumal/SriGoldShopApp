@@ -21,6 +21,11 @@ declare const colors: {
   readonly surface: string;
   readonly border: string;
   readonly muted: string;
+  readonly navigation: {
+    readonly active: string;
+    readonly inactive: string;
+    readonly border: string;
+  };
 };
 
 export = colors;
