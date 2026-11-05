@@ -1,15 +1,19 @@
 import { useCallback, useState } from 'react';
-import { Image, Modal, Pressable, Text, View } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { AuthenticatedUser } from '../Auth/Login';
 import {
   BellIcon,
+  BillingIcon,
   ChevronRightIcon,
   CloseIcon,
   DashboardIcon,
+  LoansIcon,
   LogoutIcon,
   MenuIcon,
+  MoreIcon,
   OrdersIcon,
+  ProductsIcon,
   ProfileIcon,
 } from './NavIcons';
 import NotificationDropdown, {
@@ -19,17 +23,18 @@ import ProfileDropdown from './ProfileDropdown';
 
 export type AdminRoute =
   | 'home'
+  | 'profile'
+  | 'orders'
+  | 'orderDetails'
   | 'loans'
   | 'billing'
   | 'products'
-  | 'more'
-  | 'profile'
-  | 'orders'
-  | 'orderDetails';
+  | 'more';
 
 type AppHeaderProps = {
   user: AuthenticatedUser;
   currentRoute?: AdminRoute;
+  route?: AdminRoute;
   onNavigate: (route: AdminRoute, order?: TodayOrder) => void;
   onLogout: () => void;
   ordersEndpoint?: string;
@@ -37,11 +42,13 @@ type AppHeaderProps = {
 
 function AppHeader({
   user,
-  currentRoute = 'home',
+  currentRoute,
+  route,
   onNavigate,
   onLogout,
   ordersEndpoint,
 }: AppHeaderProps) {
+  const activeRoute = route || currentRoute || 'home';
   const insets = useSafeAreaInsets();
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [isProfileVisible, setIsProfileVisible] = useState(false);
@@ -55,11 +62,11 @@ function AppHeader({
     setUnreadCount(count);
   }, []);
 
-  const navigate = (route: AdminRoute) => {
+  const navigate = (newRoute: AdminRoute) => {
     setIsDrawerVisible(false);
     setIsProfileVisible(false);
     setAreNotificationsVisible(false);
-    onNavigate(route);
+    onNavigate(newRoute);
   };
 
   const openProfile = () => {
@@ -76,24 +83,18 @@ function AppHeader({
     <>
       {/* Main Top Header Bar */}
       <View
-        style={{
-          shadowColor: '#002F28',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.06,
-          shadowRadius: 6,
-          elevation: 4,
-        }}
-        className="z-10 h-16 flex-row items-center justify-between border-b border-slate-200/90 bg-surface px-4"
+        style={styles.headerBar}
+        className="z-10 h-16 flex-row items-center justify-between border-b border-[#00382E] bg-primary px-4"
       >
         {/* Left: Menu & Sri Golds Logo */}
         <View className="flex-row items-center">
           <Pressable
-            className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-slate-200/80 bg-slate-50 active:bg-slate-100"
+            className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-emerald-700/60 bg-emerald-900/40 active:bg-emerald-900/70"
             onPress={() => setIsDrawerVisible(true)}
             accessibilityRole="button"
             accessibilityLabel="Open navigation menu"
           >
-            <MenuIcon color="#004D40" accentColor="#D4A017" />
+            <MenuIcon color="#FFFFFF" accentColor="#F5C45E" />
           </Pressable>
 
           <Pressable
@@ -102,7 +103,7 @@ function AppHeader({
             accessibilityRole="button"
             accessibilityLabel="Go to Sri Golds Dashboard"
           >
-            <View className="mr-2.5 h-10 w-10 items-center justify-center rounded-xl border border-amber-200/70 bg-amber-50/70 p-1 shadow-sm">
+            <View className="mr-2.5 h-10 w-10 items-center justify-center rounded-xl border border-accent/40 bg-white p-1 shadow-sm">
               <Image
                 source={require('../../Images/logo.png')}
                 className="h-8 w-8"
@@ -112,12 +113,12 @@ function AppHeader({
             </View>
 
             <View>
-              <Text className="text-[15px] font-black tracking-wider text-primary-dark">
+              <Text className="text-[15px] font-black tracking-wider text-white">
                 SRI GOLDS
               </Text>
               <View className="flex-row items-center">
-                <Text className="mr-1 text-[7px] text-accent">◆</Text>
-                <Text className="text-[9px] font-extrabold tracking-widest text-accent-dark">
+                <Text className="mr-1 text-[7px] text-accent-light">◆</Text>
+                <Text className="text-[9px] font-extrabold tracking-widest text-accent-light">
                   JEWELLERS
                 </Text>
               </View>
@@ -129,14 +130,14 @@ function AppHeader({
         <View className="flex-row items-center">
           {/* Notifications Button */}
           <Pressable
-            className="relative mr-2 h-10 w-10 items-center justify-center rounded-xl border border-slate-200/80 bg-slate-50 active:bg-slate-100"
+            className="relative mr-2 h-10 w-10 items-center justify-center rounded-xl border border-emerald-700/60 bg-emerald-900/40 active:bg-emerald-900/70"
             onPress={openNotifications}
             accessibilityRole="button"
             accessibilityLabel="Today's order notifications"
           >
-            <BellIcon color="#004D40" clapperColor="#D4A017" />
+            <BellIcon color="#FFFFFF" clapperColor="#F5C45E" />
             {unreadCount > 0 ? (
-              <View className="absolute -right-1 -top-1 h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-surface bg-danger px-1">
+              <View className="absolute -right-1 -top-1 h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-primary bg-danger px-1">
                 <Text className="text-[9px] font-bold text-white">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </Text>
@@ -146,13 +147,13 @@ function AppHeader({
 
           {/* User Profile Avatar */}
           <Pressable
-            className="relative h-10 w-10 items-center justify-center rounded-xl border-2 border-accent bg-primary shadow-sm active:opacity-90"
+            className="relative h-10 w-10 items-center justify-center rounded-xl border-2 border-accent-light bg-primary-dark shadow-sm active:opacity-90"
             onPress={openProfile}
             accessibilityRole="button"
             accessibilityLabel="Open user profile menu"
           >
             <Text className="text-sm font-bold text-white">{initial}</Text>
-            <View className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border border-white bg-success" />
+            <View className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border border-primary bg-success" />
           </Pressable>
         </View>
       </View>
@@ -174,20 +175,17 @@ function AppHeader({
           />
 
           <View
-            style={{
-              paddingTop: insets.top + 16,
-              shadowColor: '#002F28',
-              shadowOffset: { width: 4, height: 0 },
-              shadowOpacity: 0.2,
-              shadowRadius: 20,
-              elevation: 16,
-            }}
+            style={[styles.drawerPanel, { paddingTop: insets.top + 16 }]}
             className="h-full w-[82%] max-w-[320px] bg-surface px-5 pb-8 justify-between"
           >
-            {/* Top drawer content */}
-            <View>
+            {/* Top drawer scrollable content */}
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              className="flex-1"
+              contentContainerStyle={styles.drawerScrollContent}
+            >
               {/* Drawer Brand Header with Close Button */}
-              <View className="mb-6 flex-row items-center justify-between">
+              <View className="mb-5 flex-row items-center justify-between">
                 <View className="flex-row items-center flex-1">
                   <View className="mr-3 h-12 w-12 items-center justify-center rounded-2xl border border-amber-200/80 bg-amber-50 p-1.5 shadow-sm">
                     <Image
@@ -218,7 +216,7 @@ function AppHeader({
               </View>
 
               {/* Signed-in user card */}
-              <View className="mb-6 flex-row items-center rounded-xl border border-slate-200/80 bg-slate-50 p-3">
+              <View className="mb-5 flex-row items-center rounded-xl border border-slate-200/80 bg-slate-50 p-3">
                 <View className="mr-3 h-10 w-10 items-center justify-center rounded-lg border border-accent bg-primary shadow-xs">
                   <Text className="text-sm font-bold text-white">{initial}</Text>
                 </View>
@@ -238,36 +236,64 @@ function AppHeader({
                 </View>
               </View>
 
-              {/* Drawer Menu Title */}
+              {/* Drawer Menu Section */}
               <Text className="mb-2 px-1 text-[11px] font-extrabold tracking-wider text-slate-400 uppercase">
-                Navigation
+                Main Menu
               </Text>
 
-              {/* Navigation Items */}
               <DrawerItem
                 label="Dashboard"
-                icon={<DashboardIcon color={currentRoute === 'home' ? '#004D40' : '#64748B'} size={18} />}
-                isActive={currentRoute === 'home'}
+                icon={<DashboardIcon color={activeRoute === 'home' ? '#004D40' : '#64748B'} size={18} />}
+                isActive={activeRoute === 'home'}
                 onPress={() => navigate('home')}
               />
               <DrawerItem
                 label="Orders"
-                icon={<OrdersIcon color={currentRoute === 'orders' || currentRoute === 'orderDetails' ? '#004D40' : '#64748B'} size={18} />}
-                isActive={currentRoute === 'orders' || currentRoute === 'orderDetails'}
+                icon={<OrdersIcon color={activeRoute === 'orders' || activeRoute === 'orderDetails' ? '#004D40' : '#64748B'} size={18} />}
+                isActive={activeRoute === 'orders' || activeRoute === 'orderDetails'}
                 onPress={() => navigate('orders')}
               />
               <DrawerItem
+                label="Products"
+                icon={<ProductsIcon color={activeRoute === 'products' ? '#004D40' : '#64748B'} size={18} />}
+                isActive={activeRoute === 'products'}
+                onPress={() => navigate('products')}
+              />
+              <DrawerItem
+                label="Billing"
+                icon={<BillingIcon color={activeRoute === 'billing' ? '#004D40' : '#64748B'} size={18} />}
+                isActive={activeRoute === 'billing'}
+                onPress={() => navigate('billing')}
+              />
+              <DrawerItem
+                label="Loans"
+                icon={<LoansIcon color={activeRoute === 'loans' ? '#004D40' : '#64748B'} size={18} />}
+                isActive={activeRoute === 'loans'}
+                onPress={() => navigate('loans')}
+              />
+
+              <Text className="mt-4 mb-2 px-1 text-[11px] font-extrabold tracking-wider text-slate-400 uppercase">
+                Account
+              </Text>
+
+              <DrawerItem
                 label="Profile"
-                icon={<ProfileIcon color={currentRoute === 'profile' ? '#004D40' : '#64748B'} size={18} />}
-                isActive={currentRoute === 'profile'}
+                icon={<ProfileIcon color={activeRoute === 'profile' ? '#004D40' : '#64748B'} size={18} />}
+                isActive={activeRoute === 'profile'}
                 onPress={() => navigate('profile')}
               />
-            </View>
+              <DrawerItem
+                label="More Options"
+                icon={<MoreIcon color={activeRoute === 'more' ? '#004D40' : '#64748B'} size={18} />}
+                isActive={activeRoute === 'more'}
+                onPress={() => navigate('more')}
+              />
+            </ScrollView>
 
             {/* Bottom Drawer Footer */}
-            <View className="pt-4 border-t border-slate-200/80">
+            <View className="pt-3 border-t border-slate-200/80">
               <Pressable
-                className="flex-row items-center rounded-xl px-3 py-3 bg-rose-50/70 border border-rose-100 active:bg-rose-100"
+                className="flex-row items-center rounded-xl px-3 py-2.5 bg-rose-50/70 border border-rose-100 active:bg-rose-100"
                 onPress={() => {
                   setIsDrawerVisible(false);
                   onLogout();
@@ -287,7 +313,7 @@ function AppHeader({
                 </View>
               </Pressable>
 
-              <Text className="mt-4 text-center text-[10px] font-medium text-slate-400">
+              <Text className="mt-3 text-center text-[10px] font-medium text-slate-400">
                 Sri Golds • Jewellers Admin v1.0
               </Text>
             </View>
@@ -336,7 +362,7 @@ function DrawerItem({
 }) {
   return (
     <Pressable
-      className={`mb-2 flex-row items-center justify-between rounded-xl px-3.5 py-3 ${
+      className={`mb-1.5 flex-row items-center justify-between rounded-xl px-3.5 py-2.5 ${
         isActive
           ? 'bg-primary/10 border-l-4 border-accent'
           : 'bg-transparent active:bg-slate-100'
@@ -346,7 +372,7 @@ function DrawerItem({
     >
       <View className="flex-row items-center">
         <View
-          className={`mr-3.5 h-9 w-9 items-center justify-center rounded-lg ${
+          className={`mr-3 h-8 w-8 items-center justify-center rounded-lg ${
             isActive ? 'bg-primary/15' : 'bg-slate-100'
           }`}
         >
@@ -370,5 +396,26 @@ function DrawerItem({
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  headerBar: {
+    backgroundColor: '#004D40',
+    shadowColor: '#001A16',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  drawerPanel: {
+    shadowColor: '#002F28',
+    shadowOffset: { width: 4, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 16,
+  },
+  drawerScrollContent: {
+    paddingBottom: 16,
+  },
+});
 
 export default AppHeader;

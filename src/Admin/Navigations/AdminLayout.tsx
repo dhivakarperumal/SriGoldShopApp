@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { StatusBar, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AuthenticatedUser } from '../Auth/Login';
 import AppHeader, { type AdminRoute } from './TopHeader';
@@ -28,7 +28,8 @@ function AdminLayout({
   const activeRoute = route || currentRoute;
 
   return (
-    <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
+      <StatusBar barStyle="light-content" />
       <AppHeader
         user={user}
         currentRoute={activeRoute}

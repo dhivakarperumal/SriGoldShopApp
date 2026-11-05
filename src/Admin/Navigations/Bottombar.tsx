@@ -2,28 +2,33 @@ import { useEffect, useRef } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import type { AdminRoute } from './TopHeader';
+import AddBotton from '../Componets/AddBotton';
 
 const colors: typeof import('../../theme/colors') = require('../../theme/colors');
 
 export type MainTabRoute = 'home' | 'loans' | 'billing' | 'products' | 'more';
+
+export const MAIN_TABS: {
+  route: MainTabRoute;
+  label: string;
+  icon: TabIconName | 'add';
+}[] = [
+  { route: 'home', label: 'Home', icon: 'home' },
+  { route: 'loans', label: 'Loans', icon: 'loans' },
+  { route: 'billing', label: 'Pulse', icon: 'add' },
+  { route: 'products', label: 'Products', icon: 'products' },
+  { route: 'more', label: 'More', icon: 'more' },
+];
 
 type BottomNavigationProps = {
   activeRoute: MainTabRoute;
   onSelect: (route: AdminRoute) => void;
 };
 
-const tabs: { route: MainTabRoute; label: string; icon: TabIconName }[] = [
-  { route: 'home', label: 'Home', icon: 'home' },
-  { route: 'loans', label: 'Loans', icon: 'loans' },
-  { route: 'billing', label: 'Pulse', icon: 'pulse' },
-  { route: 'products', label: 'Products', icon: 'products' },
-  { route: 'more', label: 'More', icon: 'more' },
-];
-
 function BottomNavigation({ activeRoute, onSelect }: BottomNavigationProps) {
   return (
     <View className="h-[68px] flex-row border-t border-navigation-border bg-surface shadow-lg">
-      {tabs.map(tab => (
+      {MAIN_TABS.map(tab => (
         <TabButton
           key={tab.route}
           {...tab}
@@ -35,12 +40,12 @@ function BottomNavigation({ activeRoute, onSelect }: BottomNavigationProps) {
   );
 }
 
-type TabIconName = 'home' | 'loans' | 'pulse' | 'products' | 'more';
+type TabIconName = 'home' | 'loans' | 'products' | 'more';
 
 type TabButtonProps = {
   route: MainTabRoute;
   label: string;
-  icon: TabIconName;
+  icon: TabIconName | 'add';
   isActive: boolean;
   onPress: () => void;
 };
@@ -71,7 +76,11 @@ function TabButton({ label, icon, isActive, onPress }: TabButtonProps) {
         ) : null}
       </View>
       <Animated.View style={{ transform: [{ scale }] }}>
-        <TabIcon name={icon} active={isActive} />
+        {icon === 'add' ? (
+          <AddBotton />
+        ) : (
+          <TabIcon name={icon} active={isActive} />
+        )}
       </Animated.View>
       <Text
         className={`mt-1 text-[10px] ${
@@ -102,7 +111,6 @@ function TabIcon({ name, active }: { name: TabIconName; active: boolean }) {
       'M16 12h5v4h-5a2 2 0 0 1 0-4Z',
       'M5 7.5V5.8a2 2 0 0 1 2-2h10',
     ],
-    pulse: ['M3 12h4l3-7 4 14 3-7h4'],
     products: [
       'M4 8h16l-1 13H5L4 8Z',
       'M9 8V6a3 3 0 0 1 6 0v2',
