@@ -22,6 +22,7 @@ import AllGoldRate, {
   type CurrentRateSet,
 } from './src/Admin/DailyGoldRate/AllGoldRate';
 import AddGoldrate from './src/Admin/DailyGoldRate/AddGoldrate';
+import Customers from './src/Admin/MorePages/Customer';
 import More from './src/Admin/Screens/More';
 import AdminLayout from './src/Admin/Navigations/AdminLayout';
 import type { AdminRoute } from './src/Admin/Navigations/TopHeader';
@@ -216,6 +217,8 @@ function App() {
                     )
                     : adminRoute === 'more'
                       ? <More onNavigate={navigateAdmin} />
+                      : adminRoute === 'customers'
+                        ? <Customers onBack={() => navigateAdmin('more')} />
                       : <AdminHome user={user} onNavigate={navigateAdmin} />
     : null;
 

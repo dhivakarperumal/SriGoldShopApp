@@ -30,7 +30,8 @@ function AdminLayout({
     activeRoute !== 'editCategory' &&
     activeRoute !== 'metalTypes' &&
     activeRoute !== 'dailyGoldRates' &&
-    activeRoute !== 'addGoldrate';
+    activeRoute !== 'addGoldrate' &&
+    activeRoute !== 'customers';
 
   return (
     <SafeAreaView className="flex-1 bg-primary" edges={['top']}>

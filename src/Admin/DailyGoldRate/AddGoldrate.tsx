@@ -227,7 +227,7 @@ function AddGoldrate({ onCancel, onSaved, initialRateSet }: Props) {
     'mt-2 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900';
 
   return (
-    <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
+    <View className="flex-1 bg-primary">
       <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView
         className="flex-1"
@@ -399,7 +399,7 @@ function AddGoldrate({ onCancel, onSaved, initialRateSet }: Props) {
           </View>
         </SafeAreaView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

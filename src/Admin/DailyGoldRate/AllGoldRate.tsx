@@ -162,7 +162,7 @@ function AllGoldRate({ onBack, onAddRate, onEditRate }: Props) {
   }, [fetchCurrentRates]);
 
   return (
-    <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
+    <View className="flex-1 bg-primary">
       <StatusBar barStyle="light-content" />
       <View className="h-16 flex-row items-center border-b border-[#00382E] bg-primary px-4">
         <Pressable
@@ -358,7 +358,7 @@ function AllGoldRate({ onBack, onAddRate, onEditRate }: Props) {
           </View>
         </View>
       </SafeAreaView>
-    </SafeAreaView>
+    </View>
   );
 }
 

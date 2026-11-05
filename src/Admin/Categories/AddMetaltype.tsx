@@ -90,7 +90,7 @@ function AddMetaltype({
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
+    <View className="flex-1 bg-primary">
       <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView
         className="flex-1"
@@ -404,7 +404,7 @@ function AddMetaltype({
           </View>
         </SafeAreaView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -32,6 +32,7 @@ export type AdminRoute =
   | 'metalTypes'
   | 'dailyGoldRates'
   | 'addGoldrate'
+  | 'customers'
   | 'more';
 
 type AppHeaderProps = {
