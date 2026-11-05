@@ -257,8 +257,6 @@ function Home({ user, onNavigate }: HomeProps) {
       .get('/dashboard', {
         params: {
           datePreset: selectedFilter,
-          startDate: '',
-          endDate: '',
         },
         signal: controller.signal,
       })
@@ -349,7 +347,7 @@ function Home({ user, onNavigate }: HomeProps) {
           <Text className="text-lg font-bold text-slate-900">Overview</Text>
           <Text className="mt-0.5 text-xs text-muted">Track your key numbers</Text>
         </View>
-        {isLoading && !dashboard ? (
+        {isLoading ? (
           <ActivityIndicator color="#004D40" accessibilityLabel="Loading dashboard" />
         ) : null}
       </View>
