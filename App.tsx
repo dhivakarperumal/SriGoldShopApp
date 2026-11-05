@@ -11,8 +11,6 @@ import { Alert, Pressable, StatusBar, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Login, { type AuthenticatedUser } from './src/Admin/Auth/Login';
 import AdminHome from './src/Admin/Screens/Home';
-import OrderDetails from './src/Admin/Screens/OrderDetails';
-import Orders from './src/Admin/Screens/Orders';
 import Profile from './src/Admin/Screens/Profile';
 import Loans from './src/Admin/Screens/Loans';
 import Billing from './src/Admin/Screens/Billing';
@@ -20,14 +18,12 @@ import Products from './src/Admin/Screens/Products';
 import More from './src/Admin/Screens/More';
 import AdminLayout from './src/Admin/Navigations/AdminLayout';
 import type { AdminRoute } from './src/Admin/Navigations/TopHeader';
-import type { TodayOrder } from './src/Admin/Navigations/NotificationDropdown';
 import { clearTokenCache } from './src/api';
 
 function App() {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [adminRoute, setAdminRoute] = useState<AdminRoute>('home');
-  const [selectedOrder, setSelectedOrder] = useState<TodayOrder | null>(null);
 
   useEffect(() => {
     const restoreSession = async () => {
@@ -63,7 +59,6 @@ function App() {
       clearTokenCache();
       setUser(null);
       setAdminRoute('home');
-      setSelectedOrder(null);
     } catch {
       Alert.alert('Sign out failed', 'Please try again.');
     }
@@ -76,9 +71,8 @@ function App() {
     ]);
   };
 
-  const navigateAdmin = (route: AdminRoute, order?: TodayOrder) => {
+  const navigateAdmin = (route: AdminRoute) => {
     setAdminRoute(route);
-    setSelectedOrder(order ?? null);
   };
 
   const handleLoginSuccess = (authenticatedUser: AuthenticatedUser) => {
@@ -90,19 +84,15 @@ function App() {
   const adminContent = user
     ? adminRoute === 'profile'
       ? <Profile user={user} />
-      : adminRoute === 'orders'
-        ? <Orders />
-        : adminRoute === 'orderDetails'
-          ? <OrderDetails order={selectedOrder} />
-          : adminRoute === 'loans'
-            ? <Loans />
-            : adminRoute === 'billing'
-              ? <Billing />
-              : adminRoute === 'products'
-                ? <Products />
-                : adminRoute === 'more'
-                  ? <More />
-                  : <AdminHome user={user} onNavigate={navigateAdmin} />
+      : adminRoute === 'loans'
+        ? <Loans />
+        : adminRoute === 'billing'
+          ? <Billing />
+          : adminRoute === 'products'
+            ? <Products />
+            : adminRoute === 'more'
+              ? <More />
+              : <AdminHome user={user} onNavigate={navigateAdmin} />
     : null;
 
   return (

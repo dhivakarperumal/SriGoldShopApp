@@ -4,16 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AuthenticatedUser } from '../Auth/Login';
 import AppHeader, { type AdminRoute } from './TopHeader';
 import BottomNavigation, { type MainTabRoute } from './Bottombar';
-import type { TodayOrder } from './NotificationDropdown';
 
 type AdminLayoutProps = {
   user: AuthenticatedUser;
   currentRoute?: AdminRoute;
   route?: AdminRoute;
   children: ReactNode;
-  onNavigate: (route: AdminRoute, order?: TodayOrder) => void;
+  onNavigate: (route: AdminRoute) => void;
   onLogout: () => void;
-  ordersEndpoint?: string;
 };
 
 function AdminLayout({
@@ -23,7 +21,6 @@ function AdminLayout({
   children,
   onNavigate,
   onLogout,
-  ordersEndpoint,
 }: AdminLayoutProps) {
   const activeRoute = route || currentRoute;
   const showBottomNav = activeRoute ? isMainTab(activeRoute) : false;
@@ -36,7 +33,6 @@ function AdminLayout({
         currentRoute={activeRoute}
         onNavigate={onNavigate}
         onLogout={onLogout}
-        ordersEndpoint={ordersEndpoint}
       />
       <SafeAreaView
         className="flex-1 bg-background"

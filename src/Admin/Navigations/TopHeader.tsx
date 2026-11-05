@@ -1,9 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { AuthenticatedUser } from '../Auth/Login';
 import {
-  BellIcon,
   BillingIcon,
   ChevronRightIcon,
   CloseIcon,
@@ -12,20 +11,14 @@ import {
   LogoutIcon,
   MenuIcon,
   MoreIcon,
-  OrdersIcon,
   ProductsIcon,
   ProfileIcon,
 } from './NavIcons';
-import NotificationDropdown, {
-  type TodayOrder,
-} from './NotificationDropdown';
 import ProfileDropdown from './ProfileDropdown';
 
 export type AdminRoute =
   | 'home'
   | 'profile'
-  | 'orders'
-  | 'orderDetails'
   | 'loans'
   | 'billing'
   | 'products'
@@ -35,9 +28,8 @@ type AppHeaderProps = {
   user: AuthenticatedUser;
   currentRoute?: AdminRoute;
   route?: AdminRoute;
-  onNavigate: (route: AdminRoute, order?: TodayOrder) => void;
+  onNavigate: (route: AdminRoute) => void;
   onLogout: () => void;
-  ordersEndpoint?: string;
 };
 
 function AppHeader({
@@ -46,37 +38,23 @@ function AppHeader({
   route,
   onNavigate,
   onLogout,
-  ordersEndpoint,
 }: AppHeaderProps) {
   const activeRoute = route || currentRoute || 'home';
   const insets = useSafeAreaInsets();
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [isProfileVisible, setIsProfileVisible] = useState(false);
-  const [areNotificationsVisible, setAreNotificationsVisible] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
 
   const displayName = user.name?.trim() || 'Admin';
   const initial = (displayName.charAt(0) || 'A').toUpperCase();
 
-  const updateUnreadCount = useCallback((count: number) => {
-    setUnreadCount(count);
-  }, []);
-
   const navigate = (newRoute: AdminRoute) => {
     setIsDrawerVisible(false);
     setIsProfileVisible(false);
-    setAreNotificationsVisible(false);
     onNavigate(newRoute);
   };
 
   const openProfile = () => {
-    setAreNotificationsVisible(false);
     setIsProfileVisible(true);
-  };
-
-  const openNotifications = () => {
-    setIsProfileVisible(false);
-    setAreNotificationsVisible(true);
   };
 
   return (
@@ -126,25 +104,8 @@ function AppHeader({
           </Pressable>
         </View>
 
-        {/* Right: Notifications & User Avatar */}
+        {/* Right: User Avatar */}
         <View className="flex-row items-center">
-          {/* Notifications Button */}
-          <Pressable
-            className="relative mr-2 h-10 w-10 items-center justify-center rounded-xl border border-emerald-700/60 bg-emerald-900/40 active:bg-emerald-900/70"
-            onPress={openNotifications}
-            accessibilityRole="button"
-            accessibilityLabel="Today's order notifications"
-          >
-            <BellIcon color="#FFFFFF" clapperColor="#F5C45E" />
-            {unreadCount > 0 ? (
-              <View className="absolute -right-1 -top-1 h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-primary bg-danger px-1">
-                <Text className="text-[9px] font-bold text-white">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </Text>
-              </View>
-            ) : null}
-          </Pressable>
-
           {/* User Profile Avatar */}
           <Pressable
             className="relative h-10 w-10 items-center justify-center rounded-xl border-2 border-accent-light bg-primary-dark shadow-sm active:opacity-90"
@@ -248,12 +209,6 @@ function AppHeader({
                 onPress={() => navigate('home')}
               />
               <DrawerItem
-                label="Orders"
-                icon={<OrdersIcon color={activeRoute === 'orders' || activeRoute === 'orderDetails' ? '#004D40' : '#64748B'} size={18} />}
-                isActive={activeRoute === 'orders' || activeRoute === 'orderDetails'}
-                onPress={() => navigate('orders')}
-              />
-              <DrawerItem
                 label="Products"
                 icon={<ProductsIcon color={activeRoute === 'products' ? '#004D40' : '#64748B'} size={18} />}
                 isActive={activeRoute === 'products'}
@@ -333,18 +288,6 @@ function AppHeader({
         }}
       />
 
-      {/* Notifications Dropdown */}
-      <NotificationDropdown
-        visible={areNotificationsVisible}
-        ordersEndpoint={ordersEndpoint}
-        onClose={() => setAreNotificationsVisible(false)}
-        onViewAllOrders={() => navigate('orders')}
-        onUnreadCountChange={updateUnreadCount}
-        onSelectOrder={order => {
-          setAreNotificationsVisible(false);
-          onNavigate('orderDetails', order);
-        }}
-      />
     </>
   );
 }
