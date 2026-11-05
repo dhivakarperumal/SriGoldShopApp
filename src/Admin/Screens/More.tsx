@@ -63,6 +63,44 @@ function More({ onNavigate }: MoreProps) {
           </View>
         </Pressable>
 
+        <Pressable
+          className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"
+          onPress={() => onNavigate('dailyGoldRates')}
+          accessibilityRole="button"
+          accessibilityLabel="Show today's gold and precious metal rates"
+        >
+          <View className="flex-row items-center flex-1 pr-3">
+            <View className="mr-3.5 h-12 w-12 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50">
+              <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M12 2v20m5-16H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                  stroke="#004D40"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-bold text-slate-900">Daily Gold Rates</Text>
+              <Text className="mt-1 text-xs leading-4 text-slate-500">
+                View today’s Gold, Silver, Platinum and Diamond rates.
+              </Text>
+            </View>
+          </View>
+          <View className="h-8 w-8 items-center justify-center rounded-full bg-slate-100/70">
+            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="m9 18 6-6-6-6"
+                stroke="#64748B"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </View>
+        </Pressable>
+
         {/* Card: Metal Types */}
         <Pressable
           className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"
