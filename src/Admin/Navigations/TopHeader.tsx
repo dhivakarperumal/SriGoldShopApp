@@ -28,6 +28,7 @@ export type AdminRoute =
   | 'products'
   | 'categories'
   | 'addCategory'
+  | 'editCategory'
   | 'metalTypes'
   | 'more';
 

@@ -15,7 +15,7 @@ import Profile from './src/Admin/Screens/Profile';
 import Loans from './src/Admin/Screens/Loans';
 import Billing from './src/Admin/Screens/Billing';
 import Products from './src/Admin/Screens/Products';
-import CategoriesAll from './src/Admin/Categories/CategoriesAll';
+import CategoriesAll, { type Category } from './src/Admin/Categories/CategoriesAll';
 import AddCategories from './src/Admin/Categories/Addcategories';
 import MetalType from './src/Admin/Categories/MetalType';
 import More from './src/Admin/Screens/More';
@@ -28,6 +28,7 @@ function App() {
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [adminRoute, setAdminRoute] = useState<AdminRoute>('home');
   const [newCategoryId, setNewCategoryId] = useState('CAT001');
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const isLoggingOut = useRef(false);
 
   useEffect(() => {
@@ -146,8 +147,13 @@ function App() {
                 <CategoriesAll
                   onBack={() => navigateAdmin('products')}
                   onAddCategory={categoryId => {
+                    setEditingCategory(null);
                     setNewCategoryId(categoryId);
                     navigateAdmin('addCategory');
+                  }}
+                  onEditCategory={category => {
+                    setEditingCategory(category);
+                    navigateAdmin('editCategory');
                   }}
                 />
               )
@@ -159,6 +165,19 @@ function App() {
                     onSaved={() => navigateAdmin('categories')}
                   />
                 )
+                : adminRoute === 'editCategory' && editingCategory
+                  ? (
+                    <AddCategories
+                      key={editingCategory.catId}
+                      categoryId={editingCategory.catId}
+                      category={editingCategory}
+                      onCancel={() => navigateAdmin('categories')}
+                      onSaved={() => {
+                        setEditingCategory(null);
+                        navigateAdmin('categories');
+                      }}
+                    />
+                  )
               : adminRoute === 'metalTypes'
                 ? <MetalType onBack={() => navigateAdmin('more')} />
                 : adminRoute === 'more'

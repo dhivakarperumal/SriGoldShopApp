@@ -12,10 +12,11 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
 import { getProductImageUrl } from '../../utils/productImage';
 
-type Category = {
+export type Category = {
   catId: string;
   name: string;
   description?: string;
@@ -28,6 +29,7 @@ type Category = {
 type CategoriesAllProps = {
   onBack?: () => void;
   onAddCategory: (categoryId: string) => void;
+  onEditCategory: (category: Category) => void;
 };
 
 const getErrorMessage = (error: unknown, fallback: string): string =>
@@ -59,7 +61,7 @@ function categoryImage(category: Category): string | undefined {
   return image ? getProductImageUrl({ image }) : undefined;
 }
 
-function CategoriesAll({ onBack, onAddCategory }: CategoriesAllProps) {
+function CategoriesAll({ onBack, onAddCategory, onEditCategory }: CategoriesAllProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -265,25 +267,28 @@ function CategoriesAll({ onBack, onAddCategory }: CategoriesAllProps) {
                         </Text>
                       </View>
                     </View>
-                    <Text className="mt-2 text-xs leading-5 text-slate-600">
-                      {category.description || 'No description'}
-                    </Text>
                     {subcategories.length ? (
-                      <Text className="mt-2 text-[11px] text-slate-500" numberOfLines={2}>
+                      <Text className="mt-3 text-[11px] text-slate-500" numberOfLines={2}>
                         Subcategories: {subcategories.join(', ')}
                       </Text>
                     ) : null}
                     <View className="mt-3 flex-row items-center justify-between">
-                      <Text className="text-[11px] font-semibold text-slate-500">
-                        {category.totalProducts ?? 0} products
-                      </Text>
+                      <View className="flex-1" />
                       <Pressable
-                        className="rounded-lg px-2 py-1 active:bg-red-50"
+                        className="mr-2 h-9 w-9 items-center justify-center rounded-xl bg-amber-50 active:bg-amber-100"
+                        onPress={() => onEditCategory(category)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Edit ${category.name}`}
+                      >
+                        <CategoryActionIcon name="edit" color="#B45309" />
+                      </Pressable>
+                      <Pressable
+                        className="h-9 w-9 items-center justify-center rounded-xl bg-red-50 active:bg-red-100"
                         onPress={() => deleteCategory(category)}
                         accessibilityRole="button"
                         accessibilityLabel={`Delete ${category.name}`}
                       >
-                        <Text className="text-xs font-bold text-red-600">Delete</Text>
+                        <CategoryActionIcon name="delete" color="#DC2626" />
                       </Pressable>
                     </View>
                   </View>
@@ -336,6 +341,34 @@ function CategoriesAll({ onBack, onAddCategory }: CategoriesAllProps) {
         </View>
       </View>
     </View>
+  );
+}
+
+function CategoryActionIcon({
+  name,
+  color,
+}: {
+  name: 'edit' | 'delete';
+  color: string;
+}) {
+  const paths =
+    name === 'edit'
+      ? ['M12 20h9', 'M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z']
+      : ['M3 6h18', 'M8 6V4h8v2', 'm19 6-1 14H6L5 6', 'M10 11v5', 'M14 11v5'];
+
+  return (
+    <Svg width={17} height={17} viewBox="0 0 24 24" fill="none">
+      {paths.map(path => (
+        <Path
+          key={path}
+          d={path}
+          stroke={color}
+          strokeWidth={1.9}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ))}
+    </Svg>
   );
 }
 
