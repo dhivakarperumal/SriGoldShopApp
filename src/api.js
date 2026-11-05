@@ -7,7 +7,7 @@ export const API_BASE_URL = "https://srigold.qtechx.com/api";
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: { "Content-Type": "application/json" },
-  timeout: 8000,
+  timeout: 30000,
 });
 
 const MAX_RETRIES = 1;
@@ -56,9 +56,16 @@ api.interceptors.response.use(
       });
     }
 
+    if (error.code === "ECONNABORTED") {
+      return Promise.reject({
+        status: "timeout",
+        message: "The server took too long to respond. Please try again.",
+      });
+    }
+
     return Promise.reject({
       status: "network_error",
-      message: `Network connection failed. Check that ${API_BASE_URL} is reachable.`,
+      message: `Cannot connect to the server at ${API_BASE_URL}. Check your internet connection and try again.`,
     });
   },
 );
