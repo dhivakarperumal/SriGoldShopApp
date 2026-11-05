@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Animated,
   ActivityIndicator,
   Alert,
   Image,
@@ -79,7 +80,6 @@ function Products() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState('');
-  const [isRefreshingPrices, setIsRefreshingPrices] = useState(false);
   const [stockProduct, setStockProduct] = useState<Product | null>(null);
   const [newStock, setNewStock] = useState('');
   const [isUpdatingStock, setIsUpdatingStock] = useState(false);
@@ -88,6 +88,27 @@ function Products() {
   const [newProductPrice, setNewProductPrice] = useState('');
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [refreshVersion, setRefreshVersion] = useState(0);
+  const [isFabMenuOpen, setIsFabMenuOpen] = useState(false);
+  const addButtonPulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const pulseAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(addButtonPulse, {
+          toValue: 1,
+          duration: 1100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(addButtonPulse, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    pulseAnimation.start();
+    return () => pulseAnimation.stop();
+  }, [addButtonPulse]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -276,42 +297,11 @@ function Products() {
     }
   };
 
-  const refreshPrices = () => {
-    Alert.alert(
-      'Refresh product prices?',
-      'Recalculate product prices using the active daily metal rates?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Refresh',
-          onPress: async () => {
-            setIsRefreshingPrices(true);
-            try {
-              const { data } = await api.post('/products/recalculate-prices', {
-                reason: 'Manual product price refresh',
-              });
-              setRefreshVersion(version => version + 1);
-              Alert.alert(
-                'Prices refreshed',
-                `${getNumber(data?.updated)} product${getNumber(data?.updated) === 1 ? '' : 's'} updated.`,
-              );
-            } catch (error) {
-              console.error('Could not refresh product prices:', error);
-              Alert.alert('Price refresh failed', getErrorMessage(error, 'Could not refresh prices.'));
-            } finally {
-              setIsRefreshingPrices(false);
-            }
-          },
-        },
-      ],
-    );
-  };
-
   return (
     <View className="flex-1 bg-background">
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-4 pb-6 pt-4"
+        contentContainerClassName="px-4 pb-24 pt-4"
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
@@ -326,25 +316,6 @@ function Products() {
           <View className="flex-1 pr-3">
             <Text className="text-xl font-bold text-primary-dark">Products</Text>
             <Text className="mt-1 text-xs text-muted">Inventory and stock management</Text>
-          </View>
-          <View className="flex-row items-center gap-2">
-            <Pressable
-              onPress={refreshPrices}
-              disabled={isRefreshingPrices}
-              className="h-11 w-11 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 active:bg-primary/20"
-              accessibilityRole="button"
-              accessibilityLabel="Refresh product prices"
-            >
-              <ProductIcon name="refresh" color="#004D40" />
-            </Pressable>
-            <Pressable
-              onPress={() => setIsAddModalVisible(true)}
-              className="flex-row items-center rounded-xl bg-primary px-3.5 py-3"
-              accessibilityRole="button"
-            >
-              <ProductIcon name="plus" color="#FFFFFF" />
-              <Text className="ml-1.5 text-xs font-bold text-white">Add product</Text>
-            </Pressable>
           </View>
         </View>
 
@@ -368,49 +339,49 @@ function Products() {
           />
         </View>
 
-        <Pressable
-          onPress={() => setIsCategoryPickerVisible(true)}
-          className="mb-3 min-h-12 flex-row items-center justify-between rounded-xl border border-border bg-surface px-3.5"
-          accessibilityRole="button"
-          accessibilityLabel={`Category filter: ${selectedCategory || 'All categories'}`}
-        >
-          <View>
-            <Text className="text-[10px] font-medium text-muted">Category</Text>
-            <Text className="mt-0.5 text-sm font-semibold text-slate-800">
-              {selectedCategory || 'All categories'}
-            </Text>
-          </View>
-          <ProductIcon name="chevron" color="#64748B" />
-        </Pressable>
+        <View className="mb-4 flex-row gap-2">
+          <Pressable
+            onPress={() => setIsCategoryPickerVisible(true)}
+            className="min-h-12 min-w-0 flex-1 flex-row items-center justify-between rounded-xl border border-border bg-surface px-2.5"
+            accessibilityRole="button"
+            accessibilityLabel={`Category filter: ${selectedCategory || 'All categories'}`}
+          >
+            <View className="min-w-0 flex-1">
+              <Text className="mt-0.5 text-xs font-semibold text-slate-800" numberOfLines={1}>
+                {selectedCategory || 'All categories'}
+              </Text>
+            </View>
+            <ProductIcon name="chevron" color="#64748B" size={15} />
+          </Pressable>
 
-        <Pressable
-          onPress={() => setIsStockPickerVisible(true)}
-          className="mb-4 min-h-12 flex-row items-center justify-between rounded-xl border border-border bg-surface px-3.5"
-          accessibilityRole="button"
-          accessibilityLabel={`Stock filter: ${
-            stockFilter === 'in-stock'
-              ? 'In stock'
-              : stockFilter === 'low-stock'
-                ? 'Low stock'
-                : stockFilter === 'out-of-stock'
-                  ? 'Out of stock'
-                  : 'All stock'
-          }`}
-        >
-          <View>
-            <Text className="text-[10px] font-medium text-muted">Stock status</Text>
-            <Text className="mt-0.5 text-sm font-semibold text-slate-800">
-              {stockFilter === 'in-stock'
+          <Pressable
+            onPress={() => setIsStockPickerVisible(true)}
+            className="min-h-12 min-w-0 flex-1 flex-row items-center justify-between rounded-xl border border-border bg-surface px-2.5"
+            accessibilityRole="button"
+            accessibilityLabel={`Stock filter: ${
+              stockFilter === 'in-stock'
                 ? 'In stock'
                 : stockFilter === 'low-stock'
                   ? 'Low stock'
                   : stockFilter === 'out-of-stock'
                     ? 'Out of stock'
-                    : 'All stock'}
-            </Text>
-          </View>
-          <ProductIcon name="chevron" color="#64748B" />
-        </Pressable>
+                    : 'All stock'
+            }`}
+          >
+            <View className="min-w-0 flex-1">
+              <Text className="mt-0.5 text-xs font-semibold text-slate-800" numberOfLines={1}>
+                {stockFilter === 'in-stock'
+                  ? 'In stock'
+                  : stockFilter === 'low-stock'
+                    ? 'Low stock'
+                    : stockFilter === 'out-of-stock'
+                      ? 'Out of stock'
+                      : 'All stock'}
+              </Text>
+            </View>
+            <ProductIcon name="chevron" color="#64748B" size={15} />
+          </Pressable>
+        </View>
 
         {loadError ? (
           <View className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-4">
@@ -458,6 +429,74 @@ function Products() {
         )}
 
       </ScrollView>
+
+      <View className="absolute bottom-4 right-5 items-end">
+        {isFabMenuOpen ? (
+          <View className="mb-3 gap-2">
+            <FabMenuAction
+              label="Add Metals"
+              icon="gem"
+              onPress={() => {
+                setIsFabMenuOpen(false);
+                Alert.alert(
+                  'Add Metals',
+                  'Metal creation is not connected in the mobile app yet.',
+                );
+              }}
+            />
+            <FabMenuAction
+              label="Add Category"
+              icon="layers"
+              onPress={() => {
+                setIsFabMenuOpen(false);
+                Alert.alert(
+                  'Add Category',
+                  'Category creation is not connected in the mobile app yet.',
+                );
+              }}
+            />
+            <FabMenuAction
+              label="Add Product"
+              icon="box"
+              onPress={() => {
+                setIsFabMenuOpen(false);
+                setIsAddModalVisible(true);
+              }}
+            />
+          </View>
+        ) : null}
+        <View className="h-14 w-14 items-center justify-center">
+          {!isFabMenuOpen ? (
+            <Animated.View
+              pointerEvents="none"
+              className="absolute h-14 w-14 rounded-full bg-accent"
+              style={{
+                opacity: addButtonPulse.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.35, 0],
+                }),
+                transform: [
+                  {
+                    scale: addButtonPulse.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 1.22],
+                    }),
+                  },
+                ],
+              }}
+            />
+          ) : null}
+          <Pressable
+            onPress={() => setIsFabMenuOpen(open => !open)}
+            className="h-14 w-14 items-center justify-center rounded-full border-2 border-accent-light bg-primary shadow-lg"
+            accessibilityRole="button"
+            accessibilityLabel={isFabMenuOpen ? 'Close add menu' : 'Open add menu'}
+            accessibilityState={{ expanded: isFabMenuOpen }}
+          >
+            <ProductIcon name={isFabMenuOpen ? 'close' : 'plus'} color="#FFFFFF" size={24} />
+          </Pressable>
+        </View>
+      </View>
 
       <Modal
         visible={isCategoryPickerVisible}
@@ -612,6 +651,29 @@ function Products() {
         </ModalBackdrop>
       </Modal>
     </View>
+  );
+}
+
+function FabMenuAction({
+  label,
+  icon,
+  onPress,
+}: {
+  label: string;
+  icon: 'box' | 'layers' | 'gem';
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="flex-row items-center self-end rounded-full border border-border bg-surface py-2 pl-3 pr-2 shadow-md"
+      accessibilityRole="button"
+    >
+      <Text className="mr-3 text-xs font-bold text-slate-800">{label}</Text>
+      <View className="h-9 w-9 items-center justify-center rounded-full bg-primary">
+        <ProductIcon name={icon} color="#FFFFFF" size={17} />
+      </View>
+    </Pressable>
   );
 }
 
@@ -786,7 +848,10 @@ type ProductIconName =
   | 'edit'
   | 'trash'
   | 'chevron'
-  | 'check';
+  | 'check'
+  | 'layers'
+  | 'gem'
+  | 'close';
 
 function ProductIcon({
   name,
@@ -806,6 +871,9 @@ function ProductIcon({
     trash: ['M3 6h18', 'M8 6V4h8v2', 'm19 6-1 14H6L5 6', 'M10 11v5', 'M14 11v5'],
     chevron: ['m9 18 6-6-6-6'],
     check: ['M20 6 9 17l-5-5'],
+    layers: ['m12 2 9 5-9 5-9-5 9-5Z', 'm3 12 9 5 9-5', 'm3 17 9 5 9-5'],
+    gem: ['m12 3 8 6-8 12L4 9l8-6Z', 'M4 9h16', 'm9 9 3 12 3-12', 'm8 3 4 6 4-6'],
+    close: ['M18 6 6 18', 'm6 6 12 12'],
   };
 
   return (
