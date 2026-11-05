@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
   Alert,
@@ -6,10 +7,17 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  StatusBar,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import {
+  errorCodes,
+  isErrorWithCode,
+  pick,
+  types,
+} from '@react-native-documents/picker';
 import { launchImageLibrary } from 'react-native-image-picker';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
@@ -79,6 +87,10 @@ type Draft = {
   new_arrival: boolean;
   best_seller: boolean;
   images: string[];
+  size_guide_chart: string;
+  video: string;
+  certificate: string;
+  rating: string;
 };
 
 type SelectableField =
@@ -142,6 +154,10 @@ const EMPTY: Draft = {
   new_arrival: false,
   best_seller: false,
   images: [],
+  size_guide_chart: '',
+  video: '',
+  certificate: '',
+  rating: '0',
 };
 
 const GOLD_PURITY: Record<string, string> = {
@@ -235,6 +251,9 @@ function AddProducts({ onCancel, onSaved }: Props) {
   const [isLoadingRates, setIsLoadingRates] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [sizeGuideFileName, setSizeGuideFileName] = useState('');
+  const [videoFileName, setVideoFileName] = useState('');
+  const [certificateFileName, setCertificateFileName] = useState('');
   const [makingChargeTypeChanged, setMakingChargeTypeChanged] = useState(false);
   const [picker, setPicker] = useState<{ label: string; field: SelectableField; options: string[] } | null>(null);
 
@@ -431,6 +450,205 @@ function AddProducts({ onCancel, onSaved }: Props) {
     }
   };
 
+  const uploadSizeGuide = async (
+    file: { uri: string; name: string; type: string; size?: number | null },
+  ) => {
+    if (file.size != null && file.size > 5 * 1024 * 1024) {
+      Alert.alert('File too large', 'The size guide must be 5 MB or smaller.');
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const body = new FormData();
+      body.append('size_guide_chart', {
+        uri: file.uri,
+        name: file.name,
+        type: file.type,
+      } as unknown as Blob);
+      const { data } = await api.post('/products/upload-media', body, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (typeof data?.size_guide_chart !== 'string' || !data.size_guide_chart) {
+        throw new Error('The server did not return the uploaded size guide path.');
+      }
+      setForm(current => ({ ...current, size_guide_chart: data.size_guide_chart }));
+      setSizeGuideFileName(file.name);
+    } catch (error) {
+      console.error('Size guide upload failed:', error);
+      Alert.alert('Upload failed', getErrorMessage(error, 'Could not upload the size guide.'));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const uploadSingleMedia = async (
+    field: 'video' | 'certificate',
+    file: { uri: string; name: string; type: string; size?: number | null },
+    maxBytes: number,
+  ) => {
+    if (file.size != null && file.size > maxBytes) {
+      Alert.alert(
+        'File too large',
+        `${field === 'video' ? 'Video' : 'Certificate'} must be ${field === 'video' ? '25' : '5'} MB or smaller.`,
+      );
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const body = new FormData();
+      body.append(field, {
+        uri: file.uri,
+        name: file.name,
+        type: file.type,
+      } as unknown as Blob);
+      const { data } = await api.post('/products/upload-media', body, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (typeof data?.[field] !== 'string' || !data[field]) {
+        throw new Error(`The server did not return the uploaded ${field} path.`);
+      }
+      setForm(current => ({ ...current, [field]: data[field] }));
+      if (field === 'video') setVideoFileName(file.name);
+      else setCertificateFileName(file.name);
+    } catch (error) {
+      console.error(`Product ${field} upload failed:`, error);
+      Alert.alert('Upload failed', getErrorMessage(error, `Could not upload the ${field}.`));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const selectProductVideo = async () => {
+    try {
+      const result = await launchImageLibrary({
+        mediaType: 'video',
+        selectionLimit: 1,
+      });
+      if (result.didCancel) return;
+      if (result.errorCode) {
+        Alert.alert('Video selection failed', result.errorMessage || 'Could not select a video.');
+        return;
+      }
+      const asset = result.assets?.find(item => Boolean(item.uri));
+      if (!asset?.uri) return;
+      if (asset.type !== 'video/mp4') {
+        Alert.alert('Unsupported video', 'Choose an MP4 video.');
+        return;
+      }
+      await uploadSingleMedia('video', {
+        uri: asset.uri,
+        name: asset.fileName || `product-video-${Date.now()}.mp4`,
+        type: 'video/mp4',
+        size: asset.fileSize,
+      }, 25 * 1024 * 1024);
+    } catch (error) {
+      console.error('Product video selection failed:', error);
+      Alert.alert('Video selection failed', getErrorMessage(error, 'Could not select a video.'));
+    }
+  };
+
+  const selectCertificateImage = async () => {
+    try {
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        selectionLimit: 1,
+        quality: 0.8,
+      });
+      if (result.didCancel) return;
+      if (result.errorCode) {
+        Alert.alert('Image selection failed', result.errorMessage || 'Could not select an image.');
+        return;
+      }
+      const asset = result.assets?.find(item => Boolean(item.uri));
+      if (!asset?.uri) return;
+      if (asset.type !== 'image/png' && asset.type !== 'image/jpeg') {
+        Alert.alert('Unsupported image', 'Choose a PNG or JPG certificate.');
+        return;
+      }
+      await uploadSingleMedia('certificate', {
+        uri: asset.uri,
+        name: asset.fileName || `certificate-${Date.now()}.${asset.type === 'image/png' ? 'png' : 'jpg'}`,
+        type: asset.type,
+        size: asset.fileSize,
+      }, 5 * 1024 * 1024);
+    } catch (error) {
+      console.error('Certificate image selection failed:', error);
+      Alert.alert('Image selection failed', getErrorMessage(error, 'Could not select an image.'));
+    }
+  };
+
+  const selectCertificatePdf = async () => {
+    try {
+      const [file] = await pick({ type: [types.pdf], allowMultiSelection: false });
+      if (!file.hasRequestedType || (file.type && file.type !== 'application/pdf')) {
+        Alert.alert('Unsupported file', 'Choose a PDF certificate.');
+        return;
+      }
+      await uploadSingleMedia('certificate', {
+        uri: file.uri,
+        name: file.name || `certificate-${Date.now()}.pdf`,
+        type: 'application/pdf',
+        size: file.size,
+      }, 5 * 1024 * 1024);
+    } catch (error) {
+      if (isErrorWithCode(error) && error.code === errorCodes.OPERATION_CANCELED) return;
+      console.error('Certificate PDF selection failed:', error);
+      Alert.alert('File selection failed', getErrorMessage(error, 'Could not select a PDF.'));
+    }
+  };
+
+  const selectSizeGuideImage = async () => {
+    try {
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        selectionLimit: 1,
+        quality: 0.8,
+      });
+      if (result.didCancel) return;
+      if (result.errorCode) {
+        Alert.alert('Image selection failed', result.errorMessage || 'Could not select an image.');
+        return;
+      }
+      const asset = result.assets?.find(item => Boolean(item.uri));
+      if (!asset?.uri) return;
+      if (asset.type !== 'image/png' && asset.type !== 'image/jpeg') {
+        Alert.alert('Unsupported image', 'Choose a PNG or JPG size guide image.');
+        return;
+      }
+      await uploadSizeGuide({
+        uri: asset.uri,
+        name: asset.fileName || `size-guide-${Date.now()}.${asset.type === 'image/png' ? 'png' : 'jpg'}`,
+        type: asset.type,
+        size: asset.fileSize,
+      });
+    } catch (error) {
+      console.error('Size guide image selection failed:', error);
+      Alert.alert('Image selection failed', getErrorMessage(error, 'Could not select an image.'));
+    }
+  };
+
+  const selectSizeGuidePdf = async () => {
+    try {
+      const [file] = await pick({ type: [types.pdf], allowMultiSelection: false });
+      if (!file.hasRequestedType || (file.type && file.type !== 'application/pdf')) {
+        Alert.alert('Unsupported file', 'Choose a PDF size guide.');
+        return;
+      }
+      await uploadSizeGuide({
+        uri: file.uri,
+        name: file.name || `size-guide-${Date.now()}.pdf`,
+        type: 'application/pdf',
+        size: file.size,
+      });
+    } catch (error) {
+      if (isErrorWithCode(error) && error.code === errorCodes.OPERATION_CANCELED) return;
+      console.error('Size guide PDF selection failed:', error);
+      Alert.alert('File selection failed', getErrorMessage(error, 'Could not select a PDF.'));
+    }
+  };
+
   const save = async () => {
     if (!form.name.trim() || !form.product_code.trim() || !form.category) {
       Alert.alert('Required details missing', 'Product name, SKU, and category are required.');
@@ -438,6 +656,11 @@ function AddProducts({ onCancel, onSaved }: Props) {
     }
     if (!isDiamond && amount(form.stone_weight) > amount(form.gross_weight)) {
       Alert.alert('Invalid weight', 'Stone weight cannot exceed gross weight.');
+      return;
+    }
+    const rating = amount(form.rating);
+    if (rating !== 0 && (rating < 1 || rating > 5)) {
+      Alert.alert('Invalid rating', 'Average rating must be between 1 and 5, or 0 if unrated.');
       return;
     }
     const stock = Math.max(0, Math.floor(amount(form.total_stock)));
@@ -467,6 +690,7 @@ function AddProducts({ onCancel, onSaved }: Props) {
       gst_rate: amount(form.gst_rate),
       variants: [{ images: form.images }],
       highlights: form.highlights.split(/\r?\n/).map(value => value.trim()).filter(Boolean),
+      rating,
     };
     setIsSaving(true);
     try {
@@ -484,10 +708,27 @@ function AddProducts({ onCancel, onSaved }: Props) {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#004D40" />
-        <Text className="mt-3 text-sm text-muted">Preparing product form…</Text>
-      </View>
+      <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
+        <StatusBar barStyle="light-content" />
+        <View className="h-16 flex-row items-center border-b border-[#00382E] bg-primary px-4">
+          <Pressable
+            onPress={onCancel}
+            className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-emerald-700/60 bg-emerald-900/40 active:bg-emerald-900/70"
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <FormIcon name="back" color="#FFFFFF" />
+          </Pressable>
+          <View className="flex-1">
+            <Text className="text-base font-extrabold tracking-wide text-white">Add Product</Text>
+            <Text className="text-[10px] font-medium text-emerald-200">Sri Golds Jewellery</Text>
+          </View>
+        </View>
+        <View className="flex-1 items-center justify-center bg-background">
+          <ActivityIndicator size="large" color="#004D40" />
+          <Text className="mt-3 text-sm text-muted">Preparing product form…</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -495,17 +736,47 @@ function AddProducts({ onCancel, onSaved }: Props) {
     setPicker({ label, field, options });
 
   return (
-    <View className="flex-1 bg-background">
-      <ScrollView className="flex-1" contentContainerClassName="px-4 pb-8 pt-4" keyboardShouldPersistTaps="handled">
-        <View className="mb-5 flex-row items-center">
-          <Pressable onPress={onCancel} className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface" accessibilityRole="button">
-            <FormIcon name="back" color="#004D40" />
+    <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
+      <StatusBar barStyle="light-content" />
+      {/* Top Header */}
+      <View className="h-16 flex-row items-center justify-between border-b border-[#00382E] bg-primary px-4">
+        <View className="flex-1 flex-row items-center pr-3">
+          <Pressable
+            onPress={onCancel}
+            className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-emerald-700/60 bg-emerald-900/40 active:bg-emerald-900/70"
+            accessibilityRole="button"
+            accessibilityLabel="Back to products"
+          >
+            <FormIcon name="back" color="#FFFFFF" />
           </Pressable>
+
           <View className="flex-1">
-            <Text className="text-xl font-extrabold text-primary-dark">Add Product</Text>
-            <Text className="mt-0.5 text-xs text-muted">Product details, pricing, and inventory</Text>
+            <Text className="text-base font-extrabold tracking-wide text-white" numberOfLines={1}>
+              Add Product
+            </Text>
+            <Text className="text-[10px] font-medium text-emerald-200" numberOfLines={1}>
+              Sri Golds Jewellery
+            </Text>
           </View>
         </View>
+
+        <Pressable
+          onPress={save}
+          disabled={isSaving || isUploading}
+          className="h-10 w-10 items-center justify-center rounded-xl border border-accent/40 bg-accent/20 active:bg-accent/30"
+          accessibilityRole="button"
+          accessibilityLabel="Save product"
+        >
+          {isSaving ? (
+            <ActivityIndicator size="small" color="#F5C45E" />
+          ) : (
+            <FormIcon name="check" color="#F5C45E" />
+          )}
+        </Pressable>
+      </View>
+
+      <View className="flex-1 bg-background">
+        <ScrollView className="flex-1" contentContainerClassName="px-4 pb-12 pt-4" keyboardShouldPersistTaps="handled">
 
         {loadError ? (
           <View className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3">
@@ -611,7 +882,91 @@ function AddProducts({ onCancel, onSaved }: Props) {
           })}
         </FormSection>
 
-        <FormSection step="07" title="Inventory and publishing">
+        <FormSection step="07" title="Size guide chart">
+          <Text className="text-xs leading-5 text-muted">
+            Upload one size guide as a PNG/JPG image or PDF. Maximum file size: 5 MB.
+          </Text>
+          <View className="flex-row gap-2">
+            <Pressable onPress={selectSizeGuideImage} disabled={isUploading} className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button">
+              <FormIcon name="image" color="#004D40" />
+              <Text className="ml-2 text-center text-xs font-bold text-primary">Upload image</Text>
+            </Pressable>
+            <Pressable onPress={selectSizeGuidePdf} disabled={isUploading} className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button">
+              <FormIcon name="file" color="#004D40" />
+              <Text className="ml-2 text-center text-xs font-bold text-primary">Upload PDF</Text>
+            </Pressable>
+          </View>
+          {isUploading ? <ActivityIndicator color="#004D40" /> : null}
+          {form.size_guide_chart ? (
+            <View className="flex-row items-center rounded-xl border border-border bg-background p-3">
+              <Text className="flex-1 text-xs font-medium text-slate-700" numberOfLines={1}>
+                {sizeGuideFileName || 'Size guide uploaded'}
+              </Text>
+              <Pressable
+                onPress={() => {
+                  update('size_guide_chart', '');
+                  setSizeGuideFileName('');
+                }}
+                className="ml-2 h-9 w-9 items-center justify-center rounded-lg bg-rose-50"
+                accessibilityRole="button"
+                accessibilityLabel="Remove size guide"
+              >
+                <FormIcon name="close" color="#DC2626" />
+              </Pressable>
+            </View>
+          ) : null}
+        </FormSection>
+
+        <FormSection step="08" title="Product video">
+          <Text className="text-xs leading-5 text-muted">
+            Upload one MP4 video, up to 25 MB.
+          </Text>
+          <Pressable onPress={selectProductVideo} disabled={isUploading} className="min-h-12 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-4 py-3" accessibilityRole="button">
+            <FormIcon name="video" color="#004D40" />
+            <Text className="ml-2 text-sm font-bold text-primary">Choose MP4 video</Text>
+          </Pressable>
+          {form.video ? (
+            <View className="flex-row items-center rounded-xl border border-border bg-background p-3">
+              <Text className="flex-1 text-xs font-medium text-slate-700" numberOfLines={1}>
+                {videoFileName || 'Product video uploaded'}
+              </Text>
+              <Pressable onPress={() => { update('video', ''); setVideoFileName(''); }} className="ml-2 h-9 w-9 items-center justify-center rounded-lg bg-rose-50" accessibilityRole="button" accessibilityLabel="Remove product video">
+                <FormIcon name="close" color="#DC2626" />
+              </Pressable>
+            </View>
+          ) : null}
+          {isUploading ? <ActivityIndicator color="#004D40" /> : null}
+        </FormSection>
+
+        <FormSection step="09" title="Certificate">
+          <Text className="text-xs leading-5 text-muted">
+            Upload one certificate as a PNG/JPG image or PDF, up to 5 MB.
+          </Text>
+          <View className="flex-row gap-2">
+            <Pressable onPress={selectCertificateImage} disabled={isUploading} className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button">
+              <FormIcon name="image" color="#004D40" />
+              <Text className="ml-2 text-center text-xs font-bold text-primary">Upload image</Text>
+            </Pressable>
+            <Pressable onPress={selectCertificatePdf} disabled={isUploading} className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button">
+              <FormIcon name="file" color="#004D40" />
+              <Text className="ml-2 text-center text-xs font-bold text-primary">Upload PDF</Text>
+            </Pressable>
+          </View>
+          {form.certificate ? (
+            <View className="flex-row items-center rounded-xl border border-border bg-background p-3">
+              <Text className="flex-1 text-xs font-medium text-slate-700" numberOfLines={1}>
+                {certificateFileName || 'Certificate uploaded'}
+              </Text>
+              <Pressable onPress={() => { update('certificate', ''); setCertificateFileName(''); }} className="ml-2 h-9 w-9 items-center justify-center rounded-lg bg-rose-50" accessibilityRole="button" accessibilityLabel="Remove certificate">
+                <FormIcon name="close" color="#DC2626" />
+              </Pressable>
+            </View>
+          ) : null}
+          {isUploading ? <ActivityIndicator color="#004D40" /> : null}
+        </FormSection>
+
+        <FormSection step="10" title="Rating and publishing">
+          <Field label="Average rating (1–5; enter 0 if unrated)" value={form.rating} onChangeText={value => update('rating', value)} keyboardType="decimal-pad" placeholder="0.0" />
           <Field label="Stock quantity" value={form.total_stock} onChangeText={value => update('total_stock', value)} keyboardType="number-pad" placeholder="0" />
           <Field label="Warehouse / location" value={form.warehouse} onChangeText={value => update('warehouse', value)} placeholder="Main Shop" />
           <Selector label="Product status" value={form.status} onPress={() => openSelector('Product status', 'status', ['Active', 'Draft', 'Inactive'])} />
@@ -647,7 +1002,8 @@ function AddProducts({ onCancel, onSaved }: Props) {
           </View>
         </View>
       </Modal>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -732,10 +1088,12 @@ function PriceLine({ label, value, strong = false }: { label: string; value: str
   );
 }
 
-function FormIcon({ name, color }: { name: 'back' | 'image' | 'chevron' | 'check' | 'close'; color: string }) {
+function FormIcon({ name, color }: { name: 'back' | 'image' | 'file' | 'video' | 'chevron' | 'check' | 'close'; color: string }) {
   const iconPaths: Record<typeof name, string[]> = {
     back: ['m15 18-6-6 6-6', 'M20 12H9'],
     image: ['M4 4h16v16H4z', 'm4 16 5-5 4 4 3-3 4 4', 'M9 9h.01'],
+    file: ['M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z', 'M14 2v6h6', 'M8 13h8', 'M8 17h8'],
+    video: ['m22 8-6 4 6 4V8z', 'M2 6h14v12H2z'],
     chevron: ['m9 18 6-6-6-6'],
     check: ['M20 6 9 17l-5-5'],
     close: ['M18 6 6 18', 'm6 6 12 12'],

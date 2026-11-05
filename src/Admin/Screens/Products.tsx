@@ -302,17 +302,7 @@ function Products() {
     }
   };
 
-  if (isAddProductFormVisible) {
-    return (
-      <AddProducts
-        onCancel={() => setIsAddProductFormVisible(false)}
-        onSaved={() => {
-          setIsAddProductFormVisible(false);
-          setRefreshVersion(version => version + 1);
-        }}
-      />
-    );
-  }
+
 
   return (
     <View className="flex-1 bg-background">
@@ -329,7 +319,21 @@ function Products() {
           />
         }
       >
-     
+        <View className="mb-4 flex-row items-center justify-between">
+          <View className="flex-1 pr-3">
+            <Text className="text-xl font-bold text-primary-dark">Products</Text>
+            <Text className="mt-1 text-xs text-muted">Inventory and stock management</Text>
+          </View>
+          <Pressable
+            onPress={() => setIsAddProductFormVisible(true)}
+            className="flex-row items-center rounded-xl bg-primary px-3.5 py-2.5 active:bg-primary-dark"
+            accessibilityRole="button"
+            accessibilityLabel="Add product"
+          >
+            <ProductIcon name="plus" color="#FFFFFF" size={16} />
+            <Text className="ml-1.5 text-xs font-bold text-white">Add product</Text>
+          </Pressable>
+        </View>
 
         <View className="mb-2 flex-row flex-wrap justify-between">
           <StatCard
@@ -660,6 +664,20 @@ function Products() {
         </ModalBackdrop>
       </Modal>
 
+      <Modal
+        visible={isAddProductFormVisible}
+        animationType="slide"
+        onRequestClose={() => setIsAddProductFormVisible(false)}
+        statusBarTranslucent
+      >
+        <AddProducts
+          onCancel={() => setIsAddProductFormVisible(false)}
+          onSaved={() => {
+            setIsAddProductFormVisible(false);
+            setRefreshVersion(version => version + 1);
+          }}
+        />
+      </Modal>
     </View>
   );
 }
