@@ -27,7 +27,8 @@ function AdminLayout({
   const showAppHeader =
     activeRoute !== 'categories' &&
     activeRoute !== 'addCategory' &&
-    activeRoute !== 'editCategory';
+    activeRoute !== 'editCategory' &&
+    activeRoute !== 'metalTypes';
 
   return (
     <SafeAreaView className="flex-1 bg-primary" edges={['top']}>

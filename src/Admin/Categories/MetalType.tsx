@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Alert,
   Image,
   Modal,
@@ -64,6 +65,26 @@ function MetalType({ onBack }: { onBack: () => void }) {
   const [form, setForm] = useState<MetalFormData>(EMPTY_FORM);
   const [selectedImage, setSelectedImage] = useState<MetalImageSelection | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const addButtonPulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const pulseAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(addButtonPulse, {
+          toValue: 1,
+          duration: 1100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(addButtonPulse, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    pulseAnimation.start();
+    return () => pulseAnimation.stop();
+  }, [addButtonPulse]);
 
   const fetchMetals = useCallback(async (refresh = false) => {
     setLoadError('');
@@ -255,9 +276,29 @@ function MetalType({ onBack }: { onBack: () => void }) {
 
   return (
     <View className="flex-1 bg-background">
+      <View className="h-16 flex-row items-center justify-between border-b border-[#00382E] bg-primary px-4">
+        <View className="flex-1 flex-row items-center pr-3">
+          <Pressable
+            className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-emerald-700/60 bg-emerald-900/40 active:bg-emerald-900/70"
+            onPress={onBack}
+            accessibilityRole="button"
+            accessibilityLabel="Back to additional menu"
+          >
+            <Text className="text-xl font-bold text-white">‹</Text>
+          </Pressable>
+          <View className="flex-1">
+            <Text className="text-base font-extrabold tracking-wide text-white" numberOfLines={1}>
+              Metal Types
+            </Text>
+            <Text className="text-[10px] font-medium text-emerald-200" numberOfLines={1}>
+              Sri Golds Jewellery
+            </Text>
+          </View>
+        </View>
+      </View>
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-4 pb-8 pt-5"
+        contentContainerClassName="px-4 pb-24 pt-4"
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
@@ -267,30 +308,6 @@ function MetalType({ onBack }: { onBack: () => void }) {
           />
         }
       >
-        <View className="mb-5 flex-row items-center">
-          <Pressable
-            className="mr-3 rounded-xl bg-primary/10 px-3 py-2"
-            onPress={onBack}
-            accessibilityRole="button"
-            accessibilityLabel="Back to additional menu"
-          >
-            <Text className="text-xs font-bold text-primary">Back</Text>
-          </Pressable>
-          <View className="flex-1">
-            <Text className="text-2xl font-black text-slate-900">Metal Types</Text>
-            <Text className="mt-1 text-xs text-slate-500">
-              {metals.length} configured {metals.length === 1 ? 'metal' : 'metals'}
-            </Text>
-          </View>
-          <Pressable
-            className="rounded-xl bg-primary px-4 py-3 active:opacity-80"
-            onPress={openAddModal}
-            accessibilityRole="button"
-          >
-            <Text className="text-xs font-bold text-white">+ Add Metal</Text>
-          </Pressable>
-        </View>
-
         <View className="mb-4 flex-row gap-2">
           <StatCard label="Total" value={metals.length} />
           <StatCard label="Active" value={activeCount} />
@@ -449,6 +466,37 @@ function MetalType({ onBack }: { onBack: () => void }) {
           </View>
         )}
       </ScrollView>
+
+      <View className="absolute bottom-5 right-5 items-end">
+        <View className="h-14 w-14 items-center justify-center">
+          <Animated.View
+            pointerEvents="none"
+            className="absolute h-14 w-14 rounded-full bg-accent"
+            style={{
+              opacity: addButtonPulse.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.35, 0],
+              }),
+              transform: [
+                {
+                  scale: addButtonPulse.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [1, 1.22],
+                  }),
+                },
+              ],
+            }}
+          />
+          <Pressable
+            onPress={openAddModal}
+            className="h-14 w-14 items-center justify-center rounded-full border-2 border-accent-light bg-primary shadow-lg"
+            accessibilityRole="button"
+            accessibilityLabel="Add metal"
+          >
+            <Text className="text-2xl font-bold text-white">+</Text>
+          </Pressable>
+        </View>
+      </View>
 
       <Modal
         visible={isModalVisible}
