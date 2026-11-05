@@ -23,6 +23,7 @@ import AllGoldRate, {
 } from './src/Admin/DailyGoldRate/AllGoldRate';
 import AddGoldrate from './src/Admin/DailyGoldRate/AddGoldrate';
 import Customers from './src/Admin/MorePages/Customer';
+import Receipt from './src/Admin/MorePages/Receipt';
 import More from './src/Admin/Screens/More';
 import AdminLayout from './src/Admin/Navigations/AdminLayout';
 import type { AdminRoute } from './src/Admin/Navigations/TopHeader';
@@ -140,6 +141,7 @@ function App() {
           user={user}
           onUserUpdated={setUser}
           onLogout={confirmLogout}
+          onBack={() => navigateAdmin('home')}
         />
       )
       : adminRoute === 'loans'
@@ -219,6 +221,8 @@ function App() {
                       ? <More onNavigate={navigateAdmin} />
                       : adminRoute === 'customers'
                         ? <Customers onBack={() => navigateAdmin('more')} />
+                        : adminRoute === 'receipt'
+                          ? <Receipt onBack={() => navigateAdmin('more')} />
                       : <AdminHome user={user} onNavigate={navigateAdmin} />
     : null;
 

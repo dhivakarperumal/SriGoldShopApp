@@ -14,6 +14,7 @@ function More({ onNavigate }: MoreProps) {
         contentContainerClassName="px-4 pb-8 pt-2"
         showsVerticalScrollIndicator={false}
       >
+        {/* Card: Customers */}
         <Pressable
           className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"
           onPress={() => onNavigate('customers')}
@@ -52,7 +53,7 @@ function More({ onNavigate }: MoreProps) {
           </View>
         </Pressable>
 
-        {/* Card: Add Category / All Categories */}
+        {/* Card: All Categories */}
         <Pressable
           className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"
           onPress={() => onNavigate('categories')}
@@ -101,6 +102,7 @@ function More({ onNavigate }: MoreProps) {
           </View>
         </Pressable>
 
+        {/* Card: Daily Gold Rates */}
         <Pressable
           className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"
           onPress={() => onNavigate('dailyGoldRates')}
@@ -175,6 +177,58 @@ function More({ onNavigate }: MoreProps) {
               </View>
               <Text className="mt-1 text-xs leading-4 text-slate-500">
                 View all configured metals and their purity options.
+              </Text>
+            </View>
+          </View>
+
+          <View className="h-8 w-8 items-center justify-center rounded-full bg-slate-100/70">
+            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="m9 18 6-6-6-6"
+                stroke="#64748B"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </View>
+        </Pressable>
+
+        {/* Card: Receipt Settings */}
+        <Pressable
+          className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"
+          onPress={() => onNavigate('receipt')}
+          accessibilityRole="button"
+          accessibilityLabel="Configure receipt settings and print preview"
+        >
+          <View className="flex-row items-center flex-1 pr-3">
+            <View className="mr-3.5 h-12 w-12 items-center justify-center rounded-2xl border border-teal-100 bg-teal-50">
+              <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z"
+                  stroke="#004D40"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <Path
+                  d="M8 8h8M8 12h8M8 16h4"
+                  stroke="#D4A017"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                />
+              </Svg>
+            </View>
+
+            <View className="flex-1">
+              <View className="flex-row items-center gap-2">
+                <Text className="text-base font-bold text-slate-900">Receipt Settings</Text>
+                <View className="rounded-md bg-teal-50 border border-teal-100 px-2 py-0.5">
+                  <Text className="text-[10px] font-bold text-teal-800">Print</Text>
+                </View>
+              </View>
+              <Text className="mt-1 text-xs leading-4 text-slate-500">
+                Customize shop logo, address, GSTIN, and print layout for receipts.
               </Text>
             </View>
           </View>
