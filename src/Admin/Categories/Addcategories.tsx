@@ -207,7 +207,7 @@ function AddCategories({ categoryId, category, onCancel, onSaved }: Props) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
+    <View className="flex-1 bg-primary">
       <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView
         className="flex-1"
@@ -554,7 +554,7 @@ function AddCategories({ categoryId, category, onCancel, onSaved }: Props) {
           </View>
         </SafeAreaView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

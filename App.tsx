@@ -18,6 +18,12 @@ import Products from './src/Admin/Screens/Products';
 import CategoriesAll, { type Category } from './src/Admin/Categories/CategoriesAll';
 import AddCategories from './src/Admin/Categories/Addcategories';
 import MetalType from './src/Admin/Categories/MetalType';
+import AllGoldRate, {
+  type CurrentRateSet,
+} from './src/Admin/DailyGoldRate/AllGoldRate';
+import AddGoldrate from './src/Admin/DailyGoldRate/AddGoldrate';
+import Customers from './src/Admin/MorePages/Customer';
+import Receipt from './src/Admin/MorePages/Receipt';
 import More from './src/Admin/Screens/More';
 import AdminLayout from './src/Admin/Navigations/AdminLayout';
 import type { AdminRoute } from './src/Admin/Navigations/TopHeader';
@@ -29,6 +35,7 @@ function App() {
   const [adminRoute, setAdminRoute] = useState<AdminRoute>('home');
   const [newCategoryId, setNewCategoryId] = useState('CAT001');
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingGoldRateSet, setEditingGoldRateSet] = useState<CurrentRateSet | null>(null);
   const isLoggingOut = useRef(false);
 
   useEffect(() => {
@@ -134,6 +141,7 @@ function App() {
           user={user}
           onUserUpdated={setUser}
           onLogout={confirmLogout}
+          onBack={() => navigateAdmin('home')}
         />
       )
       : adminRoute === 'loans'
@@ -180,9 +188,42 @@ function App() {
                   )
               : adminRoute === 'metalTypes'
                 ? <MetalType onBack={() => navigateAdmin('more')} />
-                : adminRoute === 'more'
-                  ? <More onNavigate={navigateAdmin} />
-                  : <AdminHome user={user} onNavigate={navigateAdmin} />
+                : adminRoute === 'dailyGoldRates'
+                  ? (
+                    <AllGoldRate
+                      onBack={() => navigateAdmin('more')}
+                      onAddRate={() => {
+                        setEditingGoldRateSet(null);
+                        navigateAdmin('addGoldrate');
+                      }}
+                      onEditRate={rateSet => {
+                        setEditingGoldRateSet(rateSet);
+                        navigateAdmin('addGoldrate');
+                      }}
+                    />
+                  )
+                  : adminRoute === 'addGoldrate'
+                    ? (
+                      <AddGoldrate
+                        key={editingGoldRateSet?.updated_at ?? 'new-rate-set'}
+                        initialRateSet={editingGoldRateSet ?? undefined}
+                        onCancel={() => {
+                          setEditingGoldRateSet(null);
+                          navigateAdmin('dailyGoldRates');
+                        }}
+                        onSaved={() => {
+                          setEditingGoldRateSet(null);
+                          navigateAdmin('dailyGoldRates');
+                        }}
+                      />
+                    )
+                    : adminRoute === 'more'
+                      ? <More onNavigate={navigateAdmin} />
+                      : adminRoute === 'customers'
+                        ? <Customers onBack={() => navigateAdmin('more')} />
+                        : adminRoute === 'receipt'
+                          ? <Receipt onBack={() => navigateAdmin('more')} />
+                      : <AdminHome user={user} onNavigate={navigateAdmin} />
     : null;
 
   return (

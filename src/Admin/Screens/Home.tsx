@@ -24,6 +24,105 @@ type DashboardStat = {
 
 type DashboardRecord = Record<string, unknown>;
 
+const isDashboardRecord = (value: unknown): value is DashboardRecord =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const getProductRecords = (data: unknown): DashboardRecord[] | null => {
+  if (Array.isArray(data)) {
+    return data.filter(isDashboardRecord);
+  }
+  if (isDashboardRecord(data) && Array.isArray(data.products)) {
+    return data.products.filter(isDashboardRecord);
+  }
+  return null;
+};
+
+const getRecordProductId = (record: DashboardRecord): string | undefined => {
+  const value = [record.id, record.product_id, record.productId, record._id].find(
+    candidate => typeof candidate === 'string' || typeof candidate === 'number',
+  );
+  return value === undefined ? undefined : String(value);
+};
+
+const getMatchingProduct = (
+  topProduct: DashboardRecord,
+  products: DashboardRecord[],
+): DashboardRecord | undefined => {
+  const productId = getRecordProductId(topProduct);
+  if (productId) {
+    const match = products.find(product => getRecordProductId(product) === productId);
+    if (match) {
+      return match;
+    }
+  }
+
+  const name = getDisplayName(
+    topProduct,
+    ['name', 'product_name', 'productName', 'title'],
+    '',
+  )
+    .trim()
+    .toLowerCase();
+  return name
+    ? products.find(product =>
+        getDisplayName(product, ['name', 'product_name', 'productName', 'title'], '')
+          .trim()
+          .toLowerCase() === name,
+      )
+    : undefined;
+};
+
+const getMatchingLoanProduct = (
+  loan: DashboardRecord,
+  products: DashboardRecord[],
+): DashboardRecord | undefined => {
+  const jewellery = getDisplayName(
+    loan,
+    ['jewellery', 'jewelry', 'product_name', 'productName'],
+    '',
+  )
+    .split('(')[0]
+    .trim()
+    .toLowerCase();
+  if (!jewellery) {
+    return undefined;
+  }
+
+  return products.find(product => {
+    const name = getDisplayName(
+      product,
+      ['name', 'product_name', 'productName', 'title'],
+      '',
+    )
+      .trim()
+      .toLowerCase();
+    return name && (name === jewellery || jewellery.includes(name) || name.includes(jewellery));
+  });
+};
+
+const getLoanImageUrl = (
+  loan: DashboardRecord,
+  products: DashboardRecord[],
+): string | undefined => {
+  const directImage = getProductImageUrl(loan);
+  if (directImage) {
+    return directImage;
+  }
+
+  for (const key of ['product', 'jewellery', 'item', 'customer']) {
+    const nestedRecord = loan[key];
+    if (isDashboardRecord(nestedRecord)) {
+      const nestedImage = getProductImageUrl(nestedRecord);
+      if (nestedImage) {
+        return nestedImage;
+      }
+    }
+  }
+
+  const matchingProduct = getMatchingLoanProduct(loan, products);
+  return matchingProduct ? getProductImageUrl(matchingProduct) : undefined;
+};
+
 type DashboardResponse = {
   stats?: DashboardStat[];
   totalLoansCount?: number;
@@ -100,6 +199,7 @@ const getDisplayName = (record: DashboardRecord, keys: string[], fallback: strin
 
 function Home({ user, onNavigate }: HomeProps) {
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
+  const [products, setProducts] = useState<DashboardRecord[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<(typeof FILTERS)[number]['value']>('all');
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -131,11 +231,32 @@ function Home({ user, onNavigate }: HomeProps) {
     setIsLoading(true);
     setLoadError(false);
     api
+      .get('/products', {
+        params: { limit: 100, page: 1 },
+        signal: controller.signal,
+      })
+      .then(response => {
+        if (!isCurrentRequest) {
+          return;
+        }
+        const productRecords = getProductRecords(response.data);
+        if (productRecords) {
+          setProducts(productRecords);
+        } else {
+          console.error('Product API returned an invalid product list.');
+        }
+      })
+      .catch(error => {
+        if (!isCurrentRequest || error?.name === 'CanceledError') {
+          return;
+        }
+        console.error('Failed to load product images for dashboard:', error);
+      });
+
+    api
       .get('/dashboard', {
         params: {
           datePreset: selectedFilter,
-          startDate: '',
-          endDate: '',
         },
         signal: controller.signal,
       })
@@ -143,10 +264,11 @@ function Home({ user, onNavigate }: HomeProps) {
         if (!isCurrentRequest) {
           return;
         }
-        if (!response.data || !Array.isArray(response.data.stats)) {
+        const dashboardData = response.data as DashboardResponse;
+        if (!dashboardData || !Array.isArray(dashboardData.stats)) {
           throw new Error('Dashboard API returned no metrics');
         }
-        setDashboard(response.data as DashboardResponse);
+        setDashboard(dashboardData);
       })
       .catch(error => {
         if (!isCurrentRequest || error?.name === 'CanceledError') {
@@ -225,7 +347,7 @@ function Home({ user, onNavigate }: HomeProps) {
           <Text className="text-lg font-bold text-slate-900">Overview</Text>
           <Text className="mt-0.5 text-xs text-muted">Track your key numbers</Text>
         </View>
-        {isLoading && !dashboard ? (
+        {isLoading ? (
           <ActivityIndicator color="#004D40" accessibilityLabel="Loading dashboard" />
         ) : null}
       </View>
@@ -415,7 +537,7 @@ function Home({ user, onNavigate }: HomeProps) {
             {dashboard.recentLoans.slice(0, 4).map((loan, index) => {
               const customer = getDisplayName(
                 loan,
-                ['customer_name', 'customerName', 'name'],
+                ['customer_name', 'customerName', 'customer', 'name'],
                 'Customer',
               );
               const loanNumber = getDisplayName(
@@ -425,16 +547,13 @@ function Home({ user, onNavigate }: HomeProps) {
               );
               const status = getDisplayName(loan, ['status'], 'Processing');
               const amount = loan.amount ?? loan.loan_amount ?? loan.principal_amount;
+              const imageUrl = getLoanImageUrl(loan, products);
               return (
                 <View
                   key={`${loanNumber}-${index}`}
                   className="flex-row items-center border-b border-slate-100 py-3 last:border-b-0"
                 >
-                  <View className="mr-3 h-9 w-9 items-center justify-center rounded-full bg-emerald-50">
-                    <Text className="text-sm font-bold text-primary">
-                      {customer.slice(0, 1).toUpperCase()}
-                    </Text>
-                  </View>
+                  <LoanThumbnail imageUrl={imageUrl} customer={customer} />
                   <View className="min-w-0 flex-1">
                     <Text className="text-sm font-semibold text-slate-800" numberOfLines={1}>
                       {customer}
@@ -476,7 +595,10 @@ function Home({ user, onNavigate }: HomeProps) {
               );
               const quantity =
                 product.quantity ?? product.stock ?? product.stock_quantity;
-              const imageUrl = getProductImageUrl(product);
+              const matchingProduct = getMatchingProduct(product, products);
+              const imageUrl =
+                getProductImageUrl(product) ??
+                (matchingProduct ? getProductImageUrl(matchingProduct) : undefined);
               return (
                 <View
                   key={`${name}-${index}`}
@@ -535,6 +657,38 @@ function ProductThumbnail({ imageUrl }: { imageUrl?: string }) {
         />
       ) : (
         <DashboardIcon name="gem" color="#B7791F" size={20} />
+      )}
+    </View>
+  );
+}
+
+function LoanThumbnail({
+  imageUrl,
+  customer,
+}: {
+  imageUrl?: string;
+  customer: string;
+}) {
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setHasError(false);
+  }, [imageUrl]);
+
+  return (
+    <View className="mr-3 h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-emerald-50">
+      {imageUrl && !hasError ? (
+        <Image
+          source={{ uri: imageUrl }}
+          className="h-full w-full"
+          resizeMode="cover"
+          onError={() => setHasError(true)}
+          accessibilityLabel={`${customer} loan image`}
+        />
+      ) : (
+        <Text className="text-sm font-bold text-primary">
+          {customer.slice(0, 1).toUpperCase()}
+        </Text>
       )}
     </View>
   );
