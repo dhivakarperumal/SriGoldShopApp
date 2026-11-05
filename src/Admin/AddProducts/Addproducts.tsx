@@ -192,7 +192,9 @@ function getPurityOptions(metal?: Metal, rates: GoldRate[] = []): string[] {
     .filter(rate => rate.metal_type.toLowerCase() === metal.name.toLowerCase())
     .map(rate => {
       const code = normalizePurity(rate.purity);
-      return GOLD_KARAT[code] ?? rate.purity.trim();
+      return metal.name.toLowerCase() === 'gold'
+        ? GOLD_KARAT[code] ?? rate.purity.trim()
+        : rate.purity.trim();
     });
   if (ratePurities.length) return [...new Set(ratePurities)];
 
