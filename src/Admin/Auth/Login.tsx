@@ -35,11 +35,11 @@ function Login() {
             contentContainerClassName="grow justify-center px-6 py-8"
             keyboardShouldPersistTaps="handled"
           >
-            <View className="z-10 w-full self-center">
+            <View className="z-10 mb-10 w-full self-center">
               <View className="mb-6 items-center">
                 <Image
                   source={require('../../Images/logo.png')}
-                  className="h-[75px] w-28 self-center"
+                  className="h-[88px] w-32 self-center"
                   resizeMode="contain"
                   accessibilityLabel="Sri Golds"
                 />
