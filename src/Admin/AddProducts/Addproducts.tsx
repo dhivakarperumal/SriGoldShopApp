@@ -728,10 +728,10 @@ function AddProducts({ onCancel, onSaved }: Props) {
             <Text className="text-[10px] font-medium text-emerald-200">Sri Golds Jewellery</Text>
           </View>
         </View>
-        <View className="flex-1 items-center justify-center bg-background">
+        <SafeAreaView className="flex-1 items-center justify-center bg-background" edges={['bottom', 'left', 'right']}>
           <ActivityIndicator size="large" color="#004D40" />
           <Text className="mt-3 text-sm text-muted">Preparing product form…</Text>
-        </View>
+        </SafeAreaView>
       </SafeAreaView>
     );
   }
@@ -779,7 +779,7 @@ function AddProducts({ onCancel, onSaved }: Props) {
         </Pressable>
       </View>
 
-      <View className="flex-1 bg-background">
+      <SafeAreaView className="flex-1 bg-background" edges={['bottom', 'left', 'right']}>
         <ScrollView className="flex-1" contentContainerClassName="px-4 pb-12 pt-4" keyboardShouldPersistTaps="handled">
 
         {loadError ? (
@@ -1045,7 +1045,7 @@ function AddProducts({ onCancel, onSaved }: Props) {
           </View>
         </View>
       </Modal>
-      </View>
+      </SafeAreaView>
     </SafeAreaView>
   );
 }

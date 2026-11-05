@@ -226,10 +226,10 @@ function ProductDetails({
           </Pressable>
           <Text className="text-base font-extrabold text-white">Product Details</Text>
         </View>
-        <View className="flex-1 items-center justify-center bg-background">
+        <SafeAreaView className="flex-1 items-center justify-center bg-background" edges={['bottom', 'left', 'right']}>
           <ActivityIndicator size="large" color="#004D40" />
           <Text className="mt-3 text-sm text-muted">Loading product details…</Text>
-        </View>
+        </SafeAreaView>
       </SafeAreaView>
     );
   }
@@ -249,14 +249,14 @@ function ProductDetails({
           </Pressable>
           <Text className="text-base font-extrabold text-white">Product Details</Text>
         </View>
-        <View className="flex-1 items-center justify-center bg-background px-6">
+        <SafeAreaView className="flex-1 items-center justify-center bg-background px-6" edges={['bottom', 'left', 'right']}>
           <Text className="text-center text-lg font-bold text-primary-dark">Product details unavailable</Text>
           <Text className="mt-2 text-center text-sm text-muted">{errorMessage || 'This product may have been removed.'}</Text>
           <View className="mt-5 flex-row gap-3">
             <ActionButton label="Back" onPress={onBack} />
             <ActionButton label="Retry" onPress={() => setRefreshVersion(value => value + 1)} />
           </View>
-        </View>
+        </SafeAreaView>
       </SafeAreaView>
     );
   }
@@ -315,7 +315,7 @@ function ProductDetails({
         </View>
       </View>
 
-      <View className="flex-1 bg-background">
+      <SafeAreaView className="flex-1 bg-background" edges={['bottom', 'left', 'right']}>
         <ScrollView className="flex-1" contentContainerClassName="px-4 pb-8 pt-4" keyboardShouldPersistTaps="handled">
         <View className="overflow-hidden rounded-2xl border border-border bg-surface p-3">
           <View className="h-64 items-center justify-center overflow-hidden rounded-xl bg-primary/5">
@@ -489,7 +489,7 @@ function ProductDetails({
           ]} />
         ) : null}
         </ScrollView>
-      </View>
+      </SafeAreaView>
     </SafeAreaView>
   );
 }
