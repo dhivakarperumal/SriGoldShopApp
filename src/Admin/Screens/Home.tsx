@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   AppState,
   ActivityIndicator,
+  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -9,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import api from '../../api';
+import api, { API_BASE_URL } from '../../api';
 import type { AuthenticatedUser } from '../Auth/Login';
 import type { AdminRoute } from '../Navigations/TopHeader';
 
@@ -94,6 +95,36 @@ const getDisplayName = (record: DashboardRecord, keys: string[], fallback: strin
     }
   }
   return fallback;
+};
+
+const getProductImageUrl = (product: DashboardRecord): string | undefined => {
+  const imageFields = [
+    product.image_url,
+    product.imageUrl,
+    product.product_image,
+    product.productImage,
+    product.image,
+    product.image_path,
+    product.imagePath,
+    product.thumbnail,
+  ];
+  const images = product.images;
+  const firstImage = Array.isArray(images) ? images[0] : undefined;
+  const imageValue = [...imageFields, firstImage].find(
+    value => typeof value === 'string' && value.trim().length > 0,
+  );
+
+  if (typeof imageValue !== 'string') {
+    return undefined;
+  }
+
+  const image = imageValue.trim();
+  if (/^(https?:|data:|file:|content:)/i.test(image)) {
+    return image;
+  }
+
+  const serverUrl = API_BASE_URL.replace(/\/api\/?$/, '');
+  return `${serverUrl}/${image.replace(/^\/+/, '')}`;
 };
 
 function Home({ user, onNavigate }: HomeProps) {
@@ -474,17 +505,23 @@ function Home({ user, onNavigate }: HomeProps) {
               );
               const quantity =
                 product.quantity ?? product.stock ?? product.stock_quantity;
+              const imageUrl = getProductImageUrl(product);
               return (
                 <View
                   key={`${name}-${index}`}
                   className="flex-row items-center border-b border-slate-100 py-3 last:border-b-0"
                 >
-                  <View className="mr-3 h-9 w-9 items-center justify-center rounded-xl bg-amber-50">
-                    <DashboardIcon name="gem" color="#B7791F" size={18} />
+                  <ProductThumbnail imageUrl={imageUrl} />
+                  <View className="min-w-0 flex-1">
+                    <Text className="text-sm font-semibold text-slate-800" numberOfLines={1}>
+                      {name}
+                    </Text>
+                    {product.category_name || product.category ? (
+                      <Text className="mt-0.5 text-[10px] text-slate-500" numberOfLines={1}>
+                        {getString(product.category_name ?? product.category)}
+                      </Text>
+                    ) : null}
                   </View>
-                  <Text className="flex-1 text-sm font-semibold text-slate-800" numberOfLines={1}>
-                    {name}
-                  </Text>
                   {quantity !== undefined ? (
                     <Text className="ml-2 text-xs font-medium text-slate-500">
                       Stock {getString(quantity)}
@@ -505,6 +542,30 @@ function Home({ user, onNavigate }: HomeProps) {
         )}
       </View>
     </ScrollView>
+  );
+}
+
+function ProductThumbnail({ imageUrl }: { imageUrl?: string }) {
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setHasError(false);
+  }, [imageUrl]);
+
+  return (
+    <View className="mr-3 h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-amber-50">
+      {imageUrl && !hasError ? (
+        <Image
+          source={{ uri: imageUrl }}
+          className="h-full w-full"
+          resizeMode="cover"
+          onError={() => setHasError(true)}
+          accessibilityLabel="Product image"
+        />
+      ) : (
+        <DashboardIcon name="gem" color="#B7791F" size={20} />
+      )}
+    </View>
   );
 }
 
