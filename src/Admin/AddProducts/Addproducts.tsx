@@ -74,7 +74,6 @@ type Draft = {
   fixed_discount_amount: string;
   gst_rate: string;
   price_includes_gst: boolean;
-  full_description: string;
   description: string;
   highlights: string;
   specifications: string;
@@ -141,7 +140,6 @@ const EMPTY: Draft = {
   fixed_discount_amount: '0',
   gst_rate: '',
   price_includes_gst: true,
-  full_description: '',
   description: '',
   highlights: '',
   specifications: '',
@@ -252,8 +250,10 @@ function AddProducts({ onCancel, onSaved }: Props) {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [sizeGuideFileName, setSizeGuideFileName] = useState('');
+  const [sizeGuideIsImage, setSizeGuideIsImage] = useState(false);
   const [videoFileName, setVideoFileName] = useState('');
   const [certificateFileName, setCertificateFileName] = useState('');
+  const [certificateIsImage, setCertificateIsImage] = useState(false);
   const [makingChargeTypeChanged, setMakingChargeTypeChanged] = useState(false);
   const [picker, setPicker] = useState<{ label: string; field: SelectableField; options: string[] } | null>(null);
 
@@ -474,6 +474,7 @@ function AddProducts({ onCancel, onSaved }: Props) {
       }
       setForm(current => ({ ...current, size_guide_chart: data.size_guide_chart }));
       setSizeGuideFileName(file.name);
+      setSizeGuideIsImage(file.type.startsWith('image/'));
     } catch (error) {
       console.error('Size guide upload failed:', error);
       Alert.alert('Upload failed', getErrorMessage(error, 'Could not upload the size guide.'));
@@ -511,7 +512,10 @@ function AddProducts({ onCancel, onSaved }: Props) {
       }
       setForm(current => ({ ...current, [field]: data[field] }));
       if (field === 'video') setVideoFileName(file.name);
-      else setCertificateFileName(file.name);
+      else {
+        setCertificateFileName(file.name);
+        setCertificateIsImage(file.type.startsWith('image/'));
+      }
     } catch (error) {
       console.error(`Product ${field} upload failed:`, error);
       Alert.alert('Upload failed', getErrorMessage(error, `Could not upload the ${field}.`));
@@ -855,8 +859,7 @@ function AddProducts({ onCancel, onSaved }: Props) {
         </FormSection>
 
         <FormSection step="05" title="Product content">
-          <Field label="Short description" value={form.description} onChangeText={value => update('description', value)} multiline placeholder="A brief product summary" />
-          <Field label="Full description" value={form.full_description} onChangeText={value => update('full_description', value)} multiline placeholder="Detailed product description" />
+          <Field label="Description" value={form.description} onChangeText={value => update('description', value)} multiline placeholder="Product description" />
           <Field label="Highlights" value={form.highlights} onChangeText={value => update('highlights', value)} multiline placeholder="One highlight per line" />
           <Field label="Specifications" value={form.specifications} onChangeText={value => update('specifications', value)} multiline placeholder="Product specifications" />
           <Field label="Care instructions" value={form.care_instructions} onChangeText={value => update('care_instructions', value)} multiline placeholder="Care instructions" />
@@ -868,18 +871,33 @@ function AddProducts({ onCancel, onSaved }: Props) {
             {isUploading ? <ActivityIndicator color="#004D40" /> : <FormIcon name="image" color="#004D40" />}
             <Text className="ml-2 text-sm font-bold text-primary">{isUploading ? 'Uploading…' : `Choose images (${form.images.length}/10)`}</Text>
           </Pressable>
-          {form.images.map((image, index) => {
-            const uri = getProductImageUrl({ image });
-            return (
-              <View key={`${image}-${index}`} className="mt-2 flex-row items-center rounded-xl border border-border p-2">
-                {uri ? <Image source={{ uri }} className="h-14 w-14 rounded-lg bg-slate-100" resizeMode="cover" /> : null}
-                <Text className="ml-3 flex-1 text-xs text-slate-600">Product image {index + 1}</Text>
-                <Pressable onPress={() => update('images', form.images.filter((_, itemIndex) => itemIndex !== index))} className="h-9 w-9 items-center justify-center rounded-lg bg-rose-50" accessibilityRole="button" accessibilityLabel={`Remove image ${index + 1}`}>
-                  <FormIcon name="close" color="#DC2626" />
-                </Pressable>
-              </View>
-            );
-          })}
+          <View className="flex-row flex-wrap gap-3">
+            {form.images.map((image, index) => {
+              const uri = getProductImageUrl({ image });
+              return (
+                <View key={`${image}-${index}`} className="w-[30%] overflow-hidden rounded-xl border border-border bg-background">
+                  {uri ? (
+                    <Image
+                      source={{ uri }}
+                      className="h-28 w-full bg-slate-100"
+                      resizeMode="cover"
+                      accessibilityLabel={`Product image preview ${index + 1}`}
+                    />
+                  ) : (
+                    <View className="h-28 items-center justify-center bg-slate-100">
+                      <FormIcon name="image" color="#64748B" />
+                    </View>
+                  )}
+                  <View className="flex-row items-center justify-between p-2">
+                    <Text className="flex-1 text-[10px] text-slate-600">Image {index + 1}</Text>
+                    <Pressable onPress={() => update('images', form.images.filter((_, itemIndex) => itemIndex !== index))} className="h-8 w-8 items-center justify-center rounded-lg bg-rose-50" accessibilityRole="button" accessibilityLabel={`Remove image ${index + 1}`}>
+                      <FormIcon name="close" color="#DC2626" />
+                    </Pressable>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
         </FormSection>
 
         <FormSection step="07" title="Size guide chart">
@@ -899,13 +917,26 @@ function AddProducts({ onCancel, onSaved }: Props) {
           {isUploading ? <ActivityIndicator color="#004D40" /> : null}
           {form.size_guide_chart ? (
             <View className="flex-row items-center rounded-xl border border-border bg-background p-3">
+              {sizeGuideIsImage ? (
+                <Image
+                  source={{ uri: getProductImageUrl({ image: form.size_guide_chart }) }}
+                  className="h-20 w-20 rounded-lg bg-slate-100"
+                  resizeMode="cover"
+                  accessibilityLabel="Size guide image preview"
+                />
+              ) : (
+                <View className="h-20 w-20 items-center justify-center rounded-lg bg-primary/5">
+                  <FormIcon name="file" color="#004D40" />
+                </View>
+              )}
               <Text className="flex-1 text-xs font-medium text-slate-700" numberOfLines={1}>
-                {sizeGuideFileName || 'Size guide uploaded'}
+                {`  ${sizeGuideFileName || 'Size guide uploaded'}`}
               </Text>
               <Pressable
                 onPress={() => {
                   update('size_guide_chart', '');
                   setSizeGuideFileName('');
+                  setSizeGuideIsImage(false);
                 }}
                 className="ml-2 h-9 w-9 items-center justify-center rounded-lg bg-rose-50"
                 accessibilityRole="button"
@@ -954,10 +985,22 @@ function AddProducts({ onCancel, onSaved }: Props) {
           </View>
           {form.certificate ? (
             <View className="flex-row items-center rounded-xl border border-border bg-background p-3">
+              {certificateIsImage ? (
+                <Image
+                  source={{ uri: getProductImageUrl({ image: form.certificate }) }}
+                  className="h-20 w-20 rounded-lg bg-slate-100"
+                  resizeMode="cover"
+                  accessibilityLabel="Certificate image preview"
+                />
+              ) : (
+                <View className="h-20 w-20 items-center justify-center rounded-lg bg-primary/5">
+                  <FormIcon name="file" color="#004D40" />
+                </View>
+              )}
               <Text className="flex-1 text-xs font-medium text-slate-700" numberOfLines={1}>
-                {certificateFileName || 'Certificate uploaded'}
+                {`  ${certificateFileName || 'Certificate uploaded'}`}
               </Text>
-              <Pressable onPress={() => { update('certificate', ''); setCertificateFileName(''); }} className="ml-2 h-9 w-9 items-center justify-center rounded-lg bg-rose-50" accessibilityRole="button" accessibilityLabel="Remove certificate">
+              <Pressable onPress={() => { update('certificate', ''); setCertificateFileName(''); setCertificateIsImage(false); }} className="ml-2 h-9 w-9 items-center justify-center rounded-lg bg-rose-50" accessibilityRole="button" accessibilityLabel="Remove certificate">
                 <FormIcon name="close" color="#DC2626" />
               </Pressable>
             </View>
