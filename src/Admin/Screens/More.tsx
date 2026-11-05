@@ -11,13 +11,9 @@ function More({ onNavigate }: MoreProps) {
     <View className="flex-1 bg-background">
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-4 pb-8 pt-5"
+        contentContainerClassName="px-4 pb-8 pt-2"
         showsVerticalScrollIndicator={false}
       >
-  
-
-
-
         {/* Card: Add Category / All Categories */}
         <Pressable
           className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"

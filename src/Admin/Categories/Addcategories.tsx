@@ -7,6 +7,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StatusBar,
   Text,
   TextInput,
   View,
@@ -140,27 +141,32 @@ function AddCategories({ categoryId, onCancel, onSaved }: Props) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
+    <SafeAreaView className="flex-1 bg-primary" edges={[]}>
+      <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View className="flex-row items-center justify-between border-b border-border bg-surface px-5 py-4">
-          <View>
-            <Text className="text-lg font-black text-slate-900">Add Category</Text>
-            <Text className="mt-1 text-xs font-medium text-slate-500">
-              Category ID: {categoryId}
-            </Text>
-          </View>
+        <View className="h-16 flex-row items-center border-b border-[#00382E] bg-primary px-4">
           <Pressable
-            className="rounded-xl bg-slate-100 px-4 py-2.5"
+            className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-emerald-700/60 bg-emerald-900/40 active:bg-emerald-900/70"
             onPress={onCancel}
             accessibilityRole="button"
+            accessibilityLabel="Back to categories"
           >
-            <Text className="text-xs font-bold text-slate-700">Cancel</Text>
+            <Text className="text-xl font-bold text-white">‹</Text>
           </Pressable>
+          <View className="flex-1">
+            <Text className="text-base font-extrabold tracking-wide text-white" numberOfLines={1}>
+              Add Category
+            </Text>
+            <Text className="text-[10px] font-medium text-emerald-200" numberOfLines={1}>
+              Sri Golds Jewellery · {categoryId}
+            </Text>
+          </View>
         </View>
 
+        <SafeAreaView className="flex-1 bg-background" edges={['bottom', 'left', 'right']}>
         <ScrollView
           className="flex-1"
           contentContainerClassName="gap-5 px-5 py-5"
@@ -293,6 +299,7 @@ function AddCategories({ categoryId, onCancel, onSaved }: Props) {
             )}
           </Pressable>
         </View>
+        </SafeAreaView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
