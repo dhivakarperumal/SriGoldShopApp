@@ -156,8 +156,6 @@ function TabIcon({ name, active }: { name: TabIconName; active: boolean }) {
 const styles = StyleSheet.create({
   bottomNavContainer: {
     backgroundColor: '#004D40',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
     borderTopWidth: 1,
     borderTopColor: 'rgba(212, 160, 23, 0.3)',
     shadowColor: '#001A16',
