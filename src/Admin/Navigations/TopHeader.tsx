@@ -26,6 +26,9 @@ export type AdminRoute =
   | 'loans'
   | 'billing'
   | 'products'
+  | 'categories'
+  | 'addCategory'
+  | 'metalTypes'
   | 'more';
 
 type AppHeaderProps = {
@@ -255,6 +258,18 @@ function AppHeader({
                 icon={<ProductsIcon color={activeRoute === 'products' ? '#004D40' : '#64748B'} size={18} />}
                 isActive={activeRoute === 'products'}
                 onPress={() => navigate('products')}
+              />
+              <DrawerItem
+                label="Categories"
+                icon={<ProductsIcon color={activeRoute === 'categories' ? '#004D40' : '#64748B'} size={18} />}
+                isActive={activeRoute === 'categories'}
+                onPress={() => navigate('categories')}
+              />
+              <DrawerItem
+                label="Metal Types"
+                icon={<ProductsIcon color={activeRoute === 'metalTypes' ? '#004D40' : '#64748B'} size={18} />}
+                isActive={activeRoute === 'metalTypes'}
+                onPress={() => navigate('metalTypes')}
               />
               <DrawerItem
                 label="Billing"

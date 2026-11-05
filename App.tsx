@@ -15,6 +15,9 @@ import Profile from './src/Admin/Screens/Profile';
 import Loans from './src/Admin/Screens/Loans';
 import Billing from './src/Admin/Screens/Billing';
 import Products from './src/Admin/Screens/Products';
+import CategoriesAll from './src/Admin/Categories/CategoriesAll';
+import AddCategories from './src/Admin/Categories/Addcategories';
+import MetalType from './src/Admin/Categories/MetalType';
 import More from './src/Admin/Screens/More';
 import AdminLayout from './src/Admin/Navigations/AdminLayout';
 import type { AdminRoute } from './src/Admin/Navigations/TopHeader';
@@ -24,6 +27,7 @@ function App() {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [adminRoute, setAdminRoute] = useState<AdminRoute>('home');
+  const [newCategoryId, setNewCategoryId] = useState('CAT001');
   const isLoggingOut = useRef(false);
 
   useEffect(() => {
@@ -54,6 +58,18 @@ function App() {
                   email:
                     'email' in parsedUser && typeof parsedUser.email === 'string'
                       ? parsedUser.email
+                      : undefined,
+                  phone:
+                    'phone' in parsedUser && typeof parsedUser.phone === 'string'
+                      ? parsedUser.phone
+                      : undefined,
+                  mobile:
+                    'mobile' in parsedUser && typeof parsedUser.mobile === 'string'
+                      ? parsedUser.mobile
+                      : undefined,
+                  phone_number:
+                    'phone_number' in parsedUser && typeof parsedUser.phone_number === 'string'
+                      ? parsedUser.phone_number
                       : undefined,
                 };
               }
@@ -112,16 +128,42 @@ function App() {
   const isAdmin = user?.role.trim().toLowerCase() === 'admin';
   const adminContent = user
     ? adminRoute === 'profile'
-      ? <Profile user={user} />
+      ? (
+        <Profile
+          user={user}
+          onUserUpdated={setUser}
+          onLogout={confirmLogout}
+        />
+      )
       : adminRoute === 'loans'
         ? <Loans />
         : adminRoute === 'billing'
           ? <Billing />
           : adminRoute === 'products'
-            ? <Products />
-            : adminRoute === 'more'
-              ? <More />
-              : <AdminHome user={user} onNavigate={navigateAdmin} />
+            ? <Products onNavigate={navigateAdmin} />
+            : adminRoute === 'categories'
+              ? (
+                <CategoriesAll
+                  onBack={() => navigateAdmin('products')}
+                  onAddCategory={categoryId => {
+                    setNewCategoryId(categoryId);
+                    navigateAdmin('addCategory');
+                  }}
+                />
+              )
+              : adminRoute === 'addCategory'
+                ? (
+                  <AddCategories
+                    categoryId={newCategoryId}
+                    onCancel={() => navigateAdmin('categories')}
+                    onSaved={() => navigateAdmin('categories')}
+                  />
+                )
+              : adminRoute === 'metalTypes'
+                ? <MetalType onBack={() => navigateAdmin('more')} />
+                : adminRoute === 'more'
+                  ? <More onNavigate={navigateAdmin} />
+                  : <AdminHome user={user} onNavigate={navigateAdmin} />
     : null;
 
   return (
@@ -152,7 +194,7 @@ function App() {
   );
 }
 
-type RoleHomeProps = {
+export type RoleHomeProps = {
   user: AuthenticatedUser;
   onLogout: () => void;
 };

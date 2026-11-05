@@ -24,16 +24,20 @@ function AdminLayout({
 }: AdminLayoutProps) {
   const activeRoute = route || currentRoute;
   const showBottomNav = activeRoute ? isMainTab(activeRoute) : false;
+  const showAppHeader =
+    activeRoute !== 'categories' && activeRoute !== 'addCategory';
 
   return (
     <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
       <StatusBar barStyle="light-content" />
-      <AppHeader
-        user={user}
-        currentRoute={activeRoute}
-        onNavigate={onNavigate}
-        onLogout={onLogout}
-      />
+      {showAppHeader ? (
+        <AppHeader
+          user={user}
+          currentRoute={activeRoute}
+          onNavigate={onNavigate}
+          onLogout={onLogout}
+        />
+      ) : null}
       <SafeAreaView
         className="flex-1 bg-background"
         edges={showBottomNav ? ['left', 'right'] : ['bottom', 'left', 'right']}

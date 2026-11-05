@@ -15,6 +15,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
 import { getProductImageUrl } from '../../utils/productImage';
+import type { AdminRoute } from '../Navigations/TopHeader';
 import AddProducts from '../AddProducts/Addproducts';
 import ProductDetails from '../AddProducts/ProductsDetails';
 
@@ -70,7 +71,7 @@ const getNumber = (value: unknown): number => {
 const formatCurrency = (value: unknown): string =>
   `₹${getNumber(value).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 
-function Products() {
+function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, outOfStock: 0 });
@@ -485,10 +486,7 @@ function Products() {
               icon="layers"
               onPress={() => {
                 setIsFabMenuOpen(false);
-                Alert.alert(
-                  'Add Category',
-                  'Category creation is not connected in the mobile app yet.',
-                );
+                onNavigate('categories');
               }}
             />
             <FabMenuAction

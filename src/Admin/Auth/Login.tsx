@@ -18,6 +18,9 @@ export type AuthenticatedUser = {
   role: string;
   name?: string;
   email?: string;
+  phone?: string;
+  mobile?: string;
+  phone_number?: string;
 };
 
 type LoginProps = {
