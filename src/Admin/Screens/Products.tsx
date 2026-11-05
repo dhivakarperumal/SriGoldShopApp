@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   ActivityIndicator,
@@ -15,6 +15,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
 import { getProductImageUrl } from '../../utils/productImage';
+import AddProducts from '../AddProducts/Addproducts';
 
 type Product = Record<string, unknown> & {
   id: string | number;
@@ -36,6 +37,7 @@ type ProductResponse = {
   stats?: {
     total?: number;
     active?: number;
+    inactive?: number;
     lowStock?: number;
     outOfStock?: number;
   };
@@ -70,7 +72,8 @@ const formatCurrency = (value: unknown): string =>
 function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [stats, setStats] = useState({ total: 0, active: 0, lowStock: 0, outOfStock: 0 });
+  const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, outOfStock: 0 });
+  const [statFilter, setStatFilter] = useState<'all' | 'active' | 'inactive' | 'out-of-stock'>('all');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -83,10 +86,7 @@ function Products() {
   const [stockProduct, setStockProduct] = useState<Product | null>(null);
   const [newStock, setNewStock] = useState('');
   const [isUpdatingStock, setIsUpdatingStock] = useState(false);
-  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const [newProductName, setNewProductName] = useState('');
-  const [newProductPrice, setNewProductPrice] = useState('');
-  const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [isAddProductFormVisible, setIsAddProductFormVisible] = useState(false);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [isFabMenuOpen, setIsFabMenuOpen] = useState(false);
   const addButtonPulse = useRef(new Animated.Value(0)).current;
@@ -188,12 +188,34 @@ function Products() {
         }
       }
 
+      const totalCount = getNumber(payload.stats?.total) || reportedTotal || allProducts.length;
+      const activeCount =
+        payload.stats?.active !== undefined
+          ? getNumber(payload.stats.active)
+          : allProducts.filter(p => {
+              const s = String(p.status || '').toLowerCase();
+              return s === 'active' || p.is_active === true;
+            }).length;
+      const inactiveCount =
+        payload.stats?.inactive !== undefined
+          ? getNumber(payload.stats.inactive)
+          : allProducts.length > 0
+            ? allProducts.filter(p => {
+                const s = String(p.status || '').toLowerCase();
+                return s === 'inactive' || s === 'disabled' || p.is_active === false;
+              }).length
+            : Math.max(0, totalCount - activeCount);
+      const outOfStockCount =
+        payload.stats?.outOfStock !== undefined
+          ? getNumber(payload.stats.outOfStock)
+          : allProducts.filter(p => getNumber(p.total_stock) <= 0).length;
+
       setProducts(allProducts);
       setStats({
-        total: getNumber(payload.stats?.total),
-        active: getNumber(payload.stats?.active),
-        lowStock: getNumber(payload.stats?.lowStock),
-        outOfStock: getNumber(payload.stats?.outOfStock),
+        total: totalCount,
+        active: activeCount,
+        inactive: inactiveCount,
+        outOfStock: outOfStockCount,
       });
       setCategories(Array.isArray(payload.filters?.categories) ? payload.filters.categories : []);
     } catch (error) {
@@ -208,6 +230,25 @@ function Products() {
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts, refreshVersion]);
+
+
+  const displayedProducts = useMemo(() => {
+    let result = products;
+    if (statFilter === 'active') {
+      result = result.filter(p => {
+        const s = String(p.status || '').toLowerCase();
+        return s === 'active' || p.is_active === true;
+      });
+    } else if (statFilter === 'inactive') {
+      result = result.filter(p => {
+        const s = String(p.status || '').toLowerCase();
+        return s === 'inactive' || s === 'disabled' || p.is_active === false;
+      });
+    } else if (statFilter === 'out-of-stock') {
+      result = result.filter(p => getNumber(p.total_stock) <= 0);
+    }
+    return result;
+  }, [products, statFilter]);
 
   const refreshProducts = () => {
     setIsRefreshing(true);
@@ -261,41 +302,17 @@ function Products() {
     }
   };
 
-  const addProduct = async () => {
-    const name = newProductName.trim();
-    const price = Number(newProductPrice);
-    if (!name || !Number.isFinite(price) || price <= 0) {
-      Alert.alert('Product details required', 'Enter a product name and a valid price.');
-      return;
-    }
-
-    setIsAddingProduct(true);
-    try {
-      const { data } = await api.get('/products/latest-code');
-      if (typeof data?.latestCode !== 'string' && typeof data?.latestCode !== 'number') {
-        throw new Error('The server did not return a product code.');
-      }
-      await api.post('/products', {
-        name,
-        mrp: price,
-        status: 'Active',
-        product_code: data.latestCode,
-        category: 'Gold Jewellery',
-        total_stock: '0',
-        variants: [],
-      });
-      setNewProductName('');
-      setNewProductPrice('');
-      setIsAddModalVisible(false);
-      setRefreshVersion(version => version + 1);
-      Alert.alert('Product added', 'The product was added to your inventory.');
-    } catch (error) {
-      console.error('Error adding product:', error);
-      Alert.alert('Could not add product', getErrorMessage(error, 'Please try again.'));
-    } finally {
-      setIsAddingProduct(false);
-    }
-  };
+  if (isAddProductFormVisible) {
+    return (
+      <AddProducts
+        onCancel={() => setIsAddProductFormVisible(false)}
+        onSaved={() => {
+          setIsAddProductFormVisible(false);
+          setRefreshVersion(version => version + 1);
+        }}
+      />
+    );
+  }
 
   return (
     <View className="flex-1 bg-background">
@@ -312,18 +329,44 @@ function Products() {
           />
         }
       >
-        <View className="mb-4 flex-row items-center justify-between">
-          <View className="flex-1 pr-3">
-            <Text className="text-xl font-bold text-primary-dark">Products</Text>
-            <Text className="mt-1 text-xs text-muted">Inventory and stock management</Text>
-          </View>
-        </View>
+     
 
-        <View className="mb-4 flex-row flex-wrap justify-between">
-          <StatCard label="Products" value={stats.total} color="bg-primary" />
-          <StatCard label="Active" value={stats.active} color="bg-success" />
-          <StatCard label="Low stock" value={stats.lowStock} color="bg-warning" />
-          <StatCard label="Out of stock" value={stats.outOfStock} color="bg-danger" />
+        <View className="mb-2 flex-row flex-wrap justify-between">
+          <StatCard
+            type="total"
+            value={stats.total}
+            isSelected={statFilter === 'all' && stockFilter === ''}
+            onPress={() => {
+              setStatFilter('all');
+              if (stockFilter !== '') setStockFilter('');
+            }}
+          />
+          <StatCard
+            type="active"
+            value={stats.active}
+            isSelected={statFilter === 'active'}
+            onPress={() => {
+              setStatFilter(prev => (prev === 'active' ? 'all' : 'active'));
+            }}
+          />
+          <StatCard
+            type="inactive"
+            value={stats.inactive}
+            isSelected={statFilter === 'inactive'}
+            onPress={() => {
+              setStatFilter(prev => (prev === 'inactive' ? 'all' : 'inactive'));
+            }}
+          />
+          <StatCard
+            type="outOfStock"
+            value={stats.outOfStock}
+            isSelected={statFilter === 'out-of-stock' || stockFilter === 'out-of-stock'}
+            onPress={() => {
+              const next = statFilter === 'out-of-stock' ? 'all' : 'out-of-stock';
+              setStatFilter(next);
+              setStockFilter(next === 'out-of-stock' ? 'out-of-stock' : '');
+            }}
+          />
         </View>
 
         <View className="mb-3 flex-row items-center rounded-xl border border-border bg-surface px-3">
@@ -402,9 +445,9 @@ function Products() {
             <ActivityIndicator color="#004D40" />
             <Text className="mt-3 text-xs text-muted">Loading products…</Text>
           </View>
-        ) : products.length > 0 ? (
+        ) : displayedProducts.length > 0 ? (
           <View className="gap-3">
-            {products.map(product => (
+            {displayedProducts.map(product => (
               <ProductCard
                 key={String(product.id)}
                 product={product}
@@ -460,7 +503,7 @@ function Products() {
               icon="box"
               onPress={() => {
                 setIsFabMenuOpen(false);
-                setIsAddModalVisible(true);
+                setIsAddProductFormVisible(true);
               }}
             />
           </View>
@@ -617,39 +660,6 @@ function Products() {
         </ModalBackdrop>
       </Modal>
 
-      <Modal
-        visible={isAddModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsAddModalVisible(false)}
-      >
-        <ModalBackdrop onClose={() => setIsAddModalVisible(false)}>
-          <Text className="text-lg font-bold text-slate-900">Add product</Text>
-          <Text className="mt-1 text-xs text-muted">Quickly add a product to your inventory.</Text>
-          <TextInput
-            value={newProductName}
-            onChangeText={setNewProductName}
-            placeholder="Product name"
-            className="mt-5 rounded-xl border border-border bg-slate-50 px-4 py-3 text-sm text-slate-900"
-            accessibilityLabel="Product name"
-          />
-          <TextInput
-            value={newProductPrice}
-            onChangeText={setNewProductPrice}
-            keyboardType="decimal-pad"
-            placeholder="MRP"
-            className="mt-3 rounded-xl border border-border bg-slate-50 px-4 py-3 text-sm text-slate-900"
-            accessibilityLabel="Product MRP"
-          />
-          <ModalActions
-            cancelLabel="Cancel"
-            confirmLabel={isAddingProduct ? 'Adding…' : 'Add product'}
-            onCancel={() => setIsAddModalVisible(false)}
-            onConfirm={addProduct}
-            disabled={isAddingProduct}
-          />
-        </ModalBackdrop>
-      </Modal>
     </View>
   );
 }
@@ -677,21 +687,121 @@ function FabMenuAction({
   );
 }
 
-function StatCard({
-  label,
-  value,
-  color,
-}: {
+type StatType = 'total' | 'active' | 'inactive' | 'outOfStock';
+
+interface StatConfig {
   label: string;
+  tag: string;
+  icon: ProductIconName;
+  iconColor: string;
+  dotColor: string;
+  tagBg: string;
+  tagText: string;
+  cardBg: string;
+  border: string;
+  activeBorder: string;
+  valueColor: string;
+}
+
+const STAT_CONFIGS: Record<StatType, StatConfig> = {
+  total: {
+    label: 'Total Products',
+    tag: 'All',
+    icon: 'box',
+    iconColor: '#004D40',
+    dotColor: 'bg-[#004D40]',
+    tagBg: 'bg-emerald-100/70',
+    tagText: 'text-[#004D40]',
+    cardBg: 'bg-emerald-50/40',
+    border: 'border-emerald-200/60',
+    activeBorder: 'border-[#004D40] ring-2 ring-[#004D40]/20 bg-emerald-50/70',
+    valueColor: 'text-slate-900',
+  },
+  active: {
+    label: 'Active Products',
+    tag: 'Live',
+    icon: 'check-circle',
+    iconColor: '#16A34A',
+    dotColor: 'bg-emerald-500',
+    tagBg: 'bg-emerald-100/70',
+    tagText: 'text-emerald-700',
+    cardBg: 'bg-emerald-50/40',
+    border: 'border-emerald-200/60',
+    activeBorder: 'border-emerald-600 ring-2 ring-emerald-500/20 bg-emerald-50/70',
+    valueColor: 'text-slate-900',
+  },
+  inactive: {
+    label: 'Inactive',
+    tag: 'Paused',
+    icon: 'pause-circle',
+    iconColor: '#D97706',
+    dotColor: 'bg-amber-500',
+    tagBg: 'bg-amber-100/70',
+    tagText: 'text-amber-800',
+    cardBg: 'bg-amber-50/40',
+    border: 'border-amber-200/60',
+    activeBorder: 'border-amber-600 ring-2 ring-amber-500/20 bg-amber-50/70',
+    valueColor: 'text-slate-900',
+  },
+  outOfStock: {
+    label: 'Out of Stock',
+    tag: '0 Qty',
+    icon: 'alert-triangle',
+    iconColor: '#DC2626',
+    dotColor: 'bg-rose-500',
+    tagBg: 'bg-rose-100/70',
+    tagText: 'text-rose-700',
+    cardBg: 'bg-rose-50/40',
+    border: 'border-rose-200/60',
+    activeBorder: 'border-rose-600 ring-2 ring-rose-500/20 bg-rose-50/70',
+    valueColor: 'text-rose-600',
+  },
+};
+
+function StatCard({
+  type,
+  value,
+  isSelected,
+  onPress,
+}: {
+  type: StatType;
   value: number;
-  color: string;
+  isSelected?: boolean;
+  onPress?: () => void;
 }) {
+  const cfg = STAT_CONFIGS[type];
+
   return (
-    <View className="mb-2.5 w-[48.5%] rounded-xl border border-border bg-surface p-3">
-      <View className={`mb-2 h-1 w-8 rounded-full ${color}`} />
-      <Text className="text-xl font-extrabold text-slate-900">{value}</Text>
-      <Text className="mt-0.5 text-[10px] font-medium text-muted">{label}</Text>
-    </View>
+    <Pressable
+      onPress={onPress}
+      className={`mb-3 w-[48.5%] rounded-2xl border p-3.5 shadow-xs active:scale-[0.98] ${
+        isSelected
+          ? `${cfg.activeBorder} shadow-sm`
+          : `${cfg.cardBg} ${cfg.border}`
+      }`}
+      accessibilityRole="button"
+      accessibilityLabel={`${cfg.label}: ${value}`}
+    >
+      <View className="flex-row items-center justify-between">
+        <View className="h-10 w-10 items-center justify-center rounded-xl bg-white shadow-xs">
+          <ProductIcon name={cfg.icon} color={cfg.iconColor} size={20} />
+        </View>
+        <View className={`flex-row items-center rounded-full px-2 py-0.5 ${cfg.tagBg}`}>
+          <View className={`mr-1 h-1.5 w-1.5 rounded-full ${cfg.dotColor}`} />
+          <Text className={`text-[10px] font-bold ${cfg.tagText}`}>
+            {cfg.tag}
+          </Text>
+        </View>
+      </View>
+
+      <Text className={`mt-3 text-2xl font-black tracking-tight ${cfg.valueColor}`}>
+        {value.toLocaleString('en-IN')}
+      </Text>
+
+      <Text className="mt-0.5 text-xs font-bold text-slate-700" numberOfLines={1}>
+        {cfg.label}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -851,7 +961,10 @@ type ProductIconName =
   | 'check'
   | 'layers'
   | 'gem'
-  | 'close';
+  | 'close'
+  | 'check-circle'
+  | 'pause-circle'
+  | 'alert-triangle';
 
 function ProductIcon({
   name,
@@ -874,6 +987,20 @@ function ProductIcon({
     layers: ['m12 2 9 5-9 5-9-5 9-5Z', 'm3 12 9 5 9-5', 'm3 17 9 5 9-5'],
     gem: ['m12 3 8 6-8 12L4 9l8-6Z', 'M4 9h16', 'm9 9 3 12 3-12', 'm8 3 4 6 4-6'],
     close: ['M18 6 6 18', 'm6 6 12 12'],
+    'check-circle': [
+      'M22 11.08V12a10 10 0 1 1-5.93-9.14',
+      'm9 11 3 3L22 4',
+    ],
+    'pause-circle': [
+      'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z',
+      'M10 15V9',
+      'M14 15V9',
+    ],
+    'alert-triangle': [
+      'm21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z',
+      'M12 9v4',
+      'M12 17h.01',
+    ],
   };
 
   return (
