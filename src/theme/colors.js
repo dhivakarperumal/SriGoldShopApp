@@ -21,4 +21,9 @@ module.exports = {
   surface: '#FFFFFF',
   border: '#E2E8E5',
   muted: '#64748B',
+  navigation: {
+    active: '#F5C45E',
+    inactive: '#8DBDB4',
+    border: '#00382E',
+  },
 };

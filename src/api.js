@@ -13,6 +13,10 @@ const api = axios.create({
 const MAX_RETRIES = 1;
 let cachedToken = null;
 
+export function setTokenCache(token) {
+  cachedToken = token;
+}
+
 export function clearTokenCache() {
   cachedToken = null;
 }
