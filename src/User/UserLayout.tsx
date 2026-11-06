@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, StatusBar, Text, View } from 'react-native';
+import { Alert, BackHandler, StatusBar, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../api';
 import type { ProductCardData } from '../Components/ProductCard';
@@ -280,6 +280,35 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
     if (page === 'profile') setHasVisitedProfile(true);
     setMorePage(page);
   };
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        if (enquiryProduct) {
+          setEnquiryProduct(null);
+          return true;
+        }
+        if (selectedProductId) {
+          setSelectedProductId(null);
+          return true;
+        }
+        if (activeTab === 'more' && morePage) {
+          setMorePage(null);
+          return true;
+        }
+        if (activeTab !== 'home') {
+          setActiveTab('home');
+          setVisitedTabs(current => new Set(current).add('home'));
+          setMorePage(null);
+          return true;
+        }
+        return false;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [activeTab, enquiryProduct, morePage, selectedProductId]);
 
   return (
     <SafeAreaView className="flex-1 bg-primary" edges={['top']}>

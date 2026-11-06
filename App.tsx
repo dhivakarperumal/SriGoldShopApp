@@ -7,7 +7,14 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, StatusBar, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  BackHandler,
+  StatusBar,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Login, { type AuthenticatedUser } from './src/Admin/Auth/Login';
 import AdminHome from './src/Admin/Screens/Home';
@@ -29,6 +36,22 @@ import AdminLayout from './src/Admin/Navigations/AdminLayout';
 import type { AdminRoute } from './src/Admin/Navigations/TopHeader';
 import UserLayout from './src/User/UserLayout';
 import { clearTokenCache, setTokenCache } from './src/api';
+
+const ADMIN_BACK_ROUTES: Partial<Record<AdminRoute, AdminRoute>> = {
+  profile: 'home',
+  loans: 'home',
+  billing: 'home',
+  products: 'home',
+  categories: 'products',
+  addCategory: 'categories',
+  editCategory: 'categories',
+  metalTypes: 'more',
+  dailyGoldRates: 'more',
+  addGoldrate: 'dailyGoldRates',
+  customers: 'more',
+  receipt: 'more',
+  more: 'home',
+};
 
 function App() {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
@@ -164,6 +187,23 @@ function App() {
   };
 
   const isAdmin = user?.role.trim().toLowerCase() === 'admin';
+
+  useEffect(() => {
+    if (!user || !isAdmin) return undefined;
+
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        const backRoute = ADMIN_BACK_ROUTES[adminRoute];
+        if (!backRoute) return false;
+        setAdminRoute(backRoute);
+        return true;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [adminRoute, isAdmin, user]);
+
   const adminContent = user
     ? adminRoute === 'profile'
       ? (
