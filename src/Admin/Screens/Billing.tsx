@@ -215,6 +215,7 @@ export default function Billing() {
   const [search, setSearch] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'FULL_PAYMENT' | 'EXCHANGE_GOLD'>('ALL');
   const [showForm, setShowForm] = useState(false);
+  const [billStep, setBillStep] = useState<1 | 2 | 3>(1);
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
   const [customer, setCustomer] = useState<Customer>(EMPTY_CUSTOMER);
   const [products, setProducts] = useState<BillProduct[]>([]);
@@ -382,6 +383,7 @@ export default function Billing() {
   });
 
   const resetForm = () => {
+    setBillStep(1);
     setEditingBill(null);
     setCustomer(EMPTY_CUSTOMER);
     setProducts([]);
@@ -396,6 +398,7 @@ export default function Billing() {
   const openNewBill = () => {
     resetForm();
     setShowForm(true);
+    setShowProductPicker(true);
   };
 
   const openEditBill = (bill: Bill) => {
@@ -414,16 +417,18 @@ export default function Billing() {
         product_id: String(product.product_id ?? ''),
       })),
     );
-    setPaymentType(bill.payment_type === 'EXCHANGE_GOLD' ? 'EXCHANGE_GOLD' : 'FULL_PAYMENT');
-    setExchanges(
+    const savedPaymentType =
+      bill.payment_type === 'EXCHANGE_GOLD' ? 'EXCHANGE_GOLD' : 'FULL_PAYMENT';
+    setPaymentType(savedPaymentType);
+    setExchanges(savedPaymentType === 'EXCHANGE_GOLD' ? (
       savedExchanges.map(item => ({
         ...EMPTY_EXCHANGE,
         ...item,
         weight: String(item.weight ?? ''),
         wastage_weight: String(item.wastage_weight ?? ''),
         rate_per_unit: String(item.rate_per_unit ?? ''),
-      })) as ExchangeItem[],
-    );
+      })) as ExchangeItem[]
+    ) : []);
     const subtotalAmount = getNumber(bill.sub_total);
     const taxable = Math.max(
       0,
@@ -434,6 +439,7 @@ export default function Billing() {
       taxable > 0 ? String(Math.round((getNumber(bill.gst_amount) / taxable) * 10000) / 100) : '0',
     );
     setDiscount(getNumber(bill.discount_amount) ? String(bill.discount_amount) : '');
+    setBillStep(3);
     setShowForm(true);
   };
 
@@ -481,6 +487,15 @@ export default function Billing() {
     );
   };
 
+  const selectPaymentType = (type: 'FULL_PAYMENT' | 'EXCHANGE_GOLD') => {
+    setPaymentType(type);
+    if (type === 'FULL_PAYMENT') {
+      setExchanges([]);
+      return;
+    }
+    if (!exchanges.length) addExchange();
+  };
+
   const saveBill = async () => {
     if (!customer.name.trim() || !customer.phone.trim()) {
       Alert.alert('Customer details required', 'Enter the customer name and phone number.');
@@ -495,6 +510,7 @@ export default function Billing() {
       return;
     }
     if (
+      paymentType === 'EXCHANGE_GOLD' &&
       exchanges.some(item =>
         !item.category.trim() ||
         !item.metal_type.trim() ||
@@ -770,14 +786,24 @@ export default function Billing() {
             </View>
           </View>
 
-          <View className="gap-3 rounded-2xl border border-slate-100 bg-white p-4">
-            <Text className="text-base font-extrabold text-slate-900">Customer details</Text>
-            <Field label="Customer name *" value={customer.name} onChangeText={value => updateCustomer('name', value)} placeholder="Enter customer name" />
-            <Field label="Phone number *" value={customer.phone} onChangeText={value => updateCustomer('phone', value)} keyboardType="phone-pad" placeholder="Enter phone number" />
-            <Field label="Email" value={customer.email} onChangeText={value => updateCustomer('email', value)} keyboardType="email-address" placeholder="Enter email" />
-            <Field label="Address" value={customer.address} onChangeText={value => updateCustomer('address', value)} placeholder="Enter address" multiline />
+          <View className="flex-row items-center rounded-xl bg-white px-2 py-3">
+            {[1, 2, 3].map(step => (
+              <View key={step} className="flex-1 items-center">
+                <View className={`h-7 w-7 items-center justify-center rounded-full ${
+                  billStep >= step ? 'bg-primary' : 'bg-slate-200'
+                }`}>
+                  <Text className={`text-xs font-bold ${billStep >= step ? 'text-white' : 'text-slate-500'}`}>
+                    {step}
+                  </Text>
+                </View>
+                <Text className="mt-1 text-[10px] font-semibold text-slate-600">
+                  {step === 1 ? 'Products' : step === 2 ? 'Address' : 'Summary'}
+                </Text>
+              </View>
+            ))}
           </View>
 
+          {billStep === 1 ? (
           <View className="gap-3 rounded-2xl border border-slate-100 bg-white p-4">
             <View className="flex-row items-center justify-between">
               <View>
@@ -923,18 +949,57 @@ export default function Billing() {
                 )}
               </View>
             ) : null}
+            <ActionButton
+              label="Continue to customer address"
+              onPress={() => {
+                if (!products.length) {
+                  Alert.alert('Products required', 'Add at least one product to continue.');
+                  return;
+                }
+                setShowProductPicker(false);
+                setBillStep(2);
+              }}
+              disabled={!products.length}
+            />
           </View>
+          ) : null}
 
+          {billStep === 2 ? (
+          <View className="gap-3 rounded-2xl border border-slate-100 bg-white p-4">
+            <Text className="text-base font-extrabold text-slate-900">Customer address</Text>
+            <Field label="Customer name *" value={customer.name} onChangeText={value => updateCustomer('name', value)} placeholder="Enter customer name" />
+            <Field label="Phone number *" value={customer.phone} onChangeText={value => updateCustomer('phone', value)} keyboardType="phone-pad" placeholder="Enter phone number" />
+            <Field label="Email" value={customer.email} onChangeText={value => updateCustomer('email', value)} keyboardType="email-address" placeholder="Enter email" />
+            <Field label="Address" value={customer.address} onChangeText={value => updateCustomer('address', value)} placeholder="Enter address" multiline />
+            <ActionButton
+              label="Continue to bill summary"
+              onPress={() => {
+                if (!customer.name.trim() || !customer.phone.trim()) {
+                  Alert.alert('Customer details required', 'Enter the customer name and phone number.');
+                  return;
+                }
+                setBillStep(3);
+              }}
+              secondary={!customer.name.trim() || !customer.phone.trim()}
+            />
+            <ActionButton label="Back to products" onPress={() => setBillStep(1)} secondary />
+          </View>
+          ) : null}
+
+          {billStep === 3 ? (
+          <>
           <View className="gap-3 rounded-2xl border border-slate-100 bg-white p-4">
             <Text className="text-base font-extrabold text-slate-900">Payment method</Text>
-            <View className="flex-row flex-wrap gap-2">
+            <View className="flex-row gap-2">
               {(['FULL_PAYMENT', 'EXCHANGE_GOLD'] as const).map(type => (
                 <Pressable
                   key={type}
-                  onPress={() => setPaymentType(type)}
-                  className={`rounded-full border px-4 py-2.5 ${
+                  onPress={() => selectPaymentType(type)}
+                  className={`flex-1 items-center rounded-xl border px-3 py-3 ${
                     paymentType === type ? 'border-primary bg-primary' : 'border-slate-200 bg-white'
                   }`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: paymentType === type }}
                 >
                   <Text className={`text-xs font-bold ${paymentType === type ? 'text-white' : 'text-slate-700'}`}>
                     {type === 'FULL_PAYMENT' ? 'Full payment' : 'Exchange gold'}
@@ -1018,7 +1083,10 @@ export default function Billing() {
               onPress={saveBill}
               disabled={isSaving || !validDiscount || !validGst}
             />
+            <ActionButton label="Back to address" onPress={() => setBillStep(2)} secondary />
           </View>
+          </>
+          ) : null}
         </ScrollView>
       </View>
     );
