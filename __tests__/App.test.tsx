@@ -65,3 +65,20 @@ test('clicking Customer Reviews card navigates to reviews moderation', () => {
 
   expect(onNavigateMock).toHaveBeenCalledWith('reviews');
 });
+
+test('clicking Stock Details card opens stock management', () => {
+  const onNavigateMock = jest.fn();
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  act(() => {
+    renderer = ReactTestRenderer.create(<More onNavigate={onNavigateMock} />);
+  });
+
+  const stockCard = renderer.root.findByProps({
+    accessibilityLabel: 'Manage product stock',
+  });
+  act(() => {
+    stockCard.props.onPress();
+  });
+
+  expect(onNavigateMock).toHaveBeenCalledWith('stockDetails');
+});

@@ -55,6 +55,51 @@ function More({ onNavigate }: MoreProps) {
 
         <Pressable
           className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"
+          onPress={() => onNavigate('stockDetails')}
+          accessibilityRole="button"
+          accessibilityLabel="Manage product stock"
+        >
+          <View className="flex-row items-center flex-1 pr-3">
+            <View className="mr-3.5 h-12 w-12 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50">
+              <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z"
+                  stroke="#004D40"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <Path
+                  d="m4.5 7.75 7.5 4.5 7.5-4.5M12 12.25V21m4-15.75-8 4.5"
+                  stroke="#0284C7"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-bold text-slate-900">Stock Details</Text>
+              <Text className="mt-1 text-xs leading-4 text-slate-500">
+                Check product availability, find low stock, and add inventory.
+              </Text>
+            </View>
+          </View>
+          <View className="h-8 w-8 items-center justify-center rounded-full bg-slate-100/70">
+            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="m9 18 6-6-6-6"
+                stroke="#64748B"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </View>
+        </Pressable>
+
+        <Pressable
+          className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"
           onPress={() => onNavigate('homeSections')}
           accessibilityRole="button"
           accessibilityLabel="Manage home product sections"
