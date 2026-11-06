@@ -57,6 +57,14 @@ function UserHeader({ user, onLogout, onOpenProfile }: UserHeaderProps) {
         >
           <Text className="text-sm font-bold text-white">{initial}</Text>
         </Pressable>
+        <Pressable
+          className="ml-1 h-10 w-8 items-center justify-center"
+          onPress={confirmLogout}
+          accessibilityRole="button"
+          accessibilityLabel="Sign out"
+        >
+          <Text className="text-base font-bold text-white">↪</Text>
+        </Pressable>
       </View>
     </View>
   );

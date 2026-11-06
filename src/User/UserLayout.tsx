@@ -11,6 +11,7 @@ import UserHome from './Home/UserHome';
 import UserAbout from './More/About/UserAbout';
 import UserContact from './More/Contact/UserContact';
 import MoreMenu, { type MorePage } from './More/MoreMenu';
+import UserProfile from './Profile/UserProfile';
 
 type UserLayoutProps = {
   user: AuthenticatedUser;
@@ -49,6 +50,13 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
               <UserAbout onBack={() => setMorePage(null)} />
             ) : morePage === 'contact' ? (
               <UserContact onBack={() => setMorePage(null)} />
+            ) : morePage === 'profile' ? (
+              <UserProfile
+                user={user}
+                onUserUpdated={onUserUpdated}
+                onBack={() => setMorePage(null)}
+                onLogout={onLogout}
+              />
             ) : (
               <MoreMenu onSelect={setMorePage} />
             )
