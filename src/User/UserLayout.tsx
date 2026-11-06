@@ -8,6 +8,9 @@ import UserBottomNavigation, {
 import UserHeader from './components/UserHeader';
 import UserExplore from './Explore/UserExplore';
 import UserHome from './Home/UserHome';
+import UserAbout from './More/About/UserAbout';
+import UserContact from './More/Contact/UserContact';
+import MoreMenu, { type MorePage } from './More/MoreMenu';
 
 type UserLayoutProps = {
   user: AuthenticatedUser;
@@ -16,6 +19,12 @@ type UserLayoutProps = {
 
 function UserLayout({ user, onLogout }: UserLayoutProps) {
   const [activeTab, setActiveTab] = useState<UserTab>('home');
+  const [morePage, setMorePage] = useState<MorePage>(null);
+
+  const selectTab = (tab: UserTab) => {
+    setActiveTab(tab);
+    if (tab !== 'more' || activeTab === 'more') setMorePage(null);
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
@@ -27,10 +36,18 @@ function UserLayout({ user, onLogout }: UserLayoutProps) {
             <UserHome user={user} />
           ) : activeTab === 'explore' ? (
             <UserExplore />
+          ) : activeTab === 'more' ? (
+            morePage === 'about' ? (
+              <UserAbout onBack={() => setMorePage(null)} />
+            ) : morePage === 'contact' ? (
+              <UserContact onBack={() => setMorePage(null)} />
+            ) : (
+              <MoreMenu onSelect={setMorePage} />
+            )
           ) : (
             <View className="flex-1 items-center justify-center px-8">
               <Text className="text-xl font-bold text-primary-dark">
-                {activeTab === 'enquiry' ? 'Enquiry' : 'More'}
+                Enquiry
               </Text>
               <Text className="mt-2 text-center text-sm leading-5 text-slate-600">
                 This section is coming in the next step.
@@ -39,7 +56,7 @@ function UserLayout({ user, onLogout }: UserLayoutProps) {
           )}
           <UserBottomNavigation
             activeTab={activeTab}
-            onSelect={setActiveTab}
+            onSelect={selectTab}
           />
         </View>
       </SafeAreaView>
