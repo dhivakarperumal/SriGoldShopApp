@@ -20,6 +20,7 @@ export type ProductCardData = Record<string, unknown> & {
 type ProductCardProps = {
   product: ProductCardData;
   layout?: 'catalog' | 'carousel' | 'inventory' | 'compact';
+  carouselWidth?: number;
   title?: string;
   subtitle?: string;
   trailingText?: string;
@@ -57,6 +58,7 @@ function getPrice(product: ProductCardData, price: unknown) {
 function ProductCard({
   product,
   layout = 'catalog',
+  carouselWidth,
   title,
   subtitle,
   trailingText,
@@ -199,6 +201,7 @@ function ProductCard({
   return (
     <View
       className={`${layout === 'carousel' ? 'w-[250px]' : 'w-[48.5%]'} mb-3 overflow-hidden rounded-xl border border-[#eadfc8] bg-white ${className || ''}`}
+      style={layout === 'carousel' && carouselWidth ? { width: carouselWidth } : undefined}
     >
       <View>
         {onPress ? (

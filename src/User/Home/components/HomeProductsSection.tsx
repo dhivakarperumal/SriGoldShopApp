@@ -1,9 +1,12 @@
+import { useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
+  type ScrollViewInstance,
 } from 'react-native';
 import ProductCard from '../../../Components/ProductCard';
 import type { ProductCardData } from '../../../Components/ProductCard';
@@ -12,6 +15,9 @@ import type { HomeProduct } from '../types';
 const styles = StyleSheet.create({
   products: { gap: 12, paddingBottom: 8 },
 });
+
+const PRODUCT_GAP = 12;
+const HOME_HORIZONTAL_PADDING = 32;
 
 type HomeProductsSectionProps = {
   products: HomeProduct[];
@@ -51,11 +57,64 @@ function HomeProductsSection({
   isFavorite,
   onToggleFavorite,
 }: HomeProductsSectionProps) {
+  const { width } = useWindowDimensions();
+  const scrollViewRef = useRef<ScrollViewInstance>(null);
+  const physicalIndexRef = useRef(0);
   const sectionProducts = products.filter(product => matchesMetal(product, metal));
+  const listWidth = width - HOME_HORIZONTAL_PADDING;
+  const cardWidth = (listWidth - PRODUCT_GAP) / 2;
+  const itemStep = cardWidth + PRODUCT_GAP;
+  const carouselProducts =
+    sectionProducts.length > 2
+      ? [...sectionProducts, ...sectionProducts, ...sectionProducts]
+      : sectionProducts;
   const title =
     metal === 'Silver'
       ? 'Silver Articles'
       : `${metal} Jewellery`;
+
+  useEffect(() => {
+    if (sectionProducts.length <= 2) return undefined;
+
+    const timer = setInterval(() => {
+      const nextIndex = physicalIndexRef.current + 1;
+      scrollViewRef.current?.scrollTo({
+        x: nextIndex * itemStep,
+        animated: true,
+      });
+      physicalIndexRef.current = nextIndex;
+    }, 3500);
+
+    return () => clearInterval(timer);
+  }, [itemStep, sectionProducts.length]);
+
+  const syncCarouselIndex = (offset: number) => {
+    const physicalIndex = Math.max(0, Math.round(offset / itemStep));
+    const loopStart = sectionProducts.length;
+    const loopEnd = sectionProducts.length * 2;
+
+    if (sectionProducts.length > 2 && physicalIndex >= loopEnd) {
+      const nextIndex = physicalIndex - sectionProducts.length;
+      physicalIndexRef.current = nextIndex;
+      scrollViewRef.current?.scrollTo({
+        x: nextIndex * itemStep,
+        animated: false,
+      });
+      return;
+    }
+
+    if (sectionProducts.length > 2 && physicalIndex < loopStart) {
+      const nextIndex = physicalIndex + sectionProducts.length;
+      physicalIndexRef.current = nextIndex;
+      scrollViewRef.current?.scrollTo({
+        x: nextIndex * itemStep,
+        animated: false,
+      });
+      return;
+    }
+
+    physicalIndexRef.current = physicalIndex;
+  };
 
   return (
     <View className="mb-5">
@@ -80,15 +139,24 @@ function HomeProductsSection({
         </Text>
       ) : (
         <ScrollView
+          ref={scrollViewRef}
           horizontal
+          snapToInterval={itemStep}
+          snapToAlignment="start"
+          decelerationRate="fast"
           showsHorizontalScrollIndicator={false}
+          style={{ width: listWidth }}
           contentContainerStyle={styles.products}
+          onMomentumScrollEnd={event =>
+            syncCarouselIndex(event.nativeEvent.contentOffset.x)
+          }
         >
-          {sectionProducts.map(product => (
+          {carouselProducts.map((product, index) => (
             <ProductCard
-              key={product.id}
+              key={`${product.id}-${index}`}
               product={product}
               layout="carousel"
+              carouselWidth={cardWidth}
               onPress={() => onSelectProduct(String(product.id))}
               onEnquire={onEnquireProduct}
               isFavorite={isFavorite(String(product.id))}
