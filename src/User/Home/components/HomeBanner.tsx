@@ -10,6 +10,16 @@ import {
 import { resolveImageUrl } from '../homeUtils';
 import type { HomeBanner as HomeBannerData } from '../types';
 
+const BANNER_HEIGHT = 220;
+const styles = StyleSheet.create({
+  slide: { height: BANNER_HEIGHT },
+  image: { ...StyleSheet.absoluteFillObject, height: BANNER_HEIGHT },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 40, 32, 0.55)',
+  },
+});
+
 type HomeBannerProps = {
   banners: HomeBannerData[];
   userName?: string;
@@ -38,18 +48,18 @@ function HomeBanner({ banners, userName, error }: HomeBannerProps) {
           return (
             <View
               key={banner?.id ?? `welcome-${index}`}
-              className="relative min-h-44 justify-center overflow-hidden border-y border-[#d9b568] bg-[#003b30] px-5 py-5"
-              style={{ width }}
+              className="relative justify-center overflow-hidden border-y border-[#d9b568] bg-[#003b30] px-5 py-5"
+              style={[styles.slide, { width }]}
             >
               {image ? (
                 <Image
                   source={{ uri: image }}
-                  style={StyleSheet.absoluteFillObject}
+                  style={[styles.image, { width }]}
                   resizeMode="cover"
                   accessibilityLabel={banner?.title || 'Sri Golds featured jewellery'}
                 />
               ) : null}
-              <View className="absolute inset-0 bg-primary-dark/70" />
+              <View style={styles.overlay} />
               <View className="relative">
                 <Text className="text-[10px] font-bold uppercase tracking-[2px] text-accent-light">
                   Sri Golds · Jewellery
