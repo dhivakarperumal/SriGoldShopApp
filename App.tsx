@@ -24,6 +24,8 @@ import AllGoldRate, {
 import AddGoldrate from './src/Admin/DailyGoldRate/AddGoldrate';
 import Customers from './src/Admin/MorePages/Customer';
 import Receipt from './src/Admin/MorePages/Receipt';
+import HomeSections from './src/Admin/MorePages/HomeSections';
+import AllReview from './src/Admin/Review/AllReview';
 import More from './src/Admin/Screens/More';
 import AdminLayout from './src/Admin/Navigations/AdminLayout';
 import type { AdminRoute } from './src/Admin/Navigations/TopHeader';
@@ -223,7 +225,11 @@ function App() {
                         ? <Customers onBack={() => navigateAdmin('more')} />
                         : adminRoute === 'receipt'
                           ? <Receipt onBack={() => navigateAdmin('more')} />
-                      : <AdminHome user={user} onNavigate={navigateAdmin} />
+                          : adminRoute === 'reviews'
+                            ? <AllReview onBack={() => navigateAdmin('more')} />
+                        : adminRoute === 'homeSections'
+                          ? <HomeSections onBack={() => navigateAdmin('more')} />
+                    : <AdminHome user={user} onNavigate={navigateAdmin} />
     : null;
 
   return (

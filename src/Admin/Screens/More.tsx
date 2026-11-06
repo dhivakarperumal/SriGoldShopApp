@@ -53,6 +53,82 @@ function More({ onNavigate }: MoreProps) {
           </View>
         </Pressable>
 
+        <Pressable
+          className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"
+          onPress={() => onNavigate('homeSections')}
+          accessibilityRole="button"
+          accessibilityLabel="Manage home product sections"
+        >
+          <View className="flex-row items-center flex-1 pr-3">
+            <View className="mr-3.5 h-12 w-12 items-center justify-center rounded-2xl border border-teal-100 bg-teal-50">
+              <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M3 5h18M3 12h18M3 19h18M7 3v4m10 3v4m-7 3v4"
+                  stroke="#004D40"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-bold text-slate-900">Home Product Sections</Text>
+              <Text className="mt-1 text-xs leading-4 text-slate-500">
+                Choose which product sections appear on Home and change their order.
+              </Text>
+            </View>
+          </View>
+          <View className="h-8 w-8 items-center justify-center rounded-full bg-slate-100/70">
+            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="m9 18 6-6-6-6"
+                stroke="#64748B"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </View>
+        </Pressable>
+
+        <Pressable
+          className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"
+          onPress={() => onNavigate('reviews')}
+          accessibilityRole="button"
+          accessibilityLabel="Manage customer reviews"
+        >
+          <View className="flex-row items-center flex-1 pr-3">
+            <View className="mr-3.5 h-12 w-12 items-center justify-center rounded-2xl border border-amber-100 bg-amber-50">
+              <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="m12 3 2.8 5.67 6.26.91-4.53 4.42 1.07 6.24L12 17.29l-5.6 2.95 1.07-6.24-4.53-4.42 6.26-.91L12 3Z"
+                  stroke="#D4A017"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-bold text-slate-900">Customer Reviews</Text>
+              <Text className="mt-1 text-xs leading-4 text-slate-500">
+                Review customer feedback, moderate ratings, and reply to reviews.
+              </Text>
+            </View>
+          </View>
+          <View className="h-8 w-8 items-center justify-center rounded-full bg-slate-100/70">
+            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="m9 18 6-6-6-6"
+                stroke="#64748B"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </View>
+        </Pressable>
+
         {/* Card: All Categories */}
         <Pressable
           className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"

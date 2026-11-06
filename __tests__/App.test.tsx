@@ -31,3 +31,37 @@ test('clicking Add Category card on More page navigates to categories route', ()
 
   expect(onNavigateMock).toHaveBeenCalledWith('categories');
 });
+
+test('clicking Home Product Sections card navigates to its settings screen', () => {
+  const onNavigateMock = jest.fn();
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  act(() => {
+    renderer = ReactTestRenderer.create(<More onNavigate={onNavigateMock} />);
+  });
+
+  const homeSectionsCard = renderer.root.findByProps({
+    accessibilityLabel: 'Manage home product sections',
+  });
+  act(() => {
+    homeSectionsCard.props.onPress();
+  });
+
+  expect(onNavigateMock).toHaveBeenCalledWith('homeSections');
+});
+
+test('clicking Customer Reviews card navigates to reviews moderation', () => {
+  const onNavigateMock = jest.fn();
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  act(() => {
+    renderer = ReactTestRenderer.create(<More onNavigate={onNavigateMock} />);
+  });
+
+  const reviewsCard = renderer.root.findByProps({
+    accessibilityLabel: 'Manage customer reviews',
+  });
+  act(() => {
+    reviewsCard.props.onPress();
+  });
+
+  expect(onNavigateMock).toHaveBeenCalledWith('reviews');
+});

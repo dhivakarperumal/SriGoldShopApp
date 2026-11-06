@@ -34,6 +34,8 @@ export type AdminRoute =
   | 'addGoldrate'
   | 'customers'
   | 'receipt'
+  | 'homeSections'
+  | 'reviews'
   | 'more';
 
 type AppHeaderProps = {
