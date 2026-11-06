@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -220,7 +221,8 @@ export default function Billing() {
   const [customer, setCustomer] = useState<Customer>(EMPTY_CUSTOMER);
   const [products, setProducts] = useState<BillProduct[]>([]);
   const [productSearch, setProductSearch] = useState('');
-  const [showProductPicker, setShowProductPicker] = useState(true);
+  const [showProductPicker, setShowProductPicker] = useState(false);
+  const [showProductPreview, setShowProductPreview] = useState(false);
   const [paymentType, setPaymentType] = useState<'FULL_PAYMENT' | 'EXCHANGE_GOLD'>('FULL_PAYMENT');
   const [exchanges, setExchanges] = useState<ExchangeItem[]>([]);
   const [gstRate, setGstRate] = useState('0');
@@ -828,6 +830,7 @@ export default function Billing() {
             </View>
 
             {products.length ? (
+              <>
               <View className="gap-2">
                 {products.map((product, index) => {
                   const image = getProductImageUrl(product);
@@ -867,6 +870,15 @@ export default function Billing() {
                   );
                 })}
               </View>
+              <Pressable
+                onPress={() => setShowProductPreview(true)}
+                className="items-center rounded-xl border border-primary bg-primary/5 py-3"
+                accessibilityRole="button"
+                accessibilityLabel="Preview products in bill"
+              >
+                <Text className="text-sm font-bold text-primary">Preview products</Text>
+              </Pressable>
+              </>
             ) : (
               <Text className="rounded-xl border border-dashed border-slate-300 px-4 py-5 text-center text-sm text-slate-500">
                 No products added yet. Tap “Add product” to choose from the catalog.
@@ -874,83 +886,133 @@ export default function Billing() {
             )}
 
             {showProductPicker ? (
-              <View className="gap-2 border-t border-slate-100 pt-3">
-                <Text className="text-sm font-bold text-slate-800">Product catalog</Text>
-                <TextInput
-                  className={inputClass}
-                  value={productSearch}
-                  onChangeText={setProductSearch}
-                  placeholder="Search name, category, purity, or SKU"
-                  placeholderTextColor="#94A3B8"
-                  autoCapitalize="none"
-                />
-                {catalogError ? (
-                  <View className="gap-2 rounded-xl bg-rose-50 p-3">
-                    <Text className="text-xs text-rose-700">{catalogError}</Text>
-                    <ActionButton label="Retry loading products" onPress={() => { loadCatalog(); }} secondary />
-                  </View>
-                ) : null}
-                {catalog.length === 0 && !catalogError ? (
-                  <View className="items-center py-5">
-                    <ActivityIndicator color="#004D40" />
-                    <Text className="mt-2 text-xs text-slate-500">Loading products…</Text>
-                  </View>
-                ) : visibleProducts.length ? (
-                  <ScrollView className="max-h-96" nestedScrollEnabled keyboardShouldPersistTaps="handled">
-                    {visibleProducts.map(product => {
-                      const alreadyAdded = products.some(
-                        item => String(item.product_id) === String(product.id),
-                      );
-                      const image = getProductImageUrl(product);
-                      return (
-                        <View
-                          key={product.id}
-                          className="mb-2 flex-row items-center rounded-xl border border-slate-100 p-3"
-                        >
-                          {image ? (
-                            <Image
-                              source={{ uri: image }}
-                              className="mr-3 h-11 w-11 rounded-lg bg-slate-100"
-                              resizeMode="cover"
-                              accessibilityLabel={`${product.name} image`}
-                            />
-                          ) : null}
-                          <View className="min-w-0 flex-1">
-                            <Text className="text-sm font-bold text-slate-800" numberOfLines={1}>
-                              {product.name}
-                            </Text>
-                            <Text className="mt-1 text-xs text-slate-500" numberOfLines={1}>
-                              {[product.category, product.purity, product.product_code]
-                                .filter(Boolean)
-                                .join(' · ') || 'Uncategorized'}
-                            </Text>
-                            <Text className="mt-1 text-sm font-bold text-primary-dark">
-                              {currency(getProductPrice(product))}
-                            </Text>
-                          </View>
-                          <Pressable
-                            onPress={() => addProduct(product)}
-                            className={`ml-2 rounded-lg px-3 py-2 ${
-                              alreadyAdded ? 'bg-emerald-50' : 'bg-primary'
-                            }`}
-                            accessibilityRole="button"
-                            accessibilityLabel={`Add ${product.name} to bill`}
-                          >
-                            <Text className={`text-xs font-bold ${alreadyAdded ? 'text-emerald-700' : 'text-white'}`}>
-                              {alreadyAdded ? 'Add again' : '+ Add'}
-                            </Text>
-                          </Pressable>
-                        </View>
-                      );
-                    })}
+              <View className="gap-3 border-t border-slate-100 pt-3">
+                <Text className="text-sm font-extrabold text-slate-900">Product catalog</Text>
+                  <TextInput
+                    className={inputClass}
+                    value={productSearch}
+                    onChangeText={setProductSearch}
+                    placeholder="Search name, category, purity, or SKU"
+                    placeholderTextColor="#94A3B8"
+                    autoCapitalize="none"
+                  />
+                  <ScrollView className="mt-3" nestedScrollEnabled keyboardShouldPersistTaps="handled">
+                    {catalogError ? (
+                      <View className="gap-2 rounded-xl bg-rose-50 p-3">
+                        <Text className="text-xs text-rose-700">{catalogError}</Text>
+                        <ActionButton label="Retry loading products" onPress={() => { loadCatalog(); }} secondary />
+                      </View>
+                    ) : null}
+                    {catalog.length === 0 && !catalogError ? (
+                      <View className="items-center py-5">
+                        <ActivityIndicator color="#004D40" />
+                        <Text className="mt-2 text-xs text-slate-500">Loading products…</Text>
+                      </View>
+                    ) : visibleProducts.length ? (
+                      <View className="flex-row flex-wrap">
+                        {visibleProducts.map(product => {
+                          const alreadyAdded = products.some(
+                            item => String(item.product_id) === String(product.id),
+                          );
+                          const image = getProductImageUrl(product);
+                          return (
+                            <View key={product.id} className="w-1/2 px-1 pb-2">
+                              <View className="min-h-52 rounded-xl border border-slate-100 bg-white p-2">
+                                {image ? (
+                                  <Image
+                                    source={{ uri: image }}
+                                    className="mb-2 h-24 w-full rounded-lg bg-slate-100"
+                                    resizeMode="cover"
+                                    accessibilityLabel={`${product.name} image`}
+                                  />
+                                ) : (
+                                  <View className="mb-2 h-24 w-full items-center justify-center rounded-lg bg-slate-100">
+                                    <Text className="text-2xl font-bold text-slate-300">◆</Text>
+                                  </View>
+                                )}
+                                <Text className="text-sm font-bold text-slate-800" numberOfLines={2}>
+                                  {product.name}
+                                </Text>
+                                <Text className="mt-1 text-xs text-slate-500" numberOfLines={1}>
+                                  {[product.category, product.purity].filter(Boolean).join(' · ') || 'Uncategorized'}
+                                </Text>
+                                <Text className="mt-1 text-sm font-bold text-primary-dark" numberOfLines={1}>
+                                  {currency(getProductPrice(product))}
+                                </Text>
+                                <Pressable
+                                  onPress={() => addProduct(product)}
+                                  className={`mt-2 items-center rounded-lg py-2 ${alreadyAdded ? 'bg-emerald-50' : 'bg-primary'}`}
+                                  accessibilityRole="button"
+                                  accessibilityLabel={`Add ${product.name} to bill`}
+                                >
+                                  <Text className={`text-xs font-bold ${alreadyAdded ? 'text-emerald-700' : 'text-white'}`}>
+                                    {alreadyAdded ? '+ Add again' : '+ Add'}
+                                  </Text>
+                                </Pressable>
+                              </View>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    ) : (
+                      <Text className="py-4 text-center text-sm text-slate-500">
+                        No active products match this search.
+                      </Text>
+                    )}
                   </ScrollView>
-                ) : (
-                  <Text className="py-4 text-center text-sm text-slate-500">
-                    No active products match this search.
-                  </Text>
-                )}
               </View>
             ) : null}
+
+            <Modal
+              visible={showProductPreview}
+              transparent
+              animationType="slide"
+              onRequestClose={() => setShowProductPreview(false)}
+            >
+              <View className="flex-1 justify-end bg-black/50">
+                <Pressable
+                  className="flex-1"
+                  onPress={() => setShowProductPreview(false)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Close product preview"
+                />
+                <View className="max-h-[75%] rounded-t-3xl bg-white px-4 pb-6 pt-3">
+                  <View className="mx-auto mb-3 h-1 w-12 rounded-full bg-slate-300" />
+                  <View className="mb-3 flex-row items-center justify-between">
+                    <View>
+                      <Text className="text-base font-extrabold text-slate-900">Products preview</Text>
+                      <Text className="mt-1 text-xs text-slate-500">{products.length} item{products.length === 1 ? '' : 's'} selected</Text>
+                    </View>
+                    <Pressable
+                      onPress={() => setShowProductPreview(false)}
+                      className="h-9 w-9 items-center justify-center rounded-full bg-slate-100"
+                      accessibilityRole="button"
+                      accessibilityLabel="Close product preview"
+                    >
+                      <Text className="text-lg font-bold text-slate-600">×</Text>
+                    </Pressable>
+                  </View>
+                  <ScrollView nestedScrollEnabled>
+                    {products.map((product, index) => (
+                      <View key={`${product.product_id}-${index}`} className="mb-2 rounded-xl border border-slate-100 p-3">
+                        <Text className="text-sm font-bold text-slate-800">{product.product_name || 'Product'}</Text>
+                        <Text className="mt-1 text-xs text-slate-500">
+                          {[product.category, product.purity].filter(Boolean).join(' · ') || '—'}
+                        </Text>
+                        <Text className="mt-2 text-sm font-extrabold text-primary-dark">{currency(product.price)}</Text>
+                      </View>
+                    ))}
+                  </ScrollView>
+                  <Pressable
+                    onPress={() => setShowProductPreview(false)}
+                    className="mt-3 items-center rounded-xl bg-primary py-3.5"
+                    accessibilityRole="button"
+                  >
+                    <Text className="text-sm font-bold text-white">Close preview</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </Modal>
             <ActionButton
               label="Continue to customer address"
               onPress={() => {
