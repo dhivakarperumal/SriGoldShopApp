@@ -52,6 +52,7 @@ type ReviewResponse = {
 
 type StatusFilter = 'All' | 'Pending' | 'Published' | 'Flagged';
 type RatingFilter = 1 | 2 | 3 | 4 | 5 | null;
+type ActiveFilterMenu = 'status' | 'rating' | null;
 
 type NewReview = {
   user_name: string;
@@ -132,6 +133,7 @@ function AllReview({ onBack }: Props) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>(null);
+  const [activeFilterMenu, setActiveFilterMenu] = useState<ActiveFilterMenu>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState('');
@@ -382,36 +384,18 @@ function AllReview({ onBack }: Props) {
             className="mb-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800"
           />
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-2">
-            <View className="flex-row gap-2">
-              {statusOptions.map(status => (
-                <FilterChip
-                  key={status}
-                  label={status}
-                  selected={statusFilter === status}
-                  onPress={() => setStatusFilter(status)}
-                />
-              ))}
-            </View>
-          </ScrollView>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
-            <View className="flex-row gap-2">
-              <FilterChip
-                label="All ratings"
-                selected={ratingFilter === null}
-                onPress={() => setRatingFilter(null)}
-              />
-              {[5, 4, 3, 2, 1].map(rating => (
-                <FilterChip
-                  key={rating}
-                  label={`${rating} ★`}
-                  selected={ratingFilter === rating}
-                  onPress={() => setRatingFilter(rating as Exclude<RatingFilter, null>)}
-                />
-              ))}
-            </View>
-          </ScrollView>
+          <View className="mb-4 flex-row gap-3">
+            <FilterSelect
+              label="Status"
+              value={statusFilter}
+              onPress={() => setActiveFilterMenu('status')}
+            />
+            <FilterSelect
+              label="Rating"
+              value={ratingFilter === null ? 'All ratings' : `${ratingFilter} Stars`}
+              onPress={() => setActiveFilterMenu('rating')}
+            />
+          </View>
 
           {isLoading ? (
             <View className="items-center py-16">
@@ -583,6 +567,80 @@ function AllReview({ onBack }: Props) {
             </ScrollView>
           </View>
         </View>
+      </Modal>
+
+      <Modal
+        visible={activeFilterMenu !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setActiveFilterMenu(null)}
+      >
+        <Pressable
+          className="flex-1 justify-end bg-black/50"
+          onPress={() => setActiveFilterMenu(null)}
+          accessibilityRole="button"
+          accessibilityLabel="Close filter options"
+        >
+          <View
+            className="rounded-t-3xl bg-white px-5 pt-5"
+            style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+          >
+            <Text className="mb-3 text-lg font-extrabold text-slate-900">
+              {activeFilterMenu === 'status' ? 'Review status' : 'Review rating'}
+            </Text>
+            {activeFilterMenu === 'status'
+              ? statusOptions.map(status => (
+                  <Pressable
+                    key={status}
+                    onPress={() => {
+                      setStatusFilter(status);
+                      setActiveFilterMenu(null);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: statusFilter === status }}
+                    className={`mb-2 rounded-xl px-4 py-3 ${
+                      statusFilter === status ? 'bg-emerald-50' : 'bg-slate-50'
+                    }`}
+                  >
+                    <Text
+                      className={`text-sm font-semibold ${
+                        statusFilter === status ? 'text-primary' : 'text-slate-700'
+                      }`}
+                    >
+                      {status}
+                    </Text>
+                  </Pressable>
+                ))
+              : [
+                  { label: 'All ratings', value: null },
+                  ...[5, 4, 3, 2, 1].map(rating => ({
+                    label: `${rating} Stars`,
+                    value: rating as Exclude<RatingFilter, null>,
+                  })),
+                ].map(option => (
+                  <Pressable
+                    key={option.label}
+                    onPress={() => {
+                      setRatingFilter(option.value);
+                      setActiveFilterMenu(null);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: ratingFilter === option.value }}
+                    className={`mb-2 rounded-xl px-4 py-3 ${
+                      ratingFilter === option.value ? 'bg-emerald-50' : 'bg-slate-50'
+                    }`}
+                  >
+                    <Text
+                      className={`text-sm font-semibold ${
+                        ratingFilter === option.value ? 'text-primary' : 'text-slate-700'
+                      }`}
+                    >
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                ))}
+          </View>
+        </Pressable>
       </Modal>
     </View>
   );
@@ -757,26 +815,32 @@ function StatCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function FilterChip({
+function FilterSelect({
   label,
-  selected,
+  value,
   onPress,
 }: {
   label: string;
-  selected: boolean;
+  value: string;
   onPress: () => void;
 }) {
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityState={{ selected }}
-      className={`rounded-full border px-3 py-2 ${
-        selected ? 'border-primary bg-primary' : 'border-slate-200 bg-white'
-      }`}
+      accessibilityLabel={`${label}: ${value}`}
+      className="min-w-0 flex-1 flex-row items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-3"
     >
-      <Text className={`text-xs font-bold ${selected ? 'text-white' : 'text-slate-600'}`}>
-        {label}
+      <View className="min-w-0 flex-1">
+        <Text className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+          {label}
+        </Text>
+        <Text className="mt-0.5 text-sm font-bold text-slate-800" numberOfLines={1}>
+          {value}
+        </Text>
+      </View>
+      <Text className="ml-2 text-xs font-bold text-slate-500">
+        ▼
       </Text>
     </Pressable>
   );
