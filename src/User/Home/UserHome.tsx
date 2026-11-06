@@ -194,11 +194,6 @@ function UserHome({
           isLoading={isLoading}
           error={errors.categories}
         />
-        <HomeGoldRatesSection
-          rates={data.rates}
-          isLoading={isLoading}
-          error={errors.rates}
-        />
         {HOME_PRODUCT_METALS.map(metal => (
           <HomeProductsSection
             key={metal}
@@ -212,6 +207,11 @@ function UserHome({
             onToggleFavorite={onToggleFavorite}
           />
         ))}
+        <HomeGoldRatesSection
+          rates={data.rates}
+          isLoading={isLoading}
+          error={errors.rates}
+        />
         <HomeBannerSections />
       </View>
       <HomeReviewsSection refreshVersion={refreshVersion} />
