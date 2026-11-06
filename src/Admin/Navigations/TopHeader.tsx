@@ -34,6 +34,7 @@ export type AdminRoute =
   | 'addGoldrate'
   | 'customers'
   | 'stockDetails'
+  | 'enquiries'
   | 'receipt'
   | 'homeSections'
   | 'reviews'

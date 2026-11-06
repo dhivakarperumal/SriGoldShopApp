@@ -82,3 +82,20 @@ test('clicking Stock Details card opens stock management', () => {
 
   expect(onNavigateMock).toHaveBeenCalledWith('stockDetails');
 });
+
+test('clicking Gold Enquiries card opens enquiry management', () => {
+  const onNavigateMock = jest.fn();
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  act(() => {
+    renderer = ReactTestRenderer.create(<More onNavigate={onNavigateMock} />);
+  });
+
+  const enquiriesCard = renderer.root.findByProps({
+    accessibilityLabel: 'Manage customer enquiries',
+  });
+  act(() => {
+    enquiriesCard.props.onPress();
+  });
+
+  expect(onNavigateMock).toHaveBeenCalledWith('enquiries');
+});

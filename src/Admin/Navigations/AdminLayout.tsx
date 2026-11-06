@@ -34,6 +34,7 @@ function AdminLayout({
     activeRoute !== 'addGoldrate' &&
     activeRoute !== 'customers' &&
     activeRoute !== 'stockDetails' &&
+    activeRoute !== 'enquiries' &&
     activeRoute !== 'reviews' &&
     activeRoute !== 'homeSections';
 

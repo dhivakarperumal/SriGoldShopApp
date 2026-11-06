@@ -100,6 +100,44 @@ function More({ onNavigate }: MoreProps) {
 
         <Pressable
           className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"
+          onPress={() => onNavigate('enquiries')}
+          accessibilityRole="button"
+          accessibilityLabel="Manage customer enquiries"
+        >
+          <View className="flex-row items-center flex-1 pr-3">
+            <View className="mr-3.5 h-12 w-12 items-center justify-center rounded-2xl border border-fuchsia-100 bg-fuchsia-50">
+              <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"
+                  stroke="#86198F"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-bold text-slate-900">Gold Enquiries</Text>
+              <Text className="mt-1 text-xs leading-4 text-slate-500">
+                Track customer requests, update follow-ups, and manage enquiry status.
+              </Text>
+            </View>
+          </View>
+          <View className="h-8 w-8 items-center justify-center rounded-full bg-slate-100/70">
+            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="m9 18 6-6-6-6"
+                stroke="#64748B"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </View>
+        </Pressable>
+
+        <Pressable
+          className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"
           onPress={() => onNavigate('homeSections')}
           accessibilityRole="button"
           accessibilityLabel="Manage home product sections"

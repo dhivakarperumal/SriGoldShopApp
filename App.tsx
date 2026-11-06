@@ -24,6 +24,7 @@ import AllGoldRate, {
 import AddGoldrate from './src/Admin/DailyGoldRate/AddGoldrate';
 import Customers from './src/Admin/MorePages/Customer';
 import StockDetails from './src/Admin/MorePages/StockDetails';
+import AllEnquries from './src/Admin/Enquries/AllEnquries';
 import Receipt from './src/Admin/MorePages/Receipt';
 import HomeSections from './src/Admin/MorePages/HomeSections';
 import AllReview from './src/Admin/Review/AllReview';
@@ -226,6 +227,8 @@ function App() {
                         ? <Customers onBack={() => navigateAdmin('more')} />
                         : adminRoute === 'stockDetails'
                           ? <StockDetails onBack={() => navigateAdmin('more')} />
+                        : adminRoute === 'enquiries'
+                          ? <AllEnquries onBack={() => navigateAdmin('more')} />
                         : adminRoute === 'receipt'
                           ? <Receipt onBack={() => navigateAdmin('more')} />
                           : adminRoute === 'reviews'
