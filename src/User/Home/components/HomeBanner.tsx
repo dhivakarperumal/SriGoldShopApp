@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Image,
   ScrollView,
@@ -31,12 +31,29 @@ type HomeBannerProps = {
 function HomeBanner({ banners, userName, error }: HomeBannerProps) {
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
   const firstName = userName?.trim().split(/\s+/)[0];
   const slides = banners.length > 0 ? banners : [undefined];
+
+  useEffect(() => {
+    if (slides.length < 2) return undefined;
+
+    const timer = setInterval(() => {
+      const nextIndex = (activeIndex + 1) % slides.length;
+      scrollViewRef.current?.scrollTo({
+        x: nextIndex * width,
+        animated: true,
+      });
+      setActiveIndex(nextIndex);
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [activeIndex, slides.length, width]);
 
   return (
     <View className="mb-5">
       <ScrollView
+        ref={scrollViewRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
