@@ -149,15 +149,15 @@ function HomeProductsSection({
           {[0, 1].map(index => (
             <View
               key={index}
-              className="mb-3 overflow-hidden rounded-xl border border-[#eadfc8] bg-white"
+              className="mb-3 h-[420px] overflow-hidden rounded-xl border border-[#eadfc8] bg-white"
               style={{ width: cardWidth }}
             >
-              <HomeSkeleton className="h-36 w-full rounded-none bg-[#eee8dc]" />
-              <View className="p-3">
+              <HomeSkeleton className="h-40 w-full rounded-none bg-[#eee8dc]" />
+              <View className="flex-1 justify-between p-3">
                 <HomeSkeleton className="h-3 w-4/5 bg-[#e8dfd0]" />
-                <HomeSkeleton className="mt-2 h-3 w-1/2 bg-[#e8dfd0]" />
-                <HomeSkeleton className="mt-3 h-4 w-2/3 bg-[#e8dfd0]" />
-                <HomeSkeleton className="mt-3 h-9 w-full rounded-lg bg-[#e8dfd0]" />
+                <HomeSkeleton className="h-3 w-1/2 bg-[#e8dfd0]" />
+                <HomeSkeleton className="h-4 w-2/3 bg-[#e8dfd0]" />
+                <HomeSkeleton className="h-11 w-full rounded-lg bg-[#e8dfd0]" />
               </View>
             </View>
           ))}

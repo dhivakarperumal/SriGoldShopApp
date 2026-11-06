@@ -83,6 +83,36 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginBottom: 12,
   },
+  carouselCard: {
+    height: 420,
+  },
+  carouselImageBox: {
+    height: 160,
+  },
+  carouselBody: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  carouselNameRow: {
+    minHeight: 36,
+  },
+  carouselRatingRow: {
+    minHeight: 20,
+  },
+  carouselPriceRow: {
+    minHeight: 44,
+    alignContent: 'flex-start',
+  },
+  carouselSpecsRow: {
+    minHeight: 54,
+  },
+  carouselSpecsPlaceholder: {
+    height: 74,
+  },
+  carouselEnquireBtn: {
+    height: 44,
+    paddingVertical: 0,
+  },
   imageBox: {
     width: '100%',
     height: 190,
@@ -307,7 +337,13 @@ function CatalogCard({
       : { width: '48.5%' as const };
 
   return (
-    <View style={[styles.card, cardWidth, className ? {} : {}]}>
+    <View
+      style={[
+        styles.card,
+        cardWidth,
+        layout === 'carousel' && styles.carouselCard,
+      ]}
+    >
       {/* ── Image area ── */}
       <Pressable
         onPress={onPress}
@@ -315,7 +351,12 @@ function CatalogCard({
         accessibilityRole="button"
         accessibilityLabel={`View ${productName}`}
       >
-        <View style={styles.imageBox}>
+        <View
+          style={[
+            styles.imageBox,
+            layout === 'carousel' && styles.carouselImageBox,
+          ]}
+        >
           {imageUrl && !hasImageError ? (
             <Image
               source={{ uri: imageUrl }}
@@ -370,16 +411,36 @@ function CatalogCard({
       </Pressable>
 
       {/* ── Body ── */}
-      <View style={styles.body}>
+      <View
+        style={[
+          styles.body,
+          layout === 'carousel' && styles.carouselBody,
+        ]}
+      >
         {/* Name row + stock badge */}
-        <View style={styles.nameRow}>
+        <View
+          style={[
+            styles.nameRow,
+            layout === 'carousel' && styles.carouselNameRow,
+          ]}
+        >
           <Text style={styles.productName} numberOfLines={2}>
             {productName}
           </Text>
         </View>
 
         {/* Rating + Stock in same row */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+        <View
+          style={[
+            {
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 2,
+            },
+            layout === 'carousel' && styles.carouselRatingRow,
+          ]}
+        >
           {ratingDisplay ? (
             <View style={styles.ratingRow}>
               <Text style={{ fontSize: 13, color: '#FFC107' }}>★</Text>
@@ -396,7 +457,12 @@ function CatalogCard({
         </View>
 
         {/* Price row */}
-        <View style={styles.priceRow}>
+        <View
+          style={[
+            styles.priceRow,
+            layout === 'carousel' && styles.carouselPriceRow,
+          ]}
+        >
           <Text style={styles.priceText}>
             {priceData ? priceData.formatted : priceFallback ?? 'Price on request'}
           </Text>
@@ -414,7 +480,12 @@ function CatalogCard({
 
         {/* Weight & Purity specs */}
         {(weight || purity) ? (
-          <View style={styles.specsRow}>
+          <View
+            style={[
+              styles.specsRow,
+              layout === 'carousel' && styles.carouselSpecsRow,
+            ]}
+          >
             {weight ? (
               <View style={styles.specItem}>
                 {/* Weight icon */}
@@ -452,14 +523,26 @@ function CatalogCard({
               </View>
             ) : null}
           </View>
-        ) : <View style={{ height: 10 }} />}
+        ) : (
+          <View
+            style={
+              layout === 'carousel'
+                ? styles.carouselSpecsPlaceholder
+                : { height: 10 }
+            }
+          />
+        )}
       </View>
 
       {/* ── Footer / Enquire button ── */}
       {footer}
       {onEnquire ? (
         <Pressable
-          style={[styles.enquireBtn, { opacity: 1 }]}
+          style={[
+            styles.enquireBtn,
+            { opacity: 1 },
+            layout === 'carousel' && styles.carouselEnquireBtn,
+          ]}
           onPress={() => onEnquire(product)}
           accessibilityRole="button"
           accessibilityLabel={`Enquire about ${productName}`}
