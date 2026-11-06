@@ -13,11 +13,13 @@ import type { HomeBanner as HomeBannerData } from '../types';
 const BANNER_HEIGHT = 220;
 const styles = StyleSheet.create({
   slide: { height: BANNER_HEIGHT, justifyContent: 'flex-end' },
-  image: StyleSheet.absoluteFillObject,
+  image: { position: 'absolute', top: 0, left: 0, zIndex: 0 },
   overlay: {
     ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
     backgroundColor: 'rgba(0, 40, 32, 0.48)',
   },
+  text: { zIndex: 2 },
 });
 
 type HomeBannerProps = {
@@ -54,13 +56,13 @@ function HomeBanner({ banners, userName, error }: HomeBannerProps) {
               {image ? (
                 <Image
                   source={{ uri: image }}
-                  style={styles.image}
+                  style={[styles.image, { width, height: BANNER_HEIGHT }]}
                   resizeMode="cover"
                   accessibilityLabel={banner?.title || 'Sri Golds featured jewellery'}
                 />
               ) : null}
               <View style={styles.overlay} />
-              <View className="relative">
+              <View className="relative" style={styles.text}>
                 <Text className="text-[10px] font-bold uppercase tracking-[2px] text-accent-light">
                   Sri Golds · Jewellery
                 </Text>
