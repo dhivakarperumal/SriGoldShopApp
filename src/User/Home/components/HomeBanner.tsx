@@ -12,7 +12,7 @@ import type { HomeBanner as HomeBannerData } from '../types';
 
 const BANNER_HEIGHT = 220;
 const styles = StyleSheet.create({
-  slide: { height: BANNER_HEIGHT, justifyContent: 'flex-end' },
+  slide: { height: BANNER_HEIGHT, justifyContent: 'flex-start' },
   image: { position: 'absolute', top: 0, left: 0, zIndex: 0 },
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -50,7 +50,7 @@ function HomeBanner({ banners, userName, error }: HomeBannerProps) {
           return (
             <View
               key={banner?.id ?? `welcome-${index}`}
-              className="relative overflow-hidden border-y border-[#d9b568] bg-[#003b30] px-5 py-4"
+              className="relative overflow-hidden border-y border-[#d9b568] bg-[#003b30] px-5 pt-5 pb-4"
               style={[styles.slide, { width }]}
             >
               {image ? (
