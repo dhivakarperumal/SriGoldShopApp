@@ -62,19 +62,22 @@ function HomeBanner({ banners, userName, error }: HomeBannerProps) {
                 />
               ) : null}
               <View style={styles.overlay} />
-              <View className="relative" style={styles.text}>
+              <View
+                className="relative"
+                style={[styles.text, { width: width * 0.58 }]}
+              >
                 <Text className="text-[10px] font-bold uppercase tracking-[2px] text-accent-light">
                   Sri Golds · Jewellery
                 </Text>
                 <Text
-                  className="mt-1 max-w-[280px] text-2xl font-bold leading-8 text-white"
+                  className="mt-1 text-2xl font-bold leading-8 text-white"
                   numberOfLines={2}
                 >
                   {banner?.title ||
                     `Welcome${firstName ? `, ${firstName}` : ''}`}
                 </Text>
                 <Text
-                  className="mt-1 max-w-[300px] text-sm leading-5 text-emerald-50"
+                  className="mt-1 text-sm leading-5 text-emerald-50"
                   numberOfLines={2}
                 >
                   {banner?.subtitle ||
