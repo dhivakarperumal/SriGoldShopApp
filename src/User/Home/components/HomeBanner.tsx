@@ -1,12 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Image,
-  PanResponder,
+  ScrollView,
   StyleSheet,
   Text,
   useWindowDimensions,
   View,
+  type ScrollViewInstance,
 } from 'react-native';
 import { resolveImageUrl } from '../homeUtils';
 import type { HomeBanner as HomeBannerData } from '../types';
@@ -17,16 +18,20 @@ const styles = StyleSheet.create({
     height: BANNER_HEIGHT,
     justifyContent: 'center',
   },
-  page: {
-    backfaceVisibility: 'hidden',
+  backgroundScroll: {
+    ...StyleSheet.absoluteFill,
   },
-  image: { position: 'absolute', top: 0, left: 0, zIndex: 0 },
+  image: {
+    height: BANNER_HEIGHT,
+  },
   overlay: {
     ...StyleSheet.absoluteFill,
-    zIndex: 1,
     backgroundColor: 'rgba(0, 40, 32, 0.48)',
   },
-  text: { zIndex: 2 },
+  text: {
+    backfaceVisibility: 'hidden',
+    zIndex: 2,
+  },
 });
 
 type HomeBannerProps = {
@@ -35,190 +40,128 @@ type HomeBannerProps = {
   error?: string;
 };
 
-type SlideTransition = {
-  fromIndex: number;
-  toIndex: number;
-  direction: 1 | -1;
-};
-
 function HomeBanner({ banners, userName, error }: HomeBannerProps) {
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isEntering, setIsEntering] = useState(false);
-  const [slideTransition, setSlideTransition] =
-    useState<SlideTransition | null>(null);
-  const activeIndexRef = useRef(0);
-  const isTransitioningRef = useRef(false);
-  const transitionProgress = useRef(new Animated.Value(0)).current;
-  const backgroundProgress = useRef(new Animated.Value(0)).current;
-  const firstName = userName?.trim().split(/\s+/)[0];
+  const [turnDirection, setTurnDirection] = useState<1 | -1>(1);
   const slides = banners.length > 0 ? banners : [undefined];
+  const scrollViewRef = useRef<ScrollViewInstance>(null);
+  const activeIndexRef = useRef(0);
+  const lastOffsetRef = useRef(0);
+  const isTurningTextRef = useRef(false);
+  const textTurnProgress = useRef(new Animated.Value(0)).current;
+  const firstName = userName?.trim().split(/\s+/)[0];
 
-  const turnToSlide = useCallback(
+  const turnTextToSlide = useCallback(
     (nextIndex: number, direction: 1 | -1) => {
-      if (
-        slides.length < 2 ||
-        isTransitioningRef.current ||
-        nextIndex === activeIndexRef.current
-      ) {
+      if (nextIndex === activeIndexRef.current || isTurningTextRef.current) {
         return;
       }
 
-      isTransitioningRef.current = true;
-      setSlideTransition({
-        fromIndex: activeIndexRef.current,
-        toIndex: nextIndex,
-        direction,
-      });
-      backgroundProgress.setValue(0);
-      Animated.timing(backgroundProgress, {
+      isTurningTextRef.current = true;
+      setTurnDirection(direction);
+      textTurnProgress.setValue(0);
+      Animated.timing(textTurnProgress, {
         toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }).start();
-
-      Animated.timing(transitionProgress, {
-        toValue: 1,
-        duration: 300,
+        duration: 260,
         useNativeDriver: true,
       }).start(({ finished }) => {
         if (!finished) {
-          isTransitioningRef.current = false;
+          isTurningTextRef.current = false;
           return;
         }
 
         activeIndexRef.current = nextIndex;
         setActiveIndex(nextIndex);
         setIsEntering(true);
-        Animated.timing(transitionProgress, {
+        Animated.timing(textTurnProgress, {
           toValue: 0,
-          duration: 300,
+          duration: 260,
           useNativeDriver: true,
         }).start(() => {
           setIsEntering(false);
-          setSlideTransition(null);
-          backgroundProgress.setValue(0);
-          isTransitioningRef.current = false;
+          isTurningTextRef.current = false;
         });
       });
     },
-    [backgroundProgress, slides.length, transitionProgress],
+    [textTurnProgress],
   );
 
   useEffect(() => {
     if (slides.length < 2) return undefined;
 
     const timer = setInterval(() => {
-      turnToSlide((activeIndexRef.current + 1) % slides.length, 1);
+      const nextIndex = (activeIndexRef.current + 1) % slides.length;
+      scrollViewRef.current?.scrollTo({
+        x: nextIndex * width,
+        y: 0,
+        animated: true,
+      });
     }, 4000);
 
     return () => clearInterval(timer);
-  }, [slides.length, turnToSlide]);
+  }, [slides.length, width]);
 
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => false,
-        onMoveShouldSetPanResponder: (_, gesture) =>
-          slides.length > 1 &&
-          Math.abs(gesture.dx) > 12 &&
-          Math.abs(gesture.dx) > Math.abs(gesture.dy),
-        onPanResponderRelease: (_, gesture) => {
-          if (gesture.dx < -30) {
-            turnToSlide((activeIndexRef.current + 1) % slides.length, 1);
-          } else if (gesture.dx > 30) {
-            turnToSlide(
-              (activeIndexRef.current - 1 + slides.length) % slides.length,
-              -1,
-            );
-          }
-        },
-      }),
-    [slides.length, turnToSlide],
-  );
-
-  const rotateY = transitionProgress.interpolate({
+  const rotateY = textTurnProgress.interpolate({
     inputRange: [0, 1],
     outputRange: isEntering
-      ? [`${slideTransition?.direction ?? 1}90deg`, '0deg']
-      : ['0deg', `${-(slideTransition?.direction ?? 1) * 90}deg`],
+      ? [`${turnDirection * 90}deg`, '0deg']
+      : ['0deg', `${-turnDirection * 90}deg`],
   });
   const banner = slides[activeIndex];
-  const image = resolveImageUrl(banner?.mobile_image || banner?.image);
 
   return (
     <View className="mb-5">
       <View
-        {...panResponder.panHandlers}
         className="relative overflow-hidden border-y border-[#d9b568] bg-[#003b30] px-5 pt-5 pb-4"
-        style={[styles.slide, { width }]}
+        style={styles.slide}
         accessibilityLabel="Featured jewellery banners"
       >
-        {slideTransition ? (
-          <>
-            <Animated.Image
-              source={{
-                uri: resolveImageUrl(
-                  slides[slideTransition.fromIndex]?.mobile_image ||
-                    slides[slideTransition.fromIndex]?.image,
-                ),
-              }}
-              style={[
-                styles.image,
-                { width, height: BANNER_HEIGHT },
-                {
-                  transform: [
-                    {
-                      translateX: backgroundProgress.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, -slideTransition.direction * width],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-              resizeMode="cover"
-            />
-            <Animated.Image
-              source={{
-                uri: resolveImageUrl(
-                  slides[slideTransition.toIndex]?.mobile_image ||
-                    slides[slideTransition.toIndex]?.image,
-                ),
-              }}
-              style={[
-                styles.image,
-                { width, height: BANNER_HEIGHT },
-                {
-                  transform: [
-                    {
-                      translateX: backgroundProgress.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [
-                          slideTransition.direction * width,
-                          0,
-                        ],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-              resizeMode="cover"
-            />
-          </>
-        ) : image ? (
-          <Image
-            source={{ uri: image }}
-            style={[styles.image, { width, height: BANNER_HEIGHT }]}
-            resizeMode="cover"
-            accessibilityLabel={banner?.title || 'Sri Golds featured jewellery'}
-          />
-        ) : null}
-        <View style={styles.overlay} />
+        <ScrollView
+          ref={scrollViewRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          style={[styles.backgroundScroll, { width, height: BANNER_HEIGHT }]}
+          onScrollBeginDrag={event => {
+            lastOffsetRef.current = event.nativeEvent.contentOffset.x;
+          }}
+          onMomentumScrollEnd={event => {
+            const offset = event.nativeEvent.contentOffset.x;
+            const nextIndex = Math.max(
+              0,
+              Math.min(slides.length - 1, Math.round(offset / width)),
+            );
+            const direction: 1 | -1 =
+              offset >= lastOffsetRef.current ? 1 : -1;
+            lastOffsetRef.current = offset;
+            turnTextToSlide(nextIndex, direction);
+          }}
+        >
+          {slides.map((slide, index) => {
+            const image = resolveImageUrl(slide?.mobile_image || slide?.image);
+            return (
+              <View key={slide?.id ?? `welcome-${index}`} style={{ width }}>
+                {image ? (
+                  <Image
+                    source={{ uri: image }}
+                    style={[styles.image, { width }]}
+                    resizeMode="cover"
+                    accessibilityLabel={
+                      slide?.title || 'Sri Golds featured jewellery'
+                    }
+                  />
+                ) : null}
+              </View>
+            );
+          })}
+        </ScrollView>
+        <View pointerEvents="none" style={styles.overlay} />
         <Animated.View
+          pointerEvents="none"
           className="relative"
           style={[
-            styles.page,
             styles.text,
             {
               width: width * 0.58,
@@ -255,9 +198,9 @@ function HomeBanner({ banners, userName, error }: HomeBannerProps) {
       </View>
       {slides.length > 1 ? (
         <View className="mt-2 flex-row justify-center gap-1.5">
-          {slides.map((slideBanner, index) => (
+          {slides.map((slide, index) => (
             <View
-              key={slideBanner?.id ?? index}
+              key={slide?.id ?? index}
               className={`h-1.5 rounded-full ${
                 index === activeIndex ? 'w-5 bg-[#bd8732]' : 'w-1.5 bg-[#d9c9a8]'
               }`}
