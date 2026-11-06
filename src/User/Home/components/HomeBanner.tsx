@@ -196,18 +196,6 @@ function HomeBanner({ banners, userName, error }: HomeBannerProps) {
           ) : null}
         </Animated.View>
       </View>
-      {slides.length > 1 ? (
-        <View className="mt-2 flex-row justify-center gap-1.5">
-          {slides.map((slide, index) => (
-            <View
-              key={slide?.id ?? index}
-              className={`h-1.5 rounded-full ${
-                index === activeIndex ? 'w-5 bg-[#bd8732]' : 'w-1.5 bg-[#d9c9a8]'
-              }`}
-            />
-          ))}
-        </View>
-      ) : null}
     </View>
   );
 }
