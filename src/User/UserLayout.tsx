@@ -435,10 +435,12 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
               </View>
             ) : null}
           </View>
-          <UserBottomNavigation
-            activeTab={activeTab}
-            onSelect={selectTab}
-          />
+          {!selectedProductId && !(activeTab === 'more' && morePage) ? (
+            <UserBottomNavigation
+              activeTab={activeTab}
+              onSelect={selectTab}
+            />
+          ) : null}
         </View>
       </SafeAreaView>
       {enquiryProduct ? (
