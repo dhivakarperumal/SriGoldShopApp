@@ -2,13 +2,18 @@ import { Pressable, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export type UserTab = 'home' | 'enquiry' | 'more';
+export type UserTab = 'home' | 'explore' | 'enquiry' | 'more';
 
 const TABS: { id: UserTab; label: string; path: string }[] = [
   {
     id: 'home',
     label: 'Home',
     path: 'M3 10.5 12 3l9 7.5M5.5 9.5V21h13V9.5M9 21v-7h6v7',
+  },
+  {
+    id: 'explore',
+    label: 'Explore',
+    path: 'M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16ZM21 21l-4.35-4.35',
   },
   {
     id: 'enquiry',

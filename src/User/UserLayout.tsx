@@ -6,6 +6,7 @@ import UserBottomNavigation, {
   type UserTab,
 } from './components/UserBottomNavigation';
 import UserHeader from './components/UserHeader';
+import UserExplore from './Explore/UserExplore';
 import UserHome from './Home/UserHome';
 
 type UserLayoutProps = {
@@ -24,6 +25,8 @@ function UserLayout({ user, onLogout }: UserLayoutProps) {
         <View className="flex-1">
           {activeTab === 'home' ? (
             <UserHome user={user} />
+          ) : activeTab === 'explore' ? (
+            <UserExplore />
           ) : (
             <View className="flex-1 items-center justify-center px-8">
               <Text className="text-xl font-bold text-primary-dark">
