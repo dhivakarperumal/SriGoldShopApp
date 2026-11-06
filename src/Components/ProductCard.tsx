@@ -293,7 +293,6 @@ function CatalogCard({
   price,
   priceFallback,
   footer,
-  className,
   onPress,
   onEnquire,
   isFavorite,
@@ -567,7 +566,6 @@ function ProductCard(props: ProductCardProps) {
   const {
     product,
     layout = 'catalog',
-    carouselWidth,
     title,
     subtitle,
     trailingText,
@@ -577,9 +575,7 @@ function ProductCard(props: ProductCardProps) {
     footer,
     className,
     onPress,
-    onEnquire,
     isFavorite = false,
-    onToggleFavorite,
   } = props;
 
   const imageUrl = getProductImageUrl(product);
