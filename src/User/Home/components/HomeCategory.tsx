@@ -15,7 +15,7 @@ import HomeSkeleton from './HomeSkeleton';
 const VISIBLE_CATEGORIES = 4;
 const CATEGORY_GAP = 8;
 const HOME_HORIZONTAL_PADDING = 32;
-const AUTO_SLIDE_INTERVAL = 2200;
+const CATEGORY_AUTO_SLIDE_INTERVAL = 4500;
 const styles = StyleSheet.create({
   content: { gap: CATEGORY_GAP, paddingBottom: 8 },
 });
@@ -51,7 +51,7 @@ function HomeCategory({ categories, isLoading, error }: HomeCategoryProps) {
         animated: true,
       });
       physicalIndexRef.current = nextIndex;
-    }, AUTO_SLIDE_INTERVAL);
+    }, CATEGORY_AUTO_SLIDE_INTERVAL);
 
     return () => clearInterval(timer);
   }, [categories.length, itemStep]);
