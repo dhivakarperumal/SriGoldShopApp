@@ -65,11 +65,13 @@ function UserExplore({
   onEnquireProduct,
   isFavorite,
   onToggleFavorite,
+  metalSelection,
 }: {
   onSelectProduct: (productId: string) => void;
   onEnquireProduct: (product: ProductCardData) => void;
   isFavorite: (productId: string) => boolean;
   onToggleFavorite: (product: ProductCardData) => void;
+  metalSelection: { name: string; requestId: number } | null;
 }) {
   const [products, setProducts] = useState<ExploreProduct[]>([]);
   const [categories, setCategories] = useState<Facet[]>([]);
@@ -88,6 +90,19 @@ function UserExplore({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [refreshVersion, setRefreshVersion] = useState(0);
+
+  useEffect(() => {
+    if (!metalSelection) return;
+    setSearch('');
+    setSelectedCategory('');
+    setSelectedMetal(metalSelection.name);
+    setOfferThreshold(0);
+    setMinimumPrice(undefined);
+    setMaximumPrice(undefined);
+    setMinimumRating(0);
+    setAvailability('');
+    setSortBy('newest');
+  }, [metalSelection]);
 
   useEffect(() => {
     const controller = new AbortController();

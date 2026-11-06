@@ -108,6 +108,10 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
   const [lastSelectedProductId, setLastSelectedProductId] = useState<string | null>(
     null,
   );
+  const [exploreMetalSelection, setExploreMetalSelection] = useState<{
+    name: string;
+    requestId: number;
+  } | null>(null);
   const [enquiryProduct, setEnquiryProduct] = useState<ProductCardData | null>(null);
   const [favorites, setFavorites] = useState<WishlistItem[]>([]);
   const [isLoadingFavorites, setIsLoadingFavorites] = useState(true);
@@ -264,6 +268,14 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
     setSelectedProductId(productId);
   };
 
+  const exploreMetal = (metalName: string) => {
+    setExploreMetalSelection(current => ({
+      name: metalName,
+      requestId: (current?.requestId ?? 0) + 1,
+    }));
+    selectTab('explore');
+  };
+
   const selectMorePage = (page: MorePage) => {
     if (page === 'profile') setHasVisitedProfile(true);
     setMorePage(page);
@@ -310,6 +322,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
                 onEnquireProduct={setEnquiryProduct}
                 isFavorite={isFavorite}
                 onToggleFavorite={toggleFavorite}
+                onExploreMetal={exploreMetal}
               />
             ) : null}
           </View>
@@ -324,6 +337,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
                 onEnquireProduct={setEnquiryProduct}
                 isFavorite={isFavorite}
                 onToggleFavorite={toggleFavorite}
+                metalSelection={exploreMetalSelection}
               />
             ) : null}
           </View>

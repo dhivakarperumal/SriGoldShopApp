@@ -7,6 +7,7 @@ import HomeBanner from './components/HomeBanner';
 import HomeBannerSections from './components/HomeBannerSections';
 import HomeCategory from './components/HomeCategory';
 import HomeGoldRatesSection from './components/HomeGoldRatesSection';
+import HomeMetalsShowcase from './components/HomeMetalsShowcase';
 import HomeProductsSection from './components/HomeProductsSection';
 import HomeReviewsSection from './components/HomeReviewsSection';
 import type {
@@ -102,12 +103,14 @@ function UserHome({
   onEnquireProduct,
   isFavorite,
   onToggleFavorite,
+  onExploreMetal,
 }: {
   user: AuthenticatedUser;
   onSelectProduct: (productId: string) => void;
   onEnquireProduct: (product: ProductCardData) => void;
   isFavorite: (productId: string) => boolean;
   onToggleFavorite: (product: ProductCardData) => void;
+  onExploreMetal: (metalName: string) => void;
 }) {
   const [data, setData] = useState<HomeData>(EMPTY_DATA);
   const [errors, setErrors] = useState<HomeErrors>({});
@@ -212,6 +215,9 @@ function UserHome({
                 isLoading={isLoading}
                 error={errors.rates}
               />
+            ) : null}
+            {index === 1 ? (
+              <HomeMetalsShowcase onExploreMetal={onExploreMetal} />
             ) : null}
           </View>
         ))}
