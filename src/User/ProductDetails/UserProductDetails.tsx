@@ -4,6 +4,7 @@ import {
   Alert,
   Image,
   Pressable,
+  RefreshControl,
   ScrollView,
   Share,
   Text,
@@ -106,6 +107,7 @@ function UserProductDetails({
 }: UserProductDetailsProps) {
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [activeImage, setActiveImage] = useState(0);
@@ -143,7 +145,10 @@ function UserProductDetails({
         setProduct(null);
         setErrorMessage(getErrorMessage(error));
       } finally {
-        if (active) setIsLoading(false);
+        if (active) {
+          setIsLoading(false);
+          setIsRefreshing(false);
+        }
       }
     };
 
@@ -152,6 +157,7 @@ function UserProductDetails({
         console.error('Failed to load user product details:', error);
         setErrorMessage(getErrorMessage(error));
         setIsLoading(false);
+        setIsRefreshing(false);
       }
     });
 
@@ -217,6 +223,11 @@ function UserProductDetails({
     }
   };
 
+  const refreshProduct = () => {
+    setIsRefreshing(true);
+    setRefreshVersion(version => version + 1);
+  };
+
   return (
     <View className="flex-1 bg-[#fffaf0]">
       <View className="flex-row items-center border-b border-[#eadcc0] bg-white px-4 py-3">
@@ -274,14 +285,36 @@ function UserProductDetails({
       </View>
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center px-6">
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="grow items-center justify-center px-6"
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={refreshProduct}
+              tintColor="#004D40"
+              colors={['#004D40']}
+            />
+          }
+        >
           <ActivityIndicator size="large" color="#004D40" />
           <Text className="mt-3 text-sm text-slate-500">
             Loading product details…
           </Text>
-        </View>
+        </ScrollView>
       ) : !product ? (
-        <View className="flex-1 items-center justify-center px-6">
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="grow items-center justify-center px-6"
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={refreshProduct}
+              tintColor="#004D40"
+              colors={['#004D40']}
+            />
+          }
+        >
           <Text className="text-center text-lg font-bold text-primary-dark">
             Product unavailable
           </Text>
@@ -298,18 +331,26 @@ function UserProductDetails({
             </Pressable>
             <Pressable
               className="rounded-full bg-primary px-5 py-3"
-              onPress={() => setRefreshVersion(version => version + 1)}
+              onPress={refreshProduct}
               accessibilityRole="button"
             >
               <Text className="text-sm font-bold text-white">Retry</Text>
             </Pressable>
           </View>
-        </View>
+        </ScrollView>
       ) : (
         <ScrollView
           className="flex-1"
-          contentContainerClassName="gap-4 px-4 py-4 pb-8"
+          contentContainerClassName="grow gap-4 px-4 py-4 pb-8"
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={refreshProduct}
+              tintColor="#004D40"
+              colors={['#004D40']}
+            />
+          }
         >
           <View className="overflow-hidden rounded-2xl border border-[#eee8dc] bg-white p-3">
             <View className="h-72 items-center justify-center overflow-hidden rounded-xl bg-[#f8f6ef]">

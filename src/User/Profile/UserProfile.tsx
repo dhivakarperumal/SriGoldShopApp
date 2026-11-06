@@ -7,6 +7,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   Text,
   TextInput,
@@ -133,6 +134,7 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [profileError, setProfileError] = useState('');
   const [profileRequestVersion, setProfileRequestVersion] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<ProfileData>(() =>
     toProfileData(user, user),
@@ -163,7 +165,10 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
         console.error('Failed to load user profile:', error);
         setProfileError(errorMessage(error, 'Unable to load your profile.'));
       } finally {
-        if (!controller.signal.aborted) setIsLoadingProfile(false);
+        if (!controller.signal.aborted) {
+          setIsLoadingProfile(false);
+          setIsRefreshing(false);
+        }
       }
     };
 
@@ -172,6 +177,7 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
         console.error('Failed to load user profile:', error);
         setProfileError('Unable to load your profile.');
         setIsLoadingProfile(false);
+        setIsRefreshing(false);
       }
     });
 
@@ -201,7 +207,10 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
           setLoansError(errorMessage(error, 'Could not load loan details.'));
         }
       } finally {
-        if (!controller.signal.aborted) setIsLoadingLoans(false);
+        if (!controller.signal.aborted) {
+          setIsLoadingLoans(false);
+          setIsRefreshing(false);
+        }
       }
     };
 
@@ -210,6 +219,7 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
         console.error('Failed to load user loans:', error);
         setLoansError('Could not load loan details.');
         setIsLoadingLoans(false);
+        setIsRefreshing(false);
       }
     });
 
@@ -259,6 +269,15 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
       { text: 'Cancel', style: 'cancel' },
       { text: 'Log out', style: 'destructive', onPress: onLogout },
     ]);
+  };
+
+  const refreshCurrentSection = () => {
+    setIsRefreshing(true);
+    if (section === 'details') {
+      setProfileRequestVersion(version => version + 1);
+    } else {
+      setLoanRequestVersion(version => version + 1);
+    }
   };
 
   const saveProfile = async () => {
@@ -346,8 +365,16 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
 
       <ScrollView
         className="flex-1"
-        contentContainerClassName="gap-4 px-4 py-5 pb-8"
+        contentContainerClassName="grow gap-4 px-4 py-5 pb-8"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={refreshCurrentSection}
+            tintColor="#004D40"
+            colors={['#004D40']}
+          />
+        }
       >
         <View className="items-center rounded-2xl border border-[#e9e3d7] bg-white px-4 py-5">
           <View className="h-16 w-16 items-center justify-center rounded-full bg-[#f5c45e]">
@@ -424,11 +451,7 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
                 </Text>
                 <Pressable
                   className="mt-3 self-start rounded-lg bg-white px-3 py-2"
-                  onPress={() => {
-                    setProfileError('');
-                    setIsLoadingProfile(true);
-                    setProfileRequestVersion(version => version + 1);
-                  }}
+                  onPress={refreshCurrentSection}
                   accessibilityRole="button"
                 >
                   <Text className="text-xs font-bold text-red-700">Try again</Text>
@@ -488,7 +511,7 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
                 <Text className="text-sm text-red-700">{loansError}</Text>
                 <Pressable
                   className="mt-3 self-start rounded-lg bg-white px-3 py-2"
-                  onPress={() => setLoanRequestVersion(version => version + 1)}
+                  onPress={refreshCurrentSection}
                   accessibilityRole="button"
                 >
                   <Text className="text-xs font-bold text-red-700">Try again</Text>

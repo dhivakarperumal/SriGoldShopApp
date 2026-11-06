@@ -170,7 +170,7 @@ function UserHome({
   return (
     <ScrollView
       className="flex-1 bg-[#fffaf0]"
-      contentContainerClassName="pb-5"
+      contentContainerClassName="grow pb-5"
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl

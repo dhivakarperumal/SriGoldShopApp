@@ -305,7 +305,7 @@ function UserExplore({
   return (
     <ScrollView
       className="flex-1 bg-[#fffdf8]"
-      contentContainerClassName="px-4 pb-6 pt-4"
+      contentContainerClassName="grow px-4 pb-6 pt-4"
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
       refreshControl={
