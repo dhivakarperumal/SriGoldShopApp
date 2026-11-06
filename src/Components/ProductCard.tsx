@@ -30,6 +30,8 @@ type ProductCardProps = {
   className?: string;
   onPress?: () => void;
   onEnquire?: (product: ProductCardData) => void;
+  isFavorite?: boolean;
+  onToggleFavorite?: (product: ProductCardData) => void;
 };
 
 function getText(value: unknown, fallback = '') {
@@ -65,6 +67,8 @@ function ProductCard({
   className,
   onPress,
   onEnquire,
+  isFavorite = false,
+  onToggleFavorite,
 }: ProductCardProps) {
   const imageUrl = getProductImageUrl(product);
   const [hasImageError, setHasImageError] = useState(false);
@@ -194,17 +198,38 @@ function ProductCard({
 
   return (
     <View className={`mb-3 w-[48.5%] overflow-hidden rounded-xl border border-[#eadfc8] bg-white ${className || ''}`}>
-      {onPress ? (
-        <Pressable
-          onPress={onPress}
-          accessibilityRole="button"
-          accessibilityLabel={`View ${productName}`}
-        >
-          {cardContent}
-        </Pressable>
-      ) : (
-        cardContent
-      )}
+      <View>
+        {onPress ? (
+          <Pressable
+            onPress={onPress}
+            accessibilityRole="button"
+            accessibilityLabel={`View ${productName}`}
+          >
+            {cardContent}
+          </Pressable>
+        ) : (
+          cardContent
+        )}
+        {onToggleFavorite ? (
+          <Pressable
+            className="absolute right-2 top-2 h-9 w-9 items-center justify-center rounded-full bg-white/95 shadow-sm"
+            onPress={() => onToggleFavorite(product)}
+            accessibilityRole="button"
+            accessibilityLabel={`${isFavorite ? 'Remove' : 'Add'} ${productName} ${
+              isFavorite ? 'from' : 'to'
+            } favorites`}
+            accessibilityState={{ selected: isFavorite }}
+          >
+            <Text
+              className={`text-xl leading-6 ${
+                isFavorite ? 'text-rose-600' : 'text-slate-600'
+              }`}
+            >
+              {isFavorite ? '♥' : '♡'}
+            </Text>
+          </Pressable>
+        ) : null}
+      </View>
       {footer || onEnquire ? (
         <View className="border-t border-[#e8e7e3] px-3 py-2.5 sm:px-4">
           {footer}

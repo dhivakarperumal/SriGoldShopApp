@@ -2,7 +2,7 @@ import { Pressable, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export type UserTab = 'home' | 'explore' | 'enquiry' | 'more';
+export type UserTab = 'home' | 'explore' | 'favorites' | 'enquiry' | 'more';
 
 const TABS: { id: UserTab; label: string; path: string }[] = [
   {
@@ -14,6 +14,11 @@ const TABS: { id: UserTab; label: string; path: string }[] = [
     id: 'explore',
     label: 'Explore',
     path: 'M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16ZM21 21l-4.35-4.35',
+  },
+  {
+    id: 'favorites',
+    label: 'Favorites',
+    path: 'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z',
   },
   {
     id: 'enquiry',

@@ -98,10 +98,14 @@ function UserHome({
   user,
   onSelectProduct,
   onEnquireProduct,
+  isFavorite,
+  onToggleFavorite,
 }: {
   user: AuthenticatedUser;
   onSelectProduct: (productId: string) => void;
   onEnquireProduct: (product: ProductCardData) => void;
+  isFavorite: (productId: string) => boolean;
+  onToggleFavorite: (product: ProductCardData) => void;
 }) {
   const [data, setData] = useState<HomeData>(EMPTY_DATA);
   const [errors, setErrors] = useState<HomeErrors>({});
@@ -199,6 +203,8 @@ function UserHome({
           error={errors.products}
           onSelectProduct={onSelectProduct}
           onEnquireProduct={onEnquireProduct}
+          isFavorite={isFavorite}
+          onToggleFavorite={onToggleFavorite}
         />
         <HomeBannerSections />
       </View>

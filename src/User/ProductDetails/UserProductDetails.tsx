@@ -24,6 +24,8 @@ type UserProductDetailsProps = {
   productId: string;
   onBack: () => void;
   onEnquireProduct: (product: ProductCardData) => void;
+  isFavorite: (productId: string) => boolean;
+  onToggleFavorite: (product: ProductCardData) => void;
 };
 
 type ProductField = readonly [string, unknown];
@@ -99,6 +101,8 @@ function UserProductDetails({
   productId,
   onBack,
   onEnquireProduct,
+  isFavorite,
+  onToggleFavorite,
 }: UserProductDetailsProps) {
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -233,14 +237,39 @@ function UserProductDetails({
           </Text>
         </View>
         {product ? (
-          <Pressable
-            className="ml-2 h-10 w-10 items-center justify-center rounded-full bg-[#fff4d9]"
-            onPress={shareProduct}
-            accessibilityRole="button"
-            accessibilityLabel="Share product"
-          >
-            <Text className="text-base text-[#9a6817]">↗</Text>
-          </Pressable>
+          <View className="ml-2 flex-row gap-2">
+            <Pressable
+              className="h-10 w-10 items-center justify-center rounded-full bg-[#fff4d9]"
+              onPress={() => onToggleFavorite(product)}
+              accessibilityRole="button"
+              accessibilityLabel={
+                isFavorite(String(product.id ?? productId))
+                  ? 'Remove from favorites'
+                  : 'Add to favorites'
+              }
+              accessibilityState={{
+                selected: isFavorite(String(product.id ?? productId)),
+              }}
+            >
+              <Text
+                className={`text-xl ${
+                  isFavorite(String(product.id ?? productId))
+                    ? 'text-rose-600'
+                    : 'text-slate-600'
+                }`}
+              >
+                {isFavorite(String(product.id ?? productId)) ? '♥' : '♡'}
+              </Text>
+            </Pressable>
+            <Pressable
+              className="h-10 w-10 items-center justify-center rounded-full bg-[#fff4d9]"
+              onPress={shareProduct}
+              accessibilityRole="button"
+              accessibilityLabel="Share product"
+            >
+              <Text className="text-base text-[#9a6817]">↗</Text>
+            </Pressable>
+          </View>
         ) : null}
       </View>
 

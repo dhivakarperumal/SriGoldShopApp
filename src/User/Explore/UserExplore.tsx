@@ -63,9 +63,13 @@ const getDiscount = (product: ExploreProduct) => {
 function UserExplore({
   onSelectProduct,
   onEnquireProduct,
+  isFavorite,
+  onToggleFavorite,
 }: {
   onSelectProduct: (productId: string) => void;
   onEnquireProduct: (product: ProductCardData) => void;
+  isFavorite: (productId: string) => boolean;
+  onToggleFavorite: (product: ProductCardData) => void;
 }) {
   const [products, setProducts] = useState<ExploreProduct[]>([]);
   const [categories, setCategories] = useState<Facet[]>([]);
@@ -540,6 +544,8 @@ function UserExplore({
                 if (product.id != null) onSelectProduct(String(product.id));
               }}
               onEnquire={onEnquireProduct}
+              isFavorite={product.id != null && isFavorite(String(product.id))}
+              onToggleFavorite={onToggleFavorite}
             />
           ))}
         </View>

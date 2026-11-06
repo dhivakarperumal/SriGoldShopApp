@@ -9,6 +9,8 @@ type HomeProductsSectionProps = {
   error?: string;
   onSelectProduct: (productId: string) => void;
   onEnquireProduct: (product: ProductCardData) => void;
+  isFavorite: (productId: string) => boolean;
+  onToggleFavorite: (product: ProductCardData) => void;
 };
 
 function HomeProductsSection({
@@ -17,6 +19,8 @@ function HomeProductsSection({
   error,
   onSelectProduct,
   onEnquireProduct,
+  isFavorite,
+  onToggleFavorite,
 }: HomeProductsSectionProps) {
   return (
     <View className="mb-5">
@@ -46,6 +50,8 @@ function HomeProductsSection({
               layout="catalog"
               onPress={() => onSelectProduct(String(product.id))}
               onEnquire={onEnquireProduct}
+              isFavorite={isFavorite(String(product.id))}
+              onToggleFavorite={onToggleFavorite}
             />
           ))}
         </View>
