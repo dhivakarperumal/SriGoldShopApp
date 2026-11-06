@@ -194,24 +194,27 @@ function UserHome({
           isLoading={isLoading}
           error={errors.categories}
         />
-        {HOME_PRODUCT_METALS.map(metal => (
-          <HomeProductsSection
-            key={metal}
-            metal={metal}
-            products={data.products}
-            isLoading={isLoading}
-            error={errors.products}
-            onSelectProduct={onSelectProduct}
-            onEnquireProduct={onEnquireProduct}
-            isFavorite={isFavorite}
-            onToggleFavorite={onToggleFavorite}
-          />
+        {HOME_PRODUCT_METALS.map((metal, index) => (
+          <View key={metal}>
+            <HomeProductsSection
+              metal={metal}
+              products={data.products}
+              isLoading={isLoading}
+              error={errors.products}
+              onSelectProduct={onSelectProduct}
+              onEnquireProduct={onEnquireProduct}
+              isFavorite={isFavorite}
+              onToggleFavorite={onToggleFavorite}
+            />
+            {index === 0 ? (
+              <HomeGoldRatesSection
+                rates={data.rates}
+                isLoading={isLoading}
+                error={errors.rates}
+              />
+            ) : null}
+          </View>
         ))}
-        <HomeGoldRatesSection
-          rates={data.rates}
-          isLoading={isLoading}
-          error={errors.rates}
-        />
         <HomeBannerSections />
       </View>
       <HomeReviewsSection refreshVersion={refreshVersion} />
