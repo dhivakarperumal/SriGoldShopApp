@@ -66,12 +66,14 @@ function UserExplore({
   isFavorite,
   onToggleFavorite,
   metalSelection,
+  categorySelection,
 }: {
   onSelectProduct: (productId: string) => void;
   onEnquireProduct: (product: ProductCardData) => void;
   isFavorite: (productId: string) => boolean;
   onToggleFavorite: (product: ProductCardData) => void;
   metalSelection: { name: string; requestId: number } | null;
+  categorySelection: { name: string; requestId: number } | null;
 }) {
   const [products, setProducts] = useState<ExploreProduct[]>([]);
   const [categories, setCategories] = useState<Facet[]>([]);
@@ -103,6 +105,20 @@ function UserExplore({
     setAvailability('');
     setSortBy('newest');
   }, [metalSelection]);
+
+  useEffect(() => {
+    if (!categorySelection) return;
+    setSearch('');
+    setSelectedCategory(categorySelection.name);
+    setSelectedMetal('');
+    setOfferThreshold(0);
+    setMinimumPrice(undefined);
+    setMaximumPrice(undefined);
+    setMinimumRating(0);
+    setAvailability('');
+    setSortBy('newest');
+    setFiltersVisible(true);
+  }, [categorySelection]);
 
   useEffect(() => {
     const controller = new AbortController();

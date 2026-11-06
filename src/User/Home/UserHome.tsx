@@ -119,6 +119,7 @@ function UserHome({
   isFavorite,
   onToggleFavorite,
   onExploreMetal,
+  onExploreCategory,
 }: {
   user: AuthenticatedUser;
   onSelectProduct: (productId: string) => void;
@@ -126,6 +127,7 @@ function UserHome({
   isFavorite: (productId: string) => boolean;
   onToggleFavorite: (product: ProductCardData) => void;
   onExploreMetal: (metalName: string) => void;
+  onExploreCategory: (categoryName: string) => void;
 }) {
   const [data, setData] = useState<HomeData>(EMPTY_DATA);
   const [errors, setErrors] = useState<HomeErrors>({});
@@ -212,6 +214,7 @@ function UserHome({
           categories={data.categories}
           isLoading={isLoading}
           error={errors.categories}
+          onSelectCategory={onExploreCategory}
         />
         {HOME_PRODUCT_METALS.map((metal, index) => (
           <View key={metal}>

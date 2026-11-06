@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import {
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -24,9 +25,15 @@ type HomeCategoryProps = {
   categories: HomeCategoryData[];
   isLoading: boolean;
   error?: string;
+  onSelectCategory: (categoryName: string) => void;
 };
 
-function HomeCategory({ categories, isLoading, error }: HomeCategoryProps) {
+function HomeCategory({
+  categories,
+  isLoading,
+  error,
+  onSelectCategory,
+}: HomeCategoryProps) {
   const { width } = useWindowDimensions();
   const scrollViewRef = useRef<ScrollViewInstance>(null);
   const physicalIndexRef = useRef(0);
@@ -125,10 +132,13 @@ function HomeCategory({ categories, isLoading, error }: HomeCategoryProps) {
           {repeatedCategories.map((category, index) => {
             const image = getCategoryImage(category);
             return (
-              <View
+              <Pressable
                 key={`${category.catId ?? category.id ?? category.name}-${index}`}
                 className="items-center"
                 style={{ width: cardWidth }}
+                onPress={() => onSelectCategory(category.name)}
+                accessibilityRole="button"
+                accessibilityLabel={`Explore ${category.name}`}
               >
                 <View
                   className="items-center justify-center overflow-hidden rounded-full border-2 border-[#e9ce98] bg-white p-1"
@@ -156,7 +166,7 @@ function HomeCategory({ categories, isLoading, error }: HomeCategoryProps) {
                 >
                   {category.name}
                 </Text>
-              </View>
+              </Pressable>
             );
           })}
         </ScrollView>
