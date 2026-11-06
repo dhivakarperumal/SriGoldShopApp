@@ -147,7 +147,7 @@ function HomeBanner({ banners, userName, error }: HomeBannerProps) {
                   <Image
                     source={{ uri: image }}
                     style={[styles.image, { width }]}
-                    resizeMode="cover"
+                    resizeMode="contain"
                     accessibilityLabel={
                       slide?.title || 'Sri Golds featured jewellery'
                     }

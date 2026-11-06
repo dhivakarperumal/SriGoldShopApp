@@ -29,7 +29,7 @@ function HomeBannerSections() {
         >
           <Image
             source={promotion.image}
-            resizeMode="cover"
+            resizeMode="contain"
             style={StyleSheet.absoluteFill}
             accessible={false}
           />

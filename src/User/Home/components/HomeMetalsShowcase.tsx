@@ -157,7 +157,7 @@ function HomeMetalsShowcase({ onExploreMetal }: HomeMetalsShowcaseProps) {
             {background ? (
               <Image
                 source={background}
-                resizeMode="cover"
+                resizeMode="contain"
                 style={styles.background}
                 accessible={false}
               />
