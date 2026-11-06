@@ -99,8 +99,15 @@ type UserLayoutProps = {
 
 function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
   const [activeTab, setActiveTab] = useState<UserTab>('home');
+  const [visitedTabs, setVisitedTabs] = useState<Set<UserTab>>(
+    () => new Set(['home']),
+  );
   const [morePage, setMorePage] = useState<MorePage>(null);
+  const [hasVisitedProfile, setHasVisitedProfile] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [lastSelectedProductId, setLastSelectedProductId] = useState<string | null>(
+    null,
+  );
   const [enquiryProduct, setEnquiryProduct] = useState<ProductCardData | null>(null);
   const [favorites, setFavorites] = useState<WishlistItem[]>([]);
   const [isLoadingFavorites, setIsLoadingFavorites] = useState(true);
@@ -247,8 +254,19 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
 
   const selectTab = (tab: UserTab) => {
     setActiveTab(tab);
+    setVisitedTabs(current => new Set(current).add(tab));
     setSelectedProductId(null);
     if (tab !== 'more' || activeTab === 'more') setMorePage(null);
+  };
+
+  const selectProduct = (productId: string) => {
+    setLastSelectedProductId(productId);
+    setSelectedProductId(productId);
+  };
+
+  const selectMorePage = (page: MorePage) => {
+    if (page === 'profile') setHasVisitedProfile(true);
+    setMorePage(page);
   };
 
   return (
@@ -259,73 +277,121 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
         onLogout={onLogout}
         onOpenProfile={() => {
           setActiveTab('more');
+          setVisitedTabs(current => new Set(current).add('more'));
+          setHasVisitedProfile(true);
           setSelectedProductId(null);
           setMorePage('profile');
         }}
       />
       <SafeAreaView className="flex-1 bg-[#fffaf0]" edges={['left', 'right']}>
         <View className="flex-1">
-          {selectedProductId ? (
-            <UserProductDetails
-              productId={selectedProductId}
-              onBack={() => setSelectedProductId(null)}
-              onEnquireProduct={setEnquiryProduct}
-              isFavorite={isFavorite}
-              onToggleFavorite={toggleFavorite}
-            />
-          ) : activeTab === 'home' ? (
-            <UserHome
-              user={user}
-              onSelectProduct={setSelectedProductId}
-              onEnquireProduct={setEnquiryProduct}
-              isFavorite={isFavorite}
-              onToggleFavorite={toggleFavorite}
-            />
-          ) : activeTab === 'explore' ? (
-            <UserExplore
-              onSelectProduct={setSelectedProductId}
-              onEnquireProduct={setEnquiryProduct}
-              isFavorite={isFavorite}
-              onToggleFavorite={toggleFavorite}
-            />
-          ) : activeTab === 'favorites' ? (
-            <UserFavorites
-              items={favorites}
-              isLoading={isLoadingFavorites}
-              error={favoritesError}
-              isRefreshing={isRefreshingFavorites}
-              onRefresh={refreshFavorites}
-              onRetry={refreshFavorites}
-              onSelectProduct={setSelectedProductId}
-              onEnquireProduct={setEnquiryProduct}
-              onRemoveFavorite={toggleFavorite}
-              onContinueShopping={() => setActiveTab('explore')}
-            />
-          ) : activeTab === 'more' ? (
-            morePage === 'about' ? (
+          {lastSelectedProductId ? (
+            <View
+              className={selectedProductId ? 'flex-1' : 'hidden'}
+            >
+              <UserProductDetails
+                productId={lastSelectedProductId}
+                onBack={() => setSelectedProductId(null)}
+                onEnquireProduct={setEnquiryProduct}
+                isFavorite={isFavorite}
+                onToggleFavorite={toggleFavorite}
+              />
+            </View>
+          ) : null}
+          <View
+            className={
+              !selectedProductId && activeTab === 'home' ? 'flex-1' : 'hidden'
+            }
+          >
+            {visitedTabs.has('home') ? (
+              <UserHome
+                user={user}
+                onSelectProduct={selectProduct}
+                onEnquireProduct={setEnquiryProduct}
+                isFavorite={isFavorite}
+                onToggleFavorite={toggleFavorite}
+              />
+            ) : null}
+          </View>
+          <View
+            className={
+              !selectedProductId && activeTab === 'explore' ? 'flex-1' : 'hidden'
+            }
+          >
+            {visitedTabs.has('explore') ? (
+              <UserExplore
+                onSelectProduct={selectProduct}
+                onEnquireProduct={setEnquiryProduct}
+                isFavorite={isFavorite}
+                onToggleFavorite={toggleFavorite}
+              />
+            ) : null}
+          </View>
+          <View
+            className={
+              !selectedProductId && activeTab === 'favorites'
+                ? 'flex-1'
+                : 'hidden'
+            }
+          >
+            {visitedTabs.has('favorites') ? (
+              <UserFavorites
+                items={favorites}
+                isLoading={isLoadingFavorites}
+                error={favoritesError}
+                isRefreshing={isRefreshingFavorites}
+                onRefresh={refreshFavorites}
+                onRetry={refreshFavorites}
+                onSelectProduct={selectProduct}
+                onEnquireProduct={setEnquiryProduct}
+                onRemoveFavorite={toggleFavorite}
+                onContinueShopping={() => selectTab('explore')}
+              />
+            ) : null}
+          </View>
+          <View
+            className={
+              !selectedProductId && activeTab === 'more' ? 'flex-1' : 'hidden'
+            }
+          >
+            {morePage === 'about' ? (
               <UserAbout onBack={() => setMorePage(null)} />
             ) : morePage === 'contact' ? (
               <UserContact onBack={() => setMorePage(null)} />
-            ) : morePage === 'profile' ? (
-              <UserProfile
-                user={user}
-                onUserUpdated={onUserUpdated}
-                onBack={() => setMorePage(null)}
-                onLogout={onLogout}
-              />
-            ) : (
-              <MoreMenu onSelect={setMorePage} />
-            )
-          ) : (
-            <View className="flex-1 items-center justify-center px-8">
-              <Text className="text-xl font-bold text-primary-dark">
-                Enquiry
-              </Text>
-              <Text className="mt-2 text-center text-sm leading-5 text-slate-600">
-                This section is coming in the next step.
-              </Text>
-            </View>
-          )}
+            ) : morePage === 'profile' ? null : (
+              <MoreMenu onSelect={selectMorePage} />
+            )}
+            {hasVisitedProfile ? (
+              <View
+                className={morePage === 'profile' ? 'flex-1' : 'hidden'}
+              >
+                <UserProfile
+                  user={user}
+                  onUserUpdated={onUserUpdated}
+                  onBack={() => setMorePage(null)}
+                  onLogout={onLogout}
+                />
+              </View>
+            ) : null}
+          </View>
+          <View
+            className={
+              !selectedProductId && activeTab === 'enquiry'
+                ? 'flex-1'
+                : 'hidden'
+            }
+          >
+            {visitedTabs.has('enquiry') ? (
+              <View className="flex-1 items-center justify-center px-8">
+                <Text className="text-xl font-bold text-primary-dark">
+                  Enquiry
+                </Text>
+                <Text className="mt-2 text-center text-sm leading-5 text-slate-600">
+                  This section is coming in the next step.
+                </Text>
+              </View>
+            ) : null}
+          </View>
           <UserBottomNavigation
             activeTab={activeTab}
             onSelect={selectTab}
