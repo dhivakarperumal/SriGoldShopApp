@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { AuthenticatedUser } from '../../Admin/Auth/Login';
 
 const styles = StyleSheet.create({
+  headerBackground: StyleSheet.absoluteFill,
   accountMenu: {
     position: 'absolute',
     right: 12,
@@ -53,7 +54,14 @@ function UserHeader({
 
   return (
     <>
-      <View className="mx-2 mt-1 h-[68px] flex-row items-center justify-between rounded-2xl border border-[#d9b568]/55 bg-primary px-3 shadow-sm">
+      <View className="mx-2 mt-1 h-[68px] flex-row items-center justify-between overflow-hidden rounded-2xl border border-[#d9b568]/55 bg-primary px-3 shadow-sm">
+        <Image
+          source={require('../Home/assets/header.png')}
+          style={styles.headerBackground}
+          resizeMode="cover"
+          pointerEvents="none"
+          accessible={false}
+        />
         <View className="min-w-0 flex-1 flex-row items-center">
           <View className="mr-2.5 h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-accent/60 bg-white p-0.5">
             <Image
