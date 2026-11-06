@@ -4,9 +4,10 @@ import type { AuthenticatedUser } from '../../Admin/Auth/Login';
 type UserHeaderProps = {
   user: AuthenticatedUser;
   onLogout: () => void;
+  onOpenProfile: () => void;
 };
 
-function UserHeader({ user, onLogout }: UserHeaderProps) {
+function UserHeader({ user, onLogout, onOpenProfile }: UserHeaderProps) {
   const displayName = user.name?.trim() || 'Welcome';
   const initial = displayName.charAt(0).toUpperCase() || 'U';
 
@@ -50,9 +51,9 @@ function UserHeader({ user, onLogout }: UserHeaderProps) {
         </View>
         <Pressable
           className="h-10 w-10 items-center justify-center rounded-xl border border-accent-light bg-primary-dark"
-          onPress={confirmLogout}
+          onPress={onOpenProfile}
           accessibilityRole="button"
-          accessibilityLabel="Sign out"
+          accessibilityLabel="Open profile"
         >
           <Text className="text-sm font-bold text-white">{initial}</Text>
         </Pressable>

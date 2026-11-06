@@ -1,7 +1,7 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
-export type MorePage = 'about' | 'contact' | null;
+export type MorePage = 'about' | 'contact' | 'profile' | null;
 
 type MoreMenuProps = {
   onSelect: (page: MorePage) => void;
@@ -13,6 +13,12 @@ const MORE_ITEMS: {
   description: string;
   icon: string;
 }[] = [
+  {
+    id: 'profile',
+    title: 'My Profile',
+    description: 'View your account details and gold loan information.',
+    icon: 'M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z',
+  },
   {
     id: 'about',
     title: 'About Us',

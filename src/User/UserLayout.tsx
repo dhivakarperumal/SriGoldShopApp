@@ -14,10 +14,11 @@ import MoreMenu, { type MorePage } from './More/MoreMenu';
 
 type UserLayoutProps = {
   user: AuthenticatedUser;
+  onUserUpdated: (user: AuthenticatedUser) => void;
   onLogout: () => void;
 };
 
-function UserLayout({ user, onLogout }: UserLayoutProps) {
+function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
   const [activeTab, setActiveTab] = useState<UserTab>('home');
   const [morePage, setMorePage] = useState<MorePage>(null);
 
@@ -29,7 +30,14 @@ function UserLayout({ user, onLogout }: UserLayoutProps) {
   return (
     <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
       <StatusBar barStyle="light-content" />
-      <UserHeader user={user} onLogout={onLogout} />
+      <UserHeader
+        user={user}
+        onLogout={onLogout}
+        onOpenProfile={() => {
+          setActiveTab('more');
+          setMorePage('profile');
+        }}
+      />
       <SafeAreaView className="flex-1 bg-[#fffaf0]" edges={['left', 'right']}>
         <View className="flex-1">
           {activeTab === 'home' ? (

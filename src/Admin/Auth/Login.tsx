@@ -16,11 +16,17 @@ import api, { setTokenCache } from '../../api';
 
 export type AuthenticatedUser = {
   role: string;
+  user_id?: string | number;
+  username?: string;
   name?: string;
   email?: string;
   phone?: string;
   mobile?: string;
   phone_number?: string;
+  address?: string;
+  status?: string;
+  created_at?: string;
+  profile_image?: string | null;
 };
 
 type LoginProps = {

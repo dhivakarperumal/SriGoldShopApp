@@ -58,6 +58,17 @@ function App() {
               ) {
                 restoredUser = {
                   role: parsedUser.role,
+                  user_id:
+                    'user_id' in parsedUser &&
+                    (typeof parsedUser.user_id === 'string' ||
+                      typeof parsedUser.user_id === 'number')
+                      ? parsedUser.user_id
+                      : undefined,
+                  username:
+                    'username' in parsedUser &&
+                    typeof parsedUser.username === 'string'
+                      ? parsedUser.username
+                      : undefined,
                   name:
                     'name' in parsedUser && typeof parsedUser.name === 'string'
                       ? parsedUser.name
@@ -77,6 +88,24 @@ function App() {
                   phone_number:
                     'phone_number' in parsedUser && typeof parsedUser.phone_number === 'string'
                       ? parsedUser.phone_number
+                      : undefined,
+                  address:
+                    'address' in parsedUser && typeof parsedUser.address === 'string'
+                      ? parsedUser.address
+                      : undefined,
+                  status:
+                    'status' in parsedUser && typeof parsedUser.status === 'string'
+                      ? parsedUser.status
+                      : undefined,
+                  created_at:
+                    'created_at' in parsedUser && typeof parsedUser.created_at === 'string'
+                      ? parsedUser.created_at
+                      : undefined,
+                  profile_image:
+                    'profile_image' in parsedUser &&
+                    (typeof parsedUser.profile_image === 'string' ||
+                      parsedUser.profile_image === null)
+                      ? parsedUser.profile_image
                       : undefined,
                 };
               }
@@ -239,7 +268,11 @@ function App() {
             {adminContent}
           </AdminLayout>
         ) : (
-          <UserLayout user={user} onLogout={handleLogout} />
+          <UserLayout
+            user={user}
+            onUserUpdated={setUser}
+            onLogout={handleLogout}
+          />
         )
       ) : (
         <Login onLoginSuccess={handleLoginSuccess} />
