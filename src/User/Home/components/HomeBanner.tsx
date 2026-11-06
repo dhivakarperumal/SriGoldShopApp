@@ -12,7 +12,7 @@ import type { HomeBanner as HomeBannerData } from '../types';
 
 const BANNER_HEIGHT = 220;
 const styles = StyleSheet.create({
-  slide: { height: BANNER_HEIGHT, justifyContent: 'flex-start' },
+  slide: { height: BANNER_HEIGHT, justifyContent: 'center' },
   image: { position: 'absolute', top: 0, left: 0, zIndex: 0 },
   overlay: {
     ...StyleSheet.absoluteFillObject,
