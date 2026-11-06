@@ -58,7 +58,7 @@ function UserHeader({
         <Image
           source={require('../Home/assets/header.png')}
           style={styles.headerBackground}
-          resizeMode="cover"
+          resizeMode="stretch"
           pointerEvents="none"
           accessible={false}
         />
