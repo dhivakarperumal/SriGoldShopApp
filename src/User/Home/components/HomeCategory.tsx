@@ -15,6 +15,7 @@ import type { HomeCategory as HomeCategoryData } from '../types';
 const VISIBLE_CATEGORIES = 4;
 const CATEGORY_GAP = 8;
 const HOME_HORIZONTAL_PADDING = 32;
+const AUTO_SLIDE_INTERVAL = 2200;
 const styles = StyleSheet.create({
   content: { gap: CATEGORY_GAP, paddingBottom: 8 },
 });
@@ -50,7 +51,7 @@ function HomeCategory({ categories, isLoading, error }: HomeCategoryProps) {
         animated: true,
       });
       physicalIndexRef.current = nextIndex;
-    }, 3500);
+    }, AUTO_SLIDE_INTERVAL);
 
     return () => clearInterval(timer);
   }, [categories.length, itemStep]);

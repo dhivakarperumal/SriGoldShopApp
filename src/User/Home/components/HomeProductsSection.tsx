@@ -18,6 +18,7 @@ const styles = StyleSheet.create({
 
 const PRODUCT_GAP = 12;
 const HOME_HORIZONTAL_PADDING = 32;
+const AUTO_SLIDE_INTERVAL = 2200;
 
 type HomeProductsSectionProps = {
   products: HomeProduct[];
@@ -83,7 +84,7 @@ function HomeProductsSection({
         animated: true,
       });
       physicalIndexRef.current = nextIndex;
-    }, 3500);
+    }, AUTO_SLIDE_INTERVAL);
 
     return () => clearInterval(timer);
   }, [itemStep, sectionProducts.length]);
