@@ -12,11 +12,11 @@ import type { HomeBanner as HomeBannerData } from '../types';
 
 const BANNER_HEIGHT = 220;
 const styles = StyleSheet.create({
-  slide: { height: BANNER_HEIGHT },
-  image: { ...StyleSheet.absoluteFillObject, height: BANNER_HEIGHT },
+  slide: { height: BANNER_HEIGHT, justifyContent: 'flex-end' },
+  image: StyleSheet.absoluteFillObject,
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 40, 32, 0.55)',
+    backgroundColor: 'rgba(0, 40, 32, 0.48)',
   },
 });
 
@@ -48,13 +48,13 @@ function HomeBanner({ banners, userName, error }: HomeBannerProps) {
           return (
             <View
               key={banner?.id ?? `welcome-${index}`}
-              className="relative justify-center overflow-hidden border-y border-[#d9b568] bg-[#003b30] px-5 py-5"
+              className="relative overflow-hidden border-y border-[#d9b568] bg-[#003b30] px-5 py-4"
               style={[styles.slide, { width }]}
             >
               {image ? (
                 <Image
                   source={{ uri: image }}
-                  style={[styles.image, { width }]}
+                  style={styles.image}
                   resizeMode="cover"
                   accessibilityLabel={banner?.title || 'Sri Golds featured jewellery'}
                 />
@@ -64,11 +64,17 @@ function HomeBanner({ banners, userName, error }: HomeBannerProps) {
                 <Text className="text-[10px] font-bold uppercase tracking-[2px] text-accent-light">
                   Sri Golds · Jewellery
                 </Text>
-                <Text className="mt-2 max-w-[280px] text-2xl font-bold text-white">
+                <Text
+                  className="mt-1 max-w-[280px] text-2xl font-bold leading-8 text-white"
+                  numberOfLines={2}
+                >
                   {banner?.title ||
                     `Welcome${firstName ? `, ${firstName}` : ''}`}
                 </Text>
-                <Text className="mt-2 max-w-[280px] text-sm leading-5 text-emerald-50">
+                <Text
+                  className="mt-1 max-w-[300px] text-sm leading-5 text-emerald-50"
+                  numberOfLines={2}
+                >
                   {banner?.subtitle ||
                     banner?.description ||
                     'Discover timeless designs and beautifully crafted jewellery.'}
