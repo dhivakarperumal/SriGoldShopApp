@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -32,6 +32,54 @@ const TABS: { id: UserTab; label: string; path: string }[] = [
   },
 ];
 
+// Height of the pill bar itself (not counting bottom safe area extension)
+const PILL_HEIGHT = 72;
+// Horizontal margin so the pill floats inside the screen
+const PILL_MARGIN_H = 10;
+
+const styles = StyleSheet.create({
+  outerWrapper: {
+    // Transparent outer wrapper that also covers the bottom safe area
+    backgroundColor: '#fffaf0',
+  },
+  pillWrapper: {
+    height: PILL_HEIGHT,
+    marginHorizontal: PILL_MARGIN_H,
+    overflow: 'hidden',
+    borderRadius: 36,
+  },
+  bgImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  tabsRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    // Small horizontal padding so tabs don't sit on the gold border decoration
+    paddingHorizontal: 6,
+  },
+  activeTabBg: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+  },
+  activeIndicator: {
+    height: 3,
+    width: 20,
+    borderRadius: 2,
+    backgroundColor: '#F5C45E',
+    marginBottom: 2,
+  },
+});
+
 type UserBottomNavigationProps = {
   activeTab: UserTab;
   onSelect: (tab: UserTab) => void;
@@ -42,53 +90,89 @@ function UserBottomNavigation({
   onSelect,
 }: UserBottomNavigationProps) {
   const insets = useSafeAreaInsets();
-  const bottomPadding = Math.max(insets.bottom, 6);
+  const { width } = useWindowDimensions();
+  const pillWidth = width - PILL_MARGIN_H * 2;
 
   return (
     <View
-      className="flex-row border-t border-[#d9b568]/40 bg-primary"
-      style={{ height: 62 + bottomPadding, paddingBottom: bottomPadding }}
+      style={[
+        styles.outerWrapper,
+        { paddingBottom: Math.max(insets.bottom, 8), paddingTop: 8 },
+      ]}
       accessibilityRole="tablist"
     >
-      {TABS.map(tab => {
-        const isActive = activeTab === tab.id;
-        const color = isActive ? '#F5C45E' : '#A8C9C1';
+      <View style={styles.pillWrapper}>
+        {/* Footer background image */}
+        <Image
+          source={require('../Home/assets/footer.png')}
+          style={[styles.bgImage, { width: pillWidth, height: PILL_HEIGHT }]}
+          resizeMode="stretch"
+          pointerEvents="none"
+          accessible={false}
+        />
 
-        return (
-          <Pressable
-            key={tab.id}
-            className="flex-1 items-center justify-center pt-1"
-            onPress={() => onSelect(tab.id)}
-            accessibilityRole="tab"
-            accessibilityLabel={tab.label}
-            accessibilityState={{ selected: isActive }}
-          >
-            <View className="mb-1 h-1 w-6 items-center justify-center">
-              {isActive ? (
-                <View className="h-1 w-5 rounded-full bg-accent-light" />
-              ) : null}
-            </View>
-            <Svg width={21} height={21} viewBox="0 0 24 24" fill="none">
-              <Path
-                d={tab.path}
-                stroke={color}
-                strokeWidth={1.8}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-            <Text
-              className={`mt-1 text-[10px] ${
-                isActive
-                  ? 'font-bold text-accent-light'
-                  : 'font-medium text-[#A8C9C1]'
-              }`}
-            >
-              {tab.label}
-            </Text>
-          </Pressable>
-        );
-      })}
+        {/* Tabs row */}
+        <View style={styles.tabsRow}>
+          {TABS.map(tab => {
+            const isActive = activeTab === tab.id;
+            const iconColor = isActive ? '#F5C45E' : '#FFFFFF';
+
+            return (
+              <Pressable
+                key={tab.id}
+                style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+                onPress={() => onSelect(tab.id)}
+                accessibilityRole="tab"
+                accessibilityLabel={tab.label}
+                accessibilityState={{ selected: isActive }}
+              >
+                {/* Active tab rounded square highlight */}
+                <View
+                  style={{
+                    position: 'relative',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 54,
+                    height: 54,
+                    borderRadius: 14,
+                    backgroundColor: isActive
+                      ? 'rgba(0, 0, 0, 0.28)'
+                      : 'transparent',
+                  }}
+                >
+                  {/* Gold indicator line above icon when active */}
+                  {isActive ? (
+                    <View style={styles.activeIndicator} />
+                  ) : (
+                    <View style={{ height: 5 }} />
+                  )}
+
+                  <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+                    <Path
+                      d={tab.path}
+                      stroke={iconColor}
+                      strokeWidth={1.8}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </Svg>
+
+                  <Text
+                    style={{
+                      marginTop: 2,
+                      fontSize: 10,
+                      fontWeight: isActive ? '700' : '500',
+                      color: iconColor,
+                    }}
+                  >
+                    {tab.label}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
     </View>
   );
 }

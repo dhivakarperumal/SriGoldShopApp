@@ -13,16 +13,16 @@ import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { AuthenticatedUser } from '../../Admin/Auth/Login';
 
-const HEADER_HEIGHT = 68;
+const HEADER_CONTENT_HEIGHT = 68;
 
 const styles = StyleSheet.create({
   headerWrapper: {
-    height: HEADER_HEIGHT,
     overflow: 'hidden',
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
+    paddingBottom: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: 'rgba(217, 181, 104, 0.55)',
   },
@@ -63,6 +63,9 @@ function UserHeader({
   const initial = displayName.charAt(0).toUpperCase() || 'U';
   const favoritesLabel = favoritesCount > 99 ? '99+' : String(favoritesCount);
 
+  // Total header height = status bar height + visible content row height
+  const totalHeight = insets.top + HEADER_CONTENT_HEIGHT;
+
   const confirmLogout = () => {
     setIsAccountMenuOpen(false);
     Alert.alert('Sign out?', 'Are you sure you want to sign out?', [
@@ -73,11 +76,11 @@ function UserHeader({
 
   return (
     <>
-      <View style={[styles.headerWrapper, { width }]}>
-        {/* Full-width background image — no margins, no rounding */}
+      <View style={[styles.headerWrapper, { width, height: totalHeight, paddingTop: insets.top }]}>
+        {/* Full-width background image covering status bar + header row */}
         <Image
           source={require('../Home/assets/header.png')}
-          style={[styles.headerBackground, { width, height: HEADER_HEIGHT }]}
+          style={[styles.headerBackground, { width, height: totalHeight }]}
           resizeMode="cover"
           pointerEvents="none"
           accessible={false}
@@ -170,7 +173,7 @@ function UserHeader({
           />
           <View
             className="rounded-[22px] border border-[#e7b848] bg-white p-4 shadow-xl"
-            style={[styles.accountMenu, { top: insets.top + 74 }]}
+            style={[styles.accountMenu, { top: totalHeight + 6 }]}
           >
             <View className="flex-row items-center border-b border-[#eee5d6] pb-4">
               <View className="mr-3 h-14 w-14 items-center justify-center rounded-full border-[3px] border-[#e7b848] bg-primary-dark">

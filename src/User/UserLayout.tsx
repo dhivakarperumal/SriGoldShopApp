@@ -333,7 +333,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
   return (
     <SafeAreaView
       className={`flex-1 ${isStandalonePage ? 'bg-white' : 'bg-primary'}`}
-      edges={['top']}
+      edges={isStandalonePage ? (['top'] as const) : []}
     >
       <StatusBar barStyle={isStandalonePage ? 'dark-content' : 'light-content'} />
       {!isStandalonePage ? (
