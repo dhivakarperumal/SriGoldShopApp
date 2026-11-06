@@ -35,6 +35,7 @@ export type AdminRoute =
   | 'customers'
   | 'stockDetails'
   | 'enquiries'
+  | 'fundManagement'
   | 'receipt'
   | 'homeSections'
   | 'reviews'

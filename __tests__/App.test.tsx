@@ -99,3 +99,20 @@ test('clicking Gold Enquiries card opens enquiry management', () => {
 
   expect(onNavigateMock).toHaveBeenCalledWith('enquiries');
 });
+
+test('clicking Fund Management card opens fund management', () => {
+  const onNavigateMock = jest.fn();
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  act(() => {
+    renderer = ReactTestRenderer.create(<More onNavigate={onNavigateMock} />);
+  });
+
+  const fundsCard = renderer.root.findByProps({
+    accessibilityLabel: 'Open fund management',
+  });
+  act(() => {
+    fundsCard.props.onPress();
+  });
+
+  expect(onNavigateMock).toHaveBeenCalledWith('fundManagement');
+});

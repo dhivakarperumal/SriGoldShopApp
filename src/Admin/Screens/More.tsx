@@ -138,6 +138,44 @@ function More({ onNavigate }: MoreProps) {
 
         <Pressable
           className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"
+          onPress={() => onNavigate('fundManagement')}
+          accessibilityRole="button"
+          accessibilityLabel="Open fund management"
+        >
+          <View className="flex-row items-center flex-1 pr-3">
+            <View className="mr-3.5 h-12 w-12 items-center justify-center rounded-2xl border border-emerald-100 bg-emerald-50">
+              <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M3 7.5h18v12H3v-12Zm0 0 2-3h14l2 3M7 12h4m-4 4h7m3-4h1"
+                  stroke="#047857"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-bold text-slate-900">Fund Management</Text>
+              <Text className="mt-1 text-xs leading-4 text-slate-500">
+                Track balances, collections, expenses, and fund transactions.
+              </Text>
+            </View>
+          </View>
+          <View className="h-8 w-8 items-center justify-center rounded-full bg-slate-100/70">
+            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="m9 18 6-6-6-6"
+                stroke="#64748B"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </View>
+        </Pressable>
+
+        <Pressable
+          className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"
           onPress={() => onNavigate('homeSections')}
           accessibilityRole="button"
           accessibilityLabel="Manage home product sections"
