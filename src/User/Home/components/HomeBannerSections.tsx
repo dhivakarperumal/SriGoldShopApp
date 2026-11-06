@@ -30,7 +30,7 @@ function HomeBannerSections() {
           <Image
             source={promotion.image}
             resizeMode="cover"
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
             accessible={false}
           />
           <View

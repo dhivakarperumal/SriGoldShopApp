@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Animated,
   Image,
-  ScrollView,
+  PanResponder,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -12,10 +13,14 @@ import type { HomeBanner as HomeBannerData } from '../types';
 
 const BANNER_HEIGHT = 220;
 const styles = StyleSheet.create({
-  slide: { height: BANNER_HEIGHT, justifyContent: 'center' },
+  slide: {
+    height: BANNER_HEIGHT,
+    justifyContent: 'center',
+    backfaceVisibility: 'hidden',
+  },
   image: { position: 'absolute', top: 0, left: 0, zIndex: 0 },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 1,
     backgroundColor: 'rgba(0, 40, 32, 0.48)',
   },
@@ -31,48 +36,105 @@ type HomeBannerProps = {
 function HomeBanner({ banners, userName, error }: HomeBannerProps) {
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const [isEntering, setIsEntering] = useState(false);
+  const activeIndexRef = useRef(0);
+  const isTransitioningRef = useRef(false);
+  const transitionProgress = useRef(new Animated.Value(0)).current;
   const firstName = userName?.trim().split(/\s+/)[0];
   const slides = banners.length > 0 ? banners : [undefined];
+
+  const turnToSlide = useCallback(
+    (nextIndex: number) => {
+      if (
+        slides.length < 2 ||
+        isTransitioningRef.current ||
+        nextIndex === activeIndexRef.current
+      ) {
+        return;
+      }
+
+      isTransitioningRef.current = true;
+      Animated.timing(transitionProgress, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (!finished) {
+          isTransitioningRef.current = false;
+          return;
+        }
+
+        activeIndexRef.current = nextIndex;
+        setActiveIndex(nextIndex);
+        setIsEntering(true);
+        Animated.timing(transitionProgress, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start(() => {
+          setIsEntering(false);
+          isTransitioningRef.current = false;
+        });
+      });
+    },
+    [slides.length, transitionProgress],
+  );
 
   useEffect(() => {
     if (slides.length < 2) return undefined;
 
     const timer = setInterval(() => {
-      const nextIndex = (activeIndex + 1) % slides.length;
-      scrollViewRef.current?.scrollTo({
-        x: nextIndex * width,
-        animated: true,
-      });
-      setActiveIndex(nextIndex);
+      turnToSlide((activeIndexRef.current + 1) % slides.length);
     }, 4000);
 
     return () => clearInterval(timer);
-  }, [activeIndex, slides.length, width]);
+  }, [slides.length, turnToSlide]);
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponder: (_, gesture) =>
+          slides.length > 1 &&
+          Math.abs(gesture.dx) > 12 &&
+          Math.abs(gesture.dx) > Math.abs(gesture.dy),
+        onPanResponderRelease: (_, gesture) => {
+          if (gesture.dx < -30) {
+            turnToSlide((activeIndexRef.current + 1) % slides.length);
+          } else if (gesture.dx > 30) {
+            turnToSlide(
+              (activeIndexRef.current - 1 + slides.length) % slides.length,
+            );
+          }
+        },
+      }),
+    [slides.length, turnToSlide],
+  );
+
+  const rotateY = transitionProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: isEntering ? ['0deg', '90deg'] : ['0deg', '-90deg'],
+  });
 
   return (
     <View className="mb-5">
-      <ScrollView
-        ref={scrollViewRef}
-        horizontal
-        pagingEnabled
-        snapToInterval={width}
-        snapToAlignment="start"
-        decelerationRate="fast"
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={event => {
-          setActiveIndex(Math.round(event.nativeEvent.contentOffset.x / width));
-        }}
+      <Animated.View
+        {...panResponder.panHandlers}
+        className="relative overflow-hidden border-y border-[#d9b568] bg-[#003b30] px-5 pt-5 pb-4"
+        style={[
+          styles.slide,
+          {
+            width,
+            transform: [{ perspective: 1000 }, { rotateY }],
+          },
+        ]}
         accessibilityLabel="Featured jewellery banners"
       >
-        {slides.map((banner, index) => {
+        {(() => {
+          const banner = slides[activeIndex];
           const image = resolveImageUrl(banner?.mobile_image || banner?.image);
           return (
-            <View
-              key={banner?.id ?? `welcome-${index}`}
-              className="relative overflow-hidden border-y border-[#d9b568] bg-[#003b30] px-5 pt-5 pb-4"
-              style={[styles.slide, { width }]}
-            >
+            <>
               {image ? (
                 <Image
                   source={{ uri: image }}
@@ -113,10 +175,10 @@ function HomeBanner({ banners, userName, error }: HomeBannerProps) {
                   </Text>
                 ) : null}
               </View>
-            </View>
+            </>
           );
-        })}
-      </ScrollView>
+        })()}
+      </Animated.View>
       {slides.length > 1 ? (
         <View className="mt-2 flex-row justify-center gap-1.5">
           {slides.map((banner, index) => (
