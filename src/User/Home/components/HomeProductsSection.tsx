@@ -18,7 +18,6 @@ const styles = StyleSheet.create({
 
 const PRODUCT_GAP = 12;
 const HOME_HORIZONTAL_PADDING = 32;
-const PRODUCT_AUTO_SLIDE_INTERVAL = 6500;
 
 type HomeProductsSectionProps = {
   products: HomeProduct[];
@@ -30,6 +29,13 @@ type HomeProductsSectionProps = {
   isFavorite: (productId: string) => boolean;
   onToggleFavorite: (product: ProductCardData) => void;
 };
+
+const PRODUCT_AUTO_SLIDE_INTERVALS = {
+  Gold: 5500,
+  Silver: 6500,
+  Platinum: 7500,
+  Diamond: 8500,
+} as const;
 
 function productText(value: unknown): string {
   return typeof value === 'string' ? value.toLowerCase() : '';
@@ -65,6 +71,7 @@ function HomeProductsSection({
   const listWidth = width - HOME_HORIZONTAL_PADDING;
   const cardWidth = (listWidth - PRODUCT_GAP) / 2;
   const itemStep = cardWidth + PRODUCT_GAP;
+  const autoSlideInterval = PRODUCT_AUTO_SLIDE_INTERVALS[metal];
   const carouselProducts =
     sectionProducts.length > 2
       ? [...sectionProducts, ...sectionProducts, ...sectionProducts]
@@ -84,10 +91,10 @@ function HomeProductsSection({
         animated: true,
       });
       physicalIndexRef.current = nextIndex;
-    }, PRODUCT_AUTO_SLIDE_INTERVAL);
+    }, autoSlideInterval);
 
     return () => clearInterval(timer);
-  }, [itemStep, sectionProducts.length]);
+  }, [autoSlideInterval, itemStep, sectionProducts.length]);
 
   const syncCarouselIndex = (offset: number) => {
     const physicalIndex = Math.max(0, Math.round(offset / itemStep));
