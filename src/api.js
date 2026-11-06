@@ -2,12 +2,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
 export const API_BASE_URL = "https://srigold.qtechx.com/api";
-// export const API_BASE_URL = "http://192.168.1.5:5000/api";
+// export const API_BASE_URL = "http://192.168.1.4:5000/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: { "Content-Type": "application/json" },
-  timeout: 8000,
+  timeout: 30000,
 });
 
 const MAX_RETRIES = 1;
@@ -22,7 +22,15 @@ export function clearTokenCache() {
 }
 
 api.interceptors.request.use(async (config) => {
-  const storageToken = await AsyncStorage.getItem("userToken");
+  let storageToken = null;
+  try {
+    storageToken = await AsyncStorage.getItem("userToken");
+  } catch (error) {
+    if (__DEV__) {
+      console.warn("[API] Could not read the saved auth token:", error);
+    }
+  }
+
   const activeToken = storageToken || cachedToken;
 
   if (activeToken) {
@@ -32,19 +40,54 @@ api.interceptors.request.use(async (config) => {
     delete config.headers.Authorization;
   }
 
+  if (__DEV__) {
+    console.log("[API] Request", {
+      method: config.method?.toUpperCase(),
+      baseURL: config.baseURL,
+      url: config.url,
+    });
+  }
+
   return config;
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (__DEV__) {
+      console.log("[API] Response", {
+        method: response.config.method?.toUpperCase(),
+        url: response.config.url,
+        status: response.status,
+      });
+    }
+
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
     const retryCount = originalRequest?._retryCount || 0;
     const isNetworkError =
       !error.response && (error.code || error.message === "Network Error");
 
+    if (__DEV__) {
+      console.warn("[API] Request failed", {
+        method: originalRequest?.method?.toUpperCase(),
+        baseURL: originalRequest?.baseURL || API_BASE_URL,
+        url: originalRequest?.url,
+        code: error.code,
+        message: error.message,
+        status: error.response?.status,
+      });
+    }
+
     if (isNetworkError && originalRequest && retryCount < MAX_RETRIES) {
       originalRequest._retryCount = retryCount + 1;
+      if (__DEV__) {
+        console.warn("[API] Retrying network request", {
+          attempt: originalRequest._retryCount,
+          url: originalRequest.url,
+        });
+      }
       return api(originalRequest);
     }
 
@@ -56,9 +99,16 @@ api.interceptors.response.use(
       });
     }
 
+    if (error.code === "ECONNABORTED") {
+      return Promise.reject({
+        status: "timeout",
+        message: "The server took too long to respond. Please try again.",
+      });
+    }
+
     return Promise.reject({
       status: "network_error",
-      message: `Network connection failed. Check that ${API_BASE_URL} is reachable.`,
+      message: `Cannot connect to the server at ${API_BASE_URL}. Check your internet connection and try again.`,
     });
   },
 );

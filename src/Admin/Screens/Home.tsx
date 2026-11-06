@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   AppState,
   ActivityIndicator,
-  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -11,7 +10,7 @@ import {
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
-import { getProductImageUrl } from '../../utils/productImage';
+import ProductCard from '../../Components/ProductCard';
 import type { AuthenticatedUser } from '../Auth/Login';
 import type { AdminRoute } from '../Navigations/TopHeader';
 
@@ -600,27 +599,22 @@ function Home({ user, onNavigate }: HomeProps) {
                 getProductImageUrl(product) ??
                 (matchingProduct ? getProductImageUrl(matchingProduct) : undefined);
               return (
-                <View
+                <ProductCard
                   key={`${name}-${index}`}
-                  className="flex-row items-center border-b border-slate-100 py-3 last:border-b-0"
-                >
-                  <ProductThumbnail imageUrl={imageUrl} />
-                  <View className="min-w-0 flex-1">
-                    <Text className="text-sm font-semibold text-slate-800" numberOfLines={1}>
-                      {name}
-                    </Text>
-                    {product.category_name || product.category ? (
-                      <Text className="mt-0.5 text-[10px] text-slate-500" numberOfLines={1}>
-                        {getString(product.category_name ?? product.category)}
-                      </Text>
-                    ) : null}
-                  </View>
-                  {quantity !== undefined ? (
-                    <Text className="ml-2 text-xs font-medium text-slate-500">
-                      Stock {getString(quantity)}
-                    </Text>
-                  ) : null}
-                </View>
+                  product={product}
+                  layout="compact"
+                  title={name}
+                  subtitle={
+                    product.category_name || product.category
+                      ? getString(product.category_name ?? product.category)
+                      : undefined
+                  }
+                  trailingText={
+                    quantity !== undefined
+                      ? `Stock ${getString(quantity)}`
+                      : undefined
+                  }
+                />
               );
             })}
           </View>

@@ -3,7 +3,6 @@ import {
   Animated,
   ActivityIndicator,
   Alert,
-  Image,
   Modal,
   Pressable,
   RefreshControl,
@@ -14,7 +13,7 @@ import {
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
-import { getProductImageUrl } from '../../utils/productImage';
+import SharedProductCard from '../../Components/ProductCard';
 import type { AdminRoute } from '../Navigations/TopHeader';
 import AddProducts from '../AddProducts/Addproducts';
 import ProductDetails from '../AddProducts/ProductsDetails';
@@ -67,9 +66,6 @@ const getNumber = (value: unknown): number => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
 };
-
-const formatCurrency = (value: unknown): string =>
-  `₹${getNumber(value).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 
 function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
   const [products, setProducts] = useState<Product[]>([]);
@@ -441,7 +437,7 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
         ) : displayedProducts.length > 0 ? (
           <View className="gap-3">
             {displayedProducts.map(product => (
-              <ProductCard
+              <InventoryProductCard
                 key={String(product.id)}
                 product={product}
                 onPressDetails={() => setSelectedProductId(String(product.id))}
@@ -828,7 +824,7 @@ function StatCard({
   );
 }
 
-function ProductCard({
+function InventoryProductCard({
   product,
   onPressDetails,
   onUpdateStock,
@@ -840,95 +836,49 @@ function ProductCard({
   onDelete: () => void;
 }) {
   const stock = getNumber(product.total_stock);
-  const stockLabel = stock <= 0 ? 'Out of stock' : stock < 10 ? 'Low stock' : 'In stock';
-  const stockStyle =
-    stock <= 0
-      ? 'bg-rose-50 text-rose-700'
-      : stock < 10
-        ? 'bg-amber-50 text-amber-700'
-        : 'bg-emerald-50 text-emerald-700';
-  const price = product.offer_price ?? product.final_selling_price ?? product.mrp;
 
   return (
-    <View className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
-      <Pressable
-        onPress={onPressDetails}
-        className="flex-row p-3.5"
-        accessibilityRole="button"
-        accessibilityLabel={`View details for ${product.name || 'product'}`}
-      >
-        <ProductThumbnail imageUrl={getProductImageUrl(product)} name={product.name} />
-        <View className="min-w-0 flex-1 justify-center">
-          <Text className="text-sm font-bold text-slate-800" numberOfLines={2}>
-            {product.name || 'Unnamed product'}
-          </Text>
-          <Text className="mt-1 text-[10px] text-muted" numberOfLines={1}>
-            {[product.category, product.metal_type, product.purity]
-              .filter(value => typeof value === 'string' && value.length > 0)
-              .join(' · ') || 'Uncategorized'}
-          </Text>
-          <View className="mt-2 flex-row items-center justify-between">
-            <Text className="text-base font-extrabold text-primary-dark">
-              {price === undefined ? 'Price unavailable' : formatCurrency(price)}
+    <SharedProductCard
+      product={product}
+      layout="inventory"
+      subtitle={[product.category, product.metal_type, product.purity]
+        .filter(value => typeof value === 'string' && value.length > 0)
+        .join(' · ') || 'Uncategorized'}
+      showStockBadge
+      priceFallback="Price unavailable"
+      onPress={onPressDetails}
+      footer={
+        <View className="flex-row items-center justify-between border-t border-slate-100 bg-slate-50/70 px-3.5 py-2.5">
+          <View className="min-w-0 flex-1 pr-2">
+            <Text className="text-[10px] text-slate-500" numberOfLines={1}>
+              SKU <Text className="font-semibold text-slate-700">{String(product.product_code || '—')}</Text>
             </Text>
-            <View className={`rounded-full px-2.5 py-1 ${stockStyle}`}>
-              <Text className="text-[9px] font-bold">{stockLabel}</Text>
-            </View>
+            <Text className="mt-0.5 text-[10px] text-slate-500">
+              Stock: {stock} units
+            </Text>
           </View>
+          <View className="flex-row items-center">
+            <Pressable
+              onPress={onUpdateStock}
+              className="mr-2 flex-row items-center rounded-lg border border-primary/15 bg-primary/10 px-3 py-2"
+              accessibilityRole="button"
+              accessibilityLabel={`Update stock for ${product.name || 'product'}`}
+            >
+              <ProductIcon name="edit" color="#004D40" size={14} />
+              <Text className="ml-1.5 text-[10px] font-bold text-primary">Stock</Text>
+            </Pressable>
+            <Pressable
+              onPress={onDelete}
+              className="h-9 w-9 items-center justify-center rounded-lg border border-rose-100 bg-rose-50"
+              accessibilityRole="button"
+              accessibilityLabel={`Delete ${product.name || 'product'}`}
+            >
+              <ProductIcon name="trash" color="#DC2626" size={15} />
+            </Pressable>
           </View>
-        </Pressable>
-      <View className="flex-row items-center justify-between border-t border-slate-100 bg-slate-50/70 px-3.5 py-2.5">
-        <View className="min-w-0 flex-1 pr-2">
-          <Text className="text-[10px] text-slate-500" numberOfLines={1}>
-            SKU <Text className="font-semibold text-slate-700">{String(product.product_code || '—')}</Text>
-          </Text>
-          <Text className="mt-0.5 text-[10px] text-slate-500">Stock: {stock} units</Text>
         </View>
-        <View className="flex-row items-center">
-          <Pressable
-            onPress={onUpdateStock}
-            className="mr-2 flex-row items-center rounded-lg border border-primary/15 bg-primary/10 px-3 py-2"
-            accessibilityRole="button"
-            accessibilityLabel={`Update stock for ${product.name || 'product'}`}
-          >
-            <ProductIcon name="edit" color="#004D40" size={14} />
-            <Text className="ml-1.5 text-[10px] font-bold text-primary">Stock</Text>
-          </Pressable>
-          <Pressable
-            onPress={onDelete}
-            className="h-9 w-9 items-center justify-center rounded-lg border border-rose-100 bg-rose-50"
-            accessibilityRole="button"
-            accessibilityLabel={`Delete ${product.name || 'product'}`}
-          >
-            <ProductIcon name="trash" color="#DC2626" size={15} />
-          </Pressable>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function ProductThumbnail({ imageUrl, name }: { imageUrl?: string; name?: string }) {
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    setHasError(false);
-  }, [imageUrl]);
-
-  return (
-    <View className="mr-3 h-[82px] w-[72px] items-center justify-center overflow-hidden rounded-xl border border-amber-100 bg-amber-50">
-      {imageUrl && !hasError ? (
-        <Image
-          source={{ uri: imageUrl }}
-          className="h-full w-full"
-          resizeMode="cover"
-          onError={() => setHasError(true)}
-          accessibilityLabel={name ? `${name} product image` : 'Product image'}
-        />
-      ) : (
-        <ProductIcon name="box" color="#A66B00" size={23} />
-      )}
-    </View>
+      }
+    />
   );
 }
 
