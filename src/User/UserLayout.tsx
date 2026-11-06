@@ -312,6 +312,9 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
 
   const isStandalonePage =
     Boolean(selectedProductId) || (activeTab === 'more' && morePage !== null);
+  const contentSafeAreaEdges = isStandalonePage
+    ? (['left', 'right', 'bottom'] as const)
+    : (['left', 'right'] as const);
 
   return (
     <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
@@ -329,7 +332,10 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
           }}
         />
       ) : null}
-      <SafeAreaView className="flex-1 bg-[#fffaf0]" edges={['left', 'right']}>
+      <SafeAreaView
+        className="flex-1 bg-[#fffaf0]"
+        edges={contentSafeAreaEdges}
+      >
         <View className="flex-1">
           {lastSelectedProductId ? (
             <View
