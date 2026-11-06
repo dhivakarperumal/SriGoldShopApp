@@ -6,12 +6,14 @@ type HomeProductsSectionProps = {
   products: HomeProduct[];
   isLoading: boolean;
   error?: string;
+  onSelectProduct: (productId: string) => void;
 };
 
 function HomeProductsSection({
   products,
   isLoading,
   error,
+  onSelectProduct,
 }: HomeProductsSectionProps) {
   return (
     <View className="mb-5">
@@ -35,7 +37,12 @@ function HomeProductsSection({
       ) : (
         <View className="flex-row flex-wrap justify-between">
           {products.map(product => (
-            <ProductCard key={product.id} product={product} layout="catalog" />
+            <ProductCard
+              key={product.id}
+              product={product}
+              layout="catalog"
+              onPress={() => onSelectProduct(String(product.id))}
+            />
           ))}
         </View>
       )}

@@ -59,7 +59,11 @@ const getDiscount = (product: ExploreProduct) => {
     : 0;
 };
 
-function UserExplore() {
+function UserExplore({
+  onSelectProduct,
+}: {
+  onSelectProduct: (productId: string) => void;
+}) {
   const [products, setProducts] = useState<ExploreProduct[]>([]);
   const [categories, setCategories] = useState<Facet[]>([]);
   const [metals, setMetals] = useState<Facet[]>([]);
@@ -529,6 +533,9 @@ function UserExplore() {
               key={String(product.id ?? product.product_code ?? index)}
               product={product}
               layout="catalog"
+              onPress={() => {
+                if (product.id != null) onSelectProduct(String(product.id));
+              }}
             />
           ))}
         </View>

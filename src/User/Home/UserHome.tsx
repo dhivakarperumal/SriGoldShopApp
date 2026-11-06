@@ -93,7 +93,13 @@ const DATA_REQUESTS: {
   },
 ];
 
-function UserHome({ user }: { user: AuthenticatedUser }) {
+function UserHome({
+  user,
+  onSelectProduct,
+}: {
+  user: AuthenticatedUser;
+  onSelectProduct: (productId: string) => void;
+}) {
   const [data, setData] = useState<HomeData>(EMPTY_DATA);
   const [errors, setErrors] = useState<HomeErrors>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -188,6 +194,7 @@ function UserHome({ user }: { user: AuthenticatedUser }) {
           products={data.products}
           isLoading={isLoading}
           error={errors.products}
+          onSelectProduct={onSelectProduct}
         />
         <HomeBannerSections />
       </View>
