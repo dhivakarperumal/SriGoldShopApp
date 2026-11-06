@@ -19,7 +19,7 @@ export type ProductCardData = Record<string, unknown> & {
 
 type ProductCardProps = {
   product: ProductCardData;
-  layout?: 'catalog' | 'inventory' | 'compact';
+  layout?: 'catalog' | 'carousel' | 'inventory' | 'compact';
   title?: string;
   subtitle?: string;
   trailingText?: string;
@@ -197,7 +197,9 @@ function ProductCard({
   );
 
   return (
-    <View className={`mb-3 w-[48.5%] overflow-hidden rounded-xl border border-[#eadfc8] bg-white ${className || ''}`}>
+    <View
+      className={`${layout === 'carousel' ? 'w-[250px]' : 'w-[48.5%]'} mb-3 overflow-hidden rounded-xl border border-[#eadfc8] bg-white ${className || ''}`}
+    >
       <View>
         {onPress ? (
           <Pressable

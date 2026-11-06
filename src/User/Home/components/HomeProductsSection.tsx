@@ -1,7 +1,17 @@
-import { ActivityIndicator, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import ProductCard from '../../../Components/ProductCard';
 import type { ProductCardData } from '../../../Components/ProductCard';
 import type { HomeProduct } from '../types';
+
+const styles = StyleSheet.create({
+  products: { gap: 12, paddingBottom: 8 },
+});
 
 type HomeProductsSectionProps = {
   products: HomeProduct[];
@@ -69,19 +79,23 @@ function HomeProductsSection({
           No {metal.toLowerCase()} products available.
         </Text>
       ) : (
-        <View className="flex-row flex-wrap justify-between">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.products}
+        >
           {sectionProducts.map(product => (
             <ProductCard
               key={product.id}
               product={product}
-              layout="catalog"
+              layout="carousel"
               onPress={() => onSelectProduct(String(product.id))}
               onEnquire={onEnquireProduct}
               isFavorite={isFavorite(String(product.id))}
               onToggleFavorite={onToggleFavorite}
             />
           ))}
-        </View>
+        </ScrollView>
       )}
     </View>
   );
