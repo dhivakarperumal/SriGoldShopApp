@@ -1,4 +1,4 @@
-import { ImageBackground, Text, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
 
 const PROMOTIONS = [
   {
@@ -21,13 +21,18 @@ function HomeBannerSections() {
   return (
     <View className="mb-5 gap-3">
       {PROMOTIONS.map(promotion => (
-        <ImageBackground
+        <View
           key={promotion.title}
-          source={promotion.image}
-          resizeMode="cover"
-          className="min-h-40 justify-center overflow-hidden rounded-xl border border-[#d9b568] p-5"
+          className="relative min-h-40 justify-center overflow-hidden rounded-xl border border-[#d9b568] p-5"
           accessibilityLabel={`${promotion.title}. ${promotion.subtitle}`}
+          accessible
         >
+          <Image
+            source={promotion.image}
+            resizeMode="cover"
+            className="absolute inset-0 h-full w-full"
+            accessible={false}
+          />
           <View
             className={`absolute inset-0 ${
               promotion.lightText ? 'bg-primary-dark/70' : 'bg-[#36210b]/55'
@@ -44,7 +49,7 @@ function HomeBannerSections() {
               {promotion.subtitle}
             </Text>
           </View>
-        </ImageBackground>
+        </View>
       ))}
     </View>
   );
