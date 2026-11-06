@@ -31,6 +31,17 @@ type Facet = { name: string };
 type SortOption = 'newest' | 'oldest' | 'price-low' | 'price-high' | 'name';
 type Availability = '' | 'in-stock' | 'out-of-stock';
 
+function uniqueFacets(facets: Facet[]): Facet[] {
+  const seen = new Set<string>();
+  return facets.filter(facet => {
+    const name = facet.name.trim();
+    const normalizedName = name.toLowerCase();
+    if (!name || seen.has(normalizedName)) return false;
+    seen.add(normalizedName);
+    return true;
+  }).map(facet => ({ name: facet.name.trim() }));
+}
+
 const PAGE_SIZE = 100;
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'newest', label: 'Newest first' },
@@ -222,29 +233,39 @@ function UserExplore({
   }, [refreshVersion]);
 
   const availableCategories = useMemo(() => {
-    const productCategories = new Set(
-      products.map(product => product.category).filter((value): value is string => Boolean(value)),
+    const productCategories = uniqueFacets(
+      products
+        .map(product => product.category)
+        .filter((value): value is string => Boolean(value))
+        .map(name => ({ name })),
     );
-    const matchingFacets = categories.filter(category =>
-      productCategories.has(category.name),
+    const productCategoryNames = new Set(
+      productCategories.map(category => category.name.toLowerCase()),
+    );
+    const matchingFacets = uniqueFacets(categories).filter(category =>
+      productCategoryNames.has(category.name.toLowerCase()),
     );
     return matchingFacets.length
       ? matchingFacets
-      : [...productCategories].map(name => ({ name }));
+      : productCategories;
   }, [categories, products]);
 
   const availableMetals = useMemo(() => {
-    const productMetals = new Set(
-      products.map(product => product.metal_type).filter((value): value is string => Boolean(value)),
+    const productMetals = uniqueFacets(
+      products
+        .map(product => product.metal_type)
+        .filter((value): value is string => Boolean(value))
+        .map(name => ({ name })),
     );
-    const matchingFacets = metals.filter(metal =>
-      [...productMetals].some(
-        name => name.toLowerCase() === metal.name.toLowerCase(),
-      ),
+    const productMetalNames = new Set(
+      productMetals.map(metal => metal.name.toLowerCase()),
+    );
+    const matchingFacets = uniqueFacets(metals).filter(metal =>
+      productMetalNames.has(metal.name.toLowerCase()),
     );
     return matchingFacets.length
       ? matchingFacets
-      : [...productMetals].map(name => ({ name }));
+      : productMetals;
   }, [metals, products]);
 
   const popularProducts = useMemo(
@@ -622,7 +643,7 @@ function FilterChips({
             const isSelected = selected === option;
             return (
               <Pressable
-                key={option}
+                key={`${title}-${option}-${index}`}
                 onPress={() => onSelect(option)}
                 className={`mb-1.5 mr-1.5 rounded-full border px-2.5 py-1.5 ${
                   isSelected
