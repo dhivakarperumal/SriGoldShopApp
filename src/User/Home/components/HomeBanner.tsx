@@ -56,6 +56,9 @@ function HomeBanner({ banners, userName, error }: HomeBannerProps) {
         ref={scrollViewRef}
         horizontal
         pagingEnabled
+        snapToInterval={width}
+        snapToAlignment="start"
+        decelerationRate="fast"
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={event => {
           setActiveIndex(Math.round(event.nativeEvent.contentOffset.x / width));
