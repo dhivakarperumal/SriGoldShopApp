@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import {
-  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,6 +10,7 @@ import {
 import ProductCard from '../../../Components/ProductCard';
 import type { ProductCardData } from '../../../Components/ProductCard';
 import type { HomeProduct } from '../types';
+import HomeSkeleton from './HomeSkeleton';
 
 const styles = StyleSheet.create({
   products: { gap: 12, paddingBottom: 8 },
@@ -126,15 +126,36 @@ function HomeProductsSection({
             Curated collection
           </Text>
         </View>
-        {isLoading && sectionProducts.length === 0 ? (
-          <ActivityIndicator size="small" color="#004D40" />
-        ) : null}
       </View>
       {error ? (
         <Text className="text-xs text-red-700" accessibilityRole="alert">
           {error}
         </Text>
-      ) : sectionProducts.length === 0 && !isLoading ? (
+      ) : isLoading && sectionProducts.length === 0 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ width: listWidth }}
+          contentContainerStyle={styles.products}
+          accessibilityLabel={`Loading ${metal.toLowerCase()} products`}
+        >
+          {[0, 1].map(index => (
+            <View
+              key={index}
+              className="mb-3 overflow-hidden rounded-xl border border-[#eadfc8] bg-white"
+              style={{ width: cardWidth }}
+            >
+              <HomeSkeleton className="h-36 w-full rounded-none bg-[#eee8dc]" />
+              <View className="p-3">
+                <HomeSkeleton className="h-3 w-4/5 bg-[#e8dfd0]" />
+                <HomeSkeleton className="mt-2 h-3 w-1/2 bg-[#e8dfd0]" />
+                <HomeSkeleton className="mt-3 h-4 w-2/3 bg-[#e8dfd0]" />
+                <HomeSkeleton className="mt-3 h-9 w-full rounded-lg bg-[#e8dfd0]" />
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+      ) : sectionProducts.length === 0 ? (
         <Text className="text-sm text-[#777066]">
           No {metal.toLowerCase()} products available.
         </Text>

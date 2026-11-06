@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { resolveImageUrl } from '../homeUtils';
 import type { HomeBanner as HomeBannerData } from '../types';
+import HomeSkeleton from './HomeSkeleton';
 
 const BANNER_HEIGHT = 220;
 const styles = StyleSheet.create({
@@ -38,9 +39,10 @@ type HomeBannerProps = {
   banners: HomeBannerData[];
   userName?: string;
   error?: string;
+  isLoading: boolean;
 };
 
-function HomeBanner({ banners, userName, error }: HomeBannerProps) {
+function HomeBanner({ banners, userName, error, isLoading }: HomeBannerProps) {
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isEntering, setIsEntering] = useState(false);
@@ -158,43 +160,58 @@ function HomeBanner({ banners, userName, error }: HomeBannerProps) {
           })}
         </ScrollView>
         <View pointerEvents="none" style={styles.overlay} />
-        <Animated.View
-          pointerEvents="none"
-          className="relative"
-          style={[
-            styles.text,
-            {
-              width: width * 0.58,
-              transform: [{ perspective: 1000 }, { rotateY }],
-            },
-          ]}
-        >
-          <Text className="text-[10px] font-bold uppercase tracking-[2px] text-accent-light">
-            Sri Golds · Jewellery
-          </Text>
-          <Text
-            className="mt-1 text-2xl font-bold leading-8 text-white"
-            numberOfLines={2}
+        {isLoading ? (
+          <View
+            pointerEvents="none"
+            className="relative"
+            style={{ width: width * 0.58 }}
+            accessibilityLabel="Loading featured banners"
           >
-            {banner?.title || `Welcome${firstName ? `, ${firstName}` : ''}`}
-          </Text>
-          <Text
-            className="mt-1 text-sm leading-5 text-emerald-50"
-            numberOfLines={2}
+            <HomeSkeleton className="h-2 w-24 bg-white/30" />
+            <HomeSkeleton className="mt-3 h-6 w-4/5 bg-white/35" />
+            <HomeSkeleton className="mt-2 h-6 w-3/5 bg-white/35" />
+            <HomeSkeleton className="mt-3 h-3 w-full bg-white/25" />
+            <HomeSkeleton className="mt-2 h-3 w-4/5 bg-white/25" />
+          </View>
+        ) : (
+          <Animated.View
+            pointerEvents="none"
+            className="relative"
+            style={[
+              styles.text,
+              {
+                width: width * 0.58,
+                transform: [{ perspective: 1000 }, { rotateY }],
+              },
+            ]}
           >
-            {banner?.subtitle ||
-              banner?.description ||
-              'Discover timeless designs and beautifully crafted jewellery.'}
-          </Text>
-          {error ? (
-            <Text
-              className="mt-2 text-xs text-amber-100"
-              accessibilityRole="alert"
-            >
-              {error}
+            <Text className="text-[10px] font-bold uppercase tracking-[2px] text-accent-light">
+              Sri Golds · Jewellery
             </Text>
-          ) : null}
-        </Animated.View>
+            <Text
+              className="mt-1 text-2xl font-bold leading-8 text-white"
+              numberOfLines={2}
+            >
+              {banner?.title || `Welcome${firstName ? `, ${firstName}` : ''}`}
+            </Text>
+            <Text
+              className="mt-1 text-sm leading-5 text-emerald-50"
+              numberOfLines={2}
+            >
+              {banner?.subtitle ||
+                banner?.description ||
+                'Discover timeless designs and beautifully crafted jewellery.'}
+            </Text>
+            {error ? (
+              <Text
+                className="mt-2 text-xs text-amber-100"
+                accessibilityRole="alert"
+              >
+                {error}
+              </Text>
+            ) : null}
+          </Animated.View>
+        )}
       </View>
     </View>
   );

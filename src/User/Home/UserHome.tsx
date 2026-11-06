@@ -205,6 +205,7 @@ function UserHome({
         banners={data.banners}
         userName={user.name}
         error={errors.banners}
+        isLoading={isLoading}
       />
       <View className="px-4">
         <HomeCategory
@@ -219,6 +220,7 @@ function UserHome({
               metal={data.metals.find(metalData =>
                 metalData.name.toLowerCase().includes(metal.toLowerCase()),
               )}
+              isLoading={isLoading}
               onExploreMetal={onExploreMetal}
             />
             <HomeProductsSection

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, Text, View } from 'react-native';
+import { Image, ScrollView, Text, View } from 'react-native';
 import api from '../../../api';
 import { resolveImageUrl } from '../homeUtils';
 import type { HomeReview } from '../types';
+import HomeSkeleton from './HomeSkeleton';
 
 function getInitials(name?: string) {
   return (name || 'Customer')
@@ -59,11 +60,31 @@ function HomeReviewsSection({ refreshVersion }: { refreshVersion: number }) {
         <View className="mb-4 mt-2 h-px w-20 bg-[#d9a441]" />
 
         {isLoading ? (
-          <ActivityIndicator
-            className="py-6"
-            color="#004D40"
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerClassName="gap-3 pb-2"
             accessibilityLabel="Loading customer reviews"
-          />
+          >
+            {[0, 1].map(index => (
+              <View
+                key={index}
+                className="w-[280px] rounded-xl border border-[#eadfc8] bg-white p-4"
+              >
+                <View className="flex-row items-center">
+                  <HomeSkeleton className="mr-3 h-10 w-10 rounded-full bg-[#e8dfd0]" />
+                  <View className="flex-1">
+                    <HomeSkeleton className="h-3 w-2/3 bg-[#e8dfd0]" />
+                    <HomeSkeleton className="mt-2 h-2.5 w-1/2 bg-[#e8dfd0]" />
+                  </View>
+                </View>
+                <HomeSkeleton className="mt-4 h-3 w-24 bg-[#e8dfd0]" />
+                <HomeSkeleton className="mt-4 h-3 w-full bg-[#e8dfd0]" />
+                <HomeSkeleton className="mt-2 h-3 w-full bg-[#e8dfd0]" />
+                <HomeSkeleton className="mt-2 h-3 w-3/4 bg-[#e8dfd0]" />
+              </View>
+            ))}
+          </ScrollView>
         ) : (
           <ScrollView
             horizontal

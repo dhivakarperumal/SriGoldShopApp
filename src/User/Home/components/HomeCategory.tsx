@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import {
-  ActivityIndicator,
   Image,
   ScrollView,
   StyleSheet,
@@ -11,6 +10,7 @@ import {
 } from 'react-native';
 import { getCategoryImage } from '../homeUtils';
 import type { HomeCategory as HomeCategoryData } from '../types';
+import HomeSkeleton from './HomeSkeleton';
 
 const VISIBLE_CATEGORIES = 4;
 const CATEGORY_GAP = 8;
@@ -65,15 +65,30 @@ function HomeCategory({ categories, isLoading, error }: HomeCategoryProps) {
             Explore our jewellery collections
           </Text>
         </View>
-        {isLoading && categories.length === 0 ? (
-          <ActivityIndicator size="small" color="#004D40" />
-        ) : null}
       </View>
       {error ? (
         <Text className="text-xs text-red-700" accessibilityRole="alert">
           {error}
         </Text>
-      ) : categories.length === 0 && !isLoading ? (
+      ) : isLoading && categories.length === 0 ? (
+        <View
+          className="flex-row justify-between"
+          style={{ width: listWidth }}
+          accessibilityLabel="Loading categories"
+        >
+          {Array.from({ length: VISIBLE_CATEGORIES }, (_, index) => (
+            <View
+              key={index}
+              className="items-center"
+              style={{ width: cardWidth }}
+            >
+              <HomeSkeleton className="h-[68px] w-[68px] rounded-full bg-[#e8dfd0]" />
+              <HomeSkeleton className="mt-2 h-3 w-14 bg-[#e8dfd0]" />
+              <HomeSkeleton className="mt-1 h-3 w-10 bg-[#e8dfd0]" />
+            </View>
+          ))}
+        </View>
+      ) : categories.length === 0 ? (
         <Text className="text-sm text-[#777066]">No categories available.</Text>
       ) : (
         <ScrollView

@@ -7,12 +7,14 @@ import {
   type ImageSourcePropType,
 } from 'react-native';
 import type { HomeMetal } from '../types';
+import HomeSkeleton from './HomeSkeleton';
 
 type MetalKey = 'gold' | 'silver' | 'diamond' | 'platinum';
 
 type HomeMetalsShowcaseProps = {
   metalName: string;
   metal?: HomeMetal;
+  isLoading: boolean;
   onExploreMetal: (metalName: string) => void;
 };
 
@@ -60,6 +62,7 @@ function getMetalKey(name: string): MetalKey | undefined {
 function HomeMetalsShowcase({
   metalName,
   metal,
+  isLoading,
   onExploreMetal,
 }: HomeMetalsShowcaseProps) {
   const displayName = metal?.name || metalName;
@@ -86,43 +89,55 @@ function HomeMetalsShowcase({
         />
       ) : null}
       <View className="w-[68%]">
-        <Text
-          className={`font-serif text-2xl font-bold leading-tight ${
-            colors?.title || 'text-[#12372d]'
-          }`}
-        >
-          {displayName}
-        </Text>
-        {metal?.purity ? (
-          <Text
-            className={`mt-1 text-[10px] font-bold uppercase tracking-wide ${
-              colors?.detail || 'text-[#26382f]'
-            }`}
-          >
-            {metal.purity}
-          </Text>
-        ) : null}
-        {metal?.description ? (
-          <Text
-            className={`mt-1.5 text-[10px] leading-4 ${
-              colors?.detail || 'text-[#26382f]'
-            }`}
-            numberOfLines={2}
-          >
-            {metal.description}
-          </Text>
-        ) : null}
-        <Pressable
-          className="mt-3 min-h-9 flex-row items-center self-start rounded-full bg-[#e7b848] px-3.5 py-2"
-          onPress={() => onExploreMetal(displayName)}
-          accessibilityRole="button"
-          accessibilityLabel={`Explore ${displayName}`}
-        >
-          <Text className="text-[10px] font-bold text-[#382a10]">
-            Explore {displayName}
-          </Text>
-          <Text className="ml-1.5 text-xs font-bold text-[#382a10]">›</Text>
-        </Pressable>
+        {isLoading ? (
+          <>
+            <HomeSkeleton className="h-7 w-4/5 bg-white/30" />
+            <HomeSkeleton className="mt-2 h-3 w-1/3 bg-white/25" />
+            <HomeSkeleton className="mt-3 h-3 w-full bg-white/25" />
+            <HomeSkeleton className="mt-2 h-3 w-4/5 bg-white/25" />
+            <HomeSkeleton className="mt-4 h-9 w-28 rounded-full bg-white/35" />
+          </>
+        ) : (
+          <>
+            <Text
+              className={`font-serif text-2xl font-bold leading-tight ${
+                colors?.title || 'text-[#12372d]'
+              }`}
+            >
+              {displayName}
+            </Text>
+            {metal?.purity ? (
+              <Text
+                className={`mt-1 text-[10px] font-bold uppercase tracking-wide ${
+                  colors?.detail || 'text-[#26382f]'
+                }`}
+              >
+                {metal.purity}
+              </Text>
+            ) : null}
+            {metal?.description ? (
+              <Text
+                className={`mt-1.5 text-[10px] leading-4 ${
+                  colors?.detail || 'text-[#26382f]'
+                }`}
+                numberOfLines={2}
+              >
+                {metal.description}
+              </Text>
+            ) : null}
+            <Pressable
+              className="mt-3 min-h-9 flex-row items-center self-start rounded-full bg-[#e7b848] px-3.5 py-2"
+              onPress={() => onExploreMetal(displayName)}
+              accessibilityRole="button"
+              accessibilityLabel={`Explore ${displayName}`}
+            >
+              <Text className="text-[10px] font-bold text-[#382a10]">
+                Explore {displayName}
+              </Text>
+              <Text className="ml-1.5 text-xs font-bold text-[#382a10]">›</Text>
+            </Pressable>
+          </>
+        )}
       </View>
     </View>
   );

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  ActivityIndicator,
   Image,
   Modal,
   Pressable,
@@ -12,6 +11,7 @@ import {
 import Svg, { Circle, Path } from 'react-native-svg';
 import { formatPrice } from '../homeUtils';
 import type { HomeGoldRate } from '../types';
+import HomeSkeleton from './HomeSkeleton';
 
 type MetalName = 'Gold' | 'Silver' | 'Diamond' | 'Platinum';
 
@@ -101,7 +101,7 @@ function RateValue({
   isLoading: boolean;
 }) {
   if (isLoading && !rate) {
-    return <ActivityIndicator size="small" color="#004D40" />;
+    return <HomeSkeleton className="h-4 w-20 bg-[#e8dfd0]" />;
   }
   if (!rate) return <Text className="text-sm font-bold text-[#123c2d]">—</Text>;
 
