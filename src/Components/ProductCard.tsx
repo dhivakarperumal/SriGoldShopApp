@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { getProductImageUrl } from '../utils/productImage';
 
 export type ProductCardData = Record<string, unknown> & {
@@ -10,11 +11,13 @@ export type ProductCardData = Record<string, unknown> & {
   metal_type?: string;
   purity?: string;
   gross_weight?: string | number;
+  net_weight?: string | number;
   total_stock?: string | number;
   product_code?: string;
   offer_price?: string | number;
   final_selling_price?: string | number;
   mrp?: string | number;
+  rating?: string | number;
 };
 
 type ProductCardProps = {
@@ -48,32 +51,457 @@ function getPrice(product: ProductCardData, price: unknown) {
     product.final_selling_price ??
     product.mrp;
   if (value === undefined || value === null || value === '') return null;
-
   const amount = Number(value);
   return Number.isFinite(amount)
-    ? `₹${amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+    ? { amount, formatted: `₹${amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}` }
     : null;
 }
 
-function ProductCard({
+function getMrp(product: ProductCardData) {
+  const value = product.mrp;
+  if (value === undefined || value === null || value === '') return null;
+  const amount = Number(value);
+  return Number.isFinite(amount) && amount > 0 ? amount : null;
+}
+
+function getDiscount(sellingPrice: number, mrp: number) {
+  if (mrp <= sellingPrice) return null;
+  return Math.round(((mrp - sellingPrice) / mrp) * 100);
+}
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#eadfc8',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+    marginBottom: 12,
+  },
+  imageBox: {
+    width: '100%',
+    height: 190,
+    backgroundColor: '#1a1a1a',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  categoryBadge: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  categoryText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#333',
+    letterSpacing: 0.5,
+  },
+  favBtn: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  productCodeBadge: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    backgroundColor: '#B8860B',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  productCodeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: 0.3,
+  },
+  body: {
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  productName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    marginRight: 6,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#555',
+    marginLeft: 3,
+  },
+  stockBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E9',
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  stockDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#2E7D32',
+    marginRight: 4,
+  },
+  stockText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#2E7D32',
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginTop: 6,
+    gap: 6,
+  },
+  priceText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#003B2D',
+  },
+  mrpText: {
+    fontSize: 11,
+    color: '#999',
+    textDecorationLine: 'line-through',
+  },
+  discountBadge: {
+    backgroundColor: '#E8F5E9',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  discountText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#2E7D32',
+  },
+  specsRow: {
+    flexDirection: 'row',
+    marginTop: 10,
+    marginBottom: 10,
+    gap: 8,
+  },
+  specItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f9f6f0',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    gap: 6,
+  },
+  specLabel: {
+    fontSize: 9,
+    color: '#888',
+    fontWeight: '500',
+  },
+  specValue: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#333',
+    marginTop: 1,
+  },
+  enquireBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#003B2D',
+    borderRadius: 10,
+    paddingVertical: 11,
+    marginHorizontal: 12,
+    marginBottom: 12,
+    gap: 6,
+  },
+  enquireBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#fff',
+  },
+});
+
+// ─── Catalog / Carousel card (new design) ───────────────────────────────────
+function CatalogCard({
   product,
-  layout = 'catalog',
+  layout,
   carouselWidth,
   title,
-  subtitle,
-  trailingText,
   price,
-  priceFallback = 'Price on request',
-  showStockBadge = false,
+  priceFallback,
   footer,
   className,
   onPress,
   onEnquire,
-  isFavorite = false,
+  isFavorite,
   onToggleFavorite,
 }: ProductCardProps) {
   const imageUrl = getProductImageUrl(product);
   const [hasImageError, setHasImageError] = useState(false);
+
+  useEffect(() => {
+    setHasImageError(false);
+  }, [imageUrl]);
+
+  const productName = title || getText(product.name, 'Jewellery');
+  const priceData = getPrice(product, price);
+  const mrpAmount = getMrp(product);
+  const discountPct =
+    priceData && mrpAmount ? getDiscount(priceData.amount, mrpAmount) : null;
+
+  const categoryLabel =
+    getText(product.category_name) ||
+    getText(product.category) ||
+    getText(product.metal_type);
+
+  const productCode = getText(product.product_code);
+
+  const weight =
+    getText(product.gross_weight) || getText(product.net_weight);
+  const purity = getText(product.purity);
+
+  const stock = Number(product.total_stock);
+  const isInStock = stock > 0;
+
+  const rating = Number(product.rating);
+  const ratingDisplay = Number.isFinite(rating) && rating > 0 ? rating.toFixed(1) : null;
+
+  const cardWidth =
+    layout === 'carousel' && carouselWidth
+      ? { width: carouselWidth }
+      : layout === 'carousel'
+      ? { width: 220 }
+      : { width: '48.5%' as const };
+
+  return (
+    <View style={[styles.card, cardWidth, className ? {} : {}]}>
+      {/* ── Image area ── */}
+      <Pressable
+        onPress={onPress}
+        disabled={!onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`View ${productName}`}
+      >
+        <View style={styles.imageBox}>
+          {imageUrl && !hasImageError ? (
+            <Image
+              source={{ uri: imageUrl }}
+              style={styles.image}
+              resizeMode="cover"
+              onError={() => setHasImageError(true)}
+              accessibilityLabel={`${productName} product image`}
+            />
+          ) : (
+            <View style={[styles.image, { alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a1a' }]}>
+              <Text style={{ fontSize: 36, color: '#B8860B' }}>✦</Text>
+            </View>
+          )}
+
+          {/* Category badge — top left */}
+          {categoryLabel ? (
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryText}>
+                {categoryLabel.toUpperCase()}
+              </Text>
+            </View>
+          ) : null}
+
+          {/* Favorite button — top right */}
+          {onToggleFavorite ? (
+            <Pressable
+              style={styles.favBtn}
+              onPress={() => onToggleFavorite(product)}
+              accessibilityRole="button"
+              accessibilityLabel={`${isFavorite ? 'Remove from' : 'Add to'} favorites`}
+              accessibilityState={{ selected: isFavorite }}
+            >
+              <Svg width={18} height={18} viewBox="0 0 24 24" fill={isFavorite ? '#e53935' : 'none'}>
+                <Path
+                  d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"
+                  stroke={isFavorite ? '#e53935' : '#555'}
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </Pressable>
+          ) : null}
+
+          {/* Product code badge — bottom right */}
+          {productCode ? (
+            <View style={styles.productCodeBadge}>
+              <Text style={styles.productCodeText}>{productCode}</Text>
+            </View>
+          ) : null}
+        </View>
+      </Pressable>
+
+      {/* ── Body ── */}
+      <View style={styles.body}>
+        {/* Name row + stock badge */}
+        <View style={styles.nameRow}>
+          <Text style={styles.productName} numberOfLines={2}>
+            {productName}
+          </Text>
+        </View>
+
+        {/* Rating + Stock in same row */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+          {ratingDisplay ? (
+            <View style={styles.ratingRow}>
+              <Text style={{ fontSize: 13, color: '#FFC107' }}>★</Text>
+              <Text style={styles.ratingText}>{ratingDisplay}</Text>
+            </View>
+          ) : <View />}
+
+          <View style={[styles.stockBadge, !isInStock && { backgroundColor: '#FEE2E2' }]}>
+            <View style={[styles.stockDot, !isInStock && { backgroundColor: '#DC2626' }]} />
+            <Text style={[styles.stockText, !isInStock && { color: '#DC2626' }]}>
+              {isInStock ? 'In Stock' : 'Out of Stock'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Price row */}
+        <View style={styles.priceRow}>
+          <Text style={styles.priceText}>
+            {priceData ? priceData.formatted : priceFallback ?? 'Price on request'}
+          </Text>
+          {mrpAmount && discountPct ? (
+            <>
+              <Text style={styles.mrpText}>
+                ₹{mrpAmount.toLocaleString('en-IN')}
+              </Text>
+              <View style={styles.discountBadge}>
+                <Text style={styles.discountText}>{discountPct}% OFF</Text>
+              </View>
+            </>
+          ) : null}
+        </View>
+
+        {/* Weight & Purity specs */}
+        {(weight || purity) ? (
+          <View style={styles.specsRow}>
+            {weight ? (
+              <View style={styles.specItem}>
+                {/* Weight icon */}
+                <Svg width={15} height={15} viewBox="0 0 24 24" fill="none">
+                  <Path
+                    d="M12 3a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM5 20h14l-2-9H7L5 20ZM9 11V9a3 3 0 0 1 6 0v2"
+                    stroke="#888"
+                    strokeWidth={1.6}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </Svg>
+                <View>
+                  <Text style={styles.specLabel}>Weight</Text>
+                  <Text style={styles.specValue}>{weight} g</Text>
+                </View>
+              </View>
+            ) : null}
+            {purity ? (
+              <View style={styles.specItem}>
+                {/* Purity / shield icon */}
+                <Svg width={15} height={15} viewBox="0 0 24 24" fill="none">
+                  <Path
+                    d="M12 2L4 6v6c0 5 3.6 9.7 8 11 4.4-1.3 8-6 8-11V6l-8-4Z"
+                    stroke="#888"
+                    strokeWidth={1.6}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </Svg>
+                <View>
+                  <Text style={styles.specLabel}>Purity</Text>
+                  <Text style={styles.specValue}>{purity}</Text>
+                </View>
+              </View>
+            ) : null}
+          </View>
+        ) : <View style={{ height: 10 }} />}
+      </View>
+
+      {/* ── Footer / Enquire button ── */}
+      {footer}
+      {onEnquire ? (
+        <Pressable
+          style={[styles.enquireBtn, { opacity: 1 }]}
+          onPress={() => onEnquire(product)}
+          accessibilityRole="button"
+          accessibilityLabel={`Enquire about ${productName}`}
+        >
+          <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+            <Path
+              d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"
+              stroke="#fff"
+              strokeWidth={1.8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
+          <Text style={styles.enquireBtnText}>Enquire Now</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+function ProductCard(props: ProductCardProps) {
+  const {
+    product,
+    layout = 'catalog',
+    carouselWidth,
+    title,
+    subtitle,
+    trailingText,
+    price,
+    priceFallback = 'Price on request',
+    showStockBadge = false,
+    footer,
+    className,
+    onPress,
+    onEnquire,
+    isFavorite = false,
+    onToggleFavorite,
+  } = props;
+
+  const imageUrl = getProductImageUrl(product);
+  const [hasImageError, setHasImageError] = useState(false);
+
   const productName = title || getText(product.name, 'Jewellery');
   const formattedPrice = getPrice(product, price);
   const productSubtitle =
@@ -95,6 +523,12 @@ function ProductCard({
     setHasImageError(false);
   }, [imageUrl]);
 
+  // ── New catalog/carousel layout ──────────────────────────────────────────
+  if (layout === 'catalog' || layout === 'carousel') {
+    return <CatalogCard {...props} isFavorite={isFavorite} />;
+  }
+
+  // ── Compact layout ───────────────────────────────────────────────────────
   if (layout === 'compact') {
     return (
       <View className={`flex-row items-center border-b border-slate-100 py-3 last:border-b-0 ${className || ''}`}>
@@ -124,133 +558,51 @@ function ProductCard({
     );
   }
 
-  if (layout === 'inventory') {
-    const cardContent = (
-      <View className="flex-row p-3.5">
-        <ProductImage
-          imageUrl={imageUrl}
-          name={productName}
-          hasError={hasImageError}
-          onError={() => setHasImageError(true)}
-          size="inventory"
-        />
-        <View className="min-w-0 flex-1 justify-center">
-          <Text className="text-sm font-bold text-slate-800" numberOfLines={2}>
-            {productName}
-          </Text>
-          <Text className="mt-1 text-[10px] text-muted" numberOfLines={1}>
-            {productSubtitle || 'Uncategorized'}
-          </Text>
-          <View className="mt-2 flex-row items-center justify-between">
-            <Text className="text-base font-extrabold text-primary-dark">
-              {formattedPrice || priceFallback}
-            </Text>
-            {showStockBadge ? (
-              <View className={`rounded-full px-2.5 py-1 ${stockClass}`}>
-                <Text className="text-[9px] font-bold">{stockLabel}</Text>
-              </View>
-            ) : null}
-          </View>
-        </View>
-      </View>
-    );
-
-    return (
-      <View className={`overflow-hidden rounded-2xl border border-border bg-surface shadow-sm ${className || ''}`}>
-        {onPress ? (
-          <Pressable
-            onPress={onPress}
-            accessibilityRole="button"
-            accessibilityLabel={`View details for ${productName}`}
-          >
-            {cardContent}
-          </Pressable>
-        ) : (
-          cardContent
-        )}
-        {footer}
-      </View>
-    );
-  }
-
+  // ── Inventory layout ─────────────────────────────────────────────────────
   const cardContent = (
-    <>
+    <View className="flex-row p-3.5">
       <ProductImage
         imageUrl={imageUrl}
         name={productName}
         hasError={hasImageError}
         onError={() => setHasImageError(true)}
-        size="catalog"
+        size="inventory"
       />
-      <View className="p-3">
-        <Text className="text-sm font-semibold text-[#29231c]" numberOfLines={2}>
+      <View className="min-w-0 flex-1 justify-center">
+        <Text className="text-sm font-bold text-slate-800" numberOfLines={2}>
           {productName}
         </Text>
-        {productSubtitle ? (
-          <Text className="mt-1 text-[10px] text-[#777066]" numberOfLines={1}>
-            {productSubtitle}
-          </Text>
-        ) : null}
-        <Text className="mt-2 text-sm font-bold text-[#a66b00]">
-          {formattedPrice || priceFallback}
+        <Text className="mt-1 text-[10px] text-muted" numberOfLines={1}>
+          {productSubtitle || 'Uncategorized'}
         </Text>
+        <View className="mt-2 flex-row items-center justify-between">
+          <Text className="text-base font-extrabold text-primary-dark">
+            {formattedPrice ? formattedPrice.formatted : priceFallback}
+          </Text>
+          {showStockBadge ? (
+            <View className={`rounded-full px-2.5 py-1 ${stockClass}`}>
+              <Text className="text-[9px] font-bold">{stockLabel}</Text>
+            </View>
+          ) : null}
+        </View>
       </View>
-    </>
+    </View>
   );
 
   return (
-    <View
-      className={`${layout === 'carousel' ? 'w-[250px]' : 'w-[48.5%]'} mb-3 overflow-hidden rounded-xl border border-[#eadfc8] bg-white ${className || ''}`}
-      style={layout === 'carousel' && carouselWidth ? { width: carouselWidth } : undefined}
-    >
-      <View>
-        {onPress ? (
-          <Pressable
-            onPress={onPress}
-            accessibilityRole="button"
-            accessibilityLabel={`View ${productName}`}
-          >
-            {cardContent}
-          </Pressable>
-        ) : (
-          cardContent
-        )}
-        {onToggleFavorite ? (
-          <Pressable
-            className="absolute right-2 top-2 h-9 w-9 items-center justify-center rounded-full bg-white/95 shadow-sm"
-            onPress={() => onToggleFavorite(product)}
-            accessibilityRole="button"
-            accessibilityLabel={`${isFavorite ? 'Remove' : 'Add'} ${productName} ${
-              isFavorite ? 'from' : 'to'
-            } favorites`}
-            accessibilityState={{ selected: isFavorite }}
-          >
-            <Text
-              className={`text-xl leading-6 ${
-                isFavorite ? 'text-rose-600' : 'text-slate-600'
-              }`}
-            >
-              {isFavorite ? '♥' : '♡'}
-            </Text>
-          </Pressable>
-        ) : null}
-      </View>
-      {footer || onEnquire ? (
-        <View className="border-t border-[#e8e7e3] px-3 py-2.5 sm:px-4">
-          {footer}
-          {onEnquire ? (
-            <Pressable
-              className="min-h-9 w-full flex-row items-center justify-center rounded-lg bg-primary px-3 py-2 active:opacity-80"
-              onPress={() => onEnquire(product)}
-              accessibilityRole="button"
-              accessibilityLabel={`Enquire about ${productName}`}
-            >
-              <Text className="mr-2 text-sm text-white">◉</Text>
-              <Text className="text-xs font-semibold text-white">Enquire Now</Text>
-            </Pressable>
-          ) : null}
-        </View>
-      ) : null}
+    <View className={`overflow-hidden rounded-2xl border border-border bg-surface shadow-sm ${className || ''}`}>
+      {onPress ? (
+        <Pressable
+          onPress={onPress}
+          accessibilityRole="button"
+          accessibilityLabel={`View details for ${productName}`}
+        >
+          {cardContent}
+        </Pressable>
+      ) : (
+        cardContent
+      )}
+      {footer}
     </View>
   );
 }
