@@ -1,4 +1,4 @@
-import { Image, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 const PROMOTIONS = [
   {
@@ -30,7 +30,7 @@ function HomeBannerSections() {
           <Image
             source={promotion.image}
             resizeMode="cover"
-            className="absolute inset-0 h-full w-full"
+            style={StyleSheet.absoluteFillObject}
             accessible={false}
           />
           <View

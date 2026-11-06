@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { Image, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { resolveImageUrl } from '../homeUtils';
 import type { HomeBanner as HomeBannerData } from '../types';
 
@@ -37,7 +44,7 @@ function HomeBanner({ banners, userName, error }: HomeBannerProps) {
               {image ? (
                 <Image
                   source={{ uri: image }}
-                  className="absolute inset-0 h-full w-full"
+                  style={StyleSheet.absoluteFillObject}
                   resizeMode="cover"
                   accessibilityLabel={banner?.title || 'Sri Golds featured jewellery'}
                 />
