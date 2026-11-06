@@ -18,19 +18,62 @@ import UserProductDetails from './ProductDetails/UserProductDetails';
 import UserProductEnquiry from './Enquiry/UserProductEnquiry';
 import UserFavorites, { type WishlistItem } from './Favorites/UserFavorites';
 
+function mediaPath(value: unknown): string | undefined {
+  if (typeof value === 'string' && value.trim()) {
+    const stored = value.trim();
+    try {
+      const parsed: unknown = JSON.parse(stored);
+      return mediaPath(parsed);
+    } catch {
+      return stored;
+    }
+  }
+  if (Array.isArray(value)) {
+    for (const media of value) {
+      const path = mediaPath(media);
+      if (path) return path;
+    }
+    return undefined;
+  }
+  if (typeof value === 'object' && value !== null) {
+    if ('url' in value) {
+      const path = mediaPath(value.url);
+      if (path) return path;
+    }
+    if ('path' in value) {
+      const path = mediaPath(value.path);
+      if (path) return path;
+    }
+    if ('src' in value) return mediaPath(value.src);
+    if ('image' in value) return mediaPath(value.image);
+  }
+  return undefined;
+}
+
 function getFirstImage(product: ProductCardData): string | undefined {
-  const image = product.image || product.image_url || product.product_image;
-  if (typeof image === 'string') return image;
-  if (Array.isArray(product.images)) {
-    const first = product.images[0];
-    if (typeof first === 'string') return first;
-    if (
-      typeof first === 'object' &&
-      first !== null &&
-      'url' in first &&
-      typeof first.url === 'string'
-    ) {
-      return first.url;
+  const imageFields = [
+    product.image,
+    product.image_url,
+    product.imageUrl,
+    product.product_image,
+    product.productImage,
+    product.image_path,
+    product.thumbnail,
+    product.images,
+    product.product_images,
+  ];
+  for (const field of imageFields) {
+    const image = mediaPath(field);
+    if (image) return image;
+  }
+
+  if (Array.isArray(product.variants)) {
+    for (const variant of product.variants) {
+      if (typeof variant !== 'object' || variant === null || !('images' in variant)) {
+        continue;
+      }
+      const image = mediaPath(variant.images);
+      if (image) return image;
     }
   }
   return undefined;
