@@ -5,6 +5,7 @@ import type { HomeProduct } from '../types';
 
 type HomeProductsSectionProps = {
   products: HomeProduct[];
+  metal: 'Gold' | 'Silver' | 'Platinum' | 'Diamond';
   isLoading: boolean;
   error?: string;
   onSelectProduct: (productId: string) => void;
@@ -13,8 +14,26 @@ type HomeProductsSectionProps = {
   onToggleFavorite: (product: ProductCardData) => void;
 };
 
+function productText(value: unknown): string {
+  return typeof value === 'string' ? value.toLowerCase() : '';
+}
+
+function matchesMetal(product: HomeProduct, metal: HomeProductsSectionProps['metal']) {
+  const isDiamond = [
+    product.name,
+    product.category,
+    product.subcategory,
+    product.metal_type,
+  ].some(value => productText(value).includes('diamond'));
+
+  if (metal === 'Diamond') return isDiamond;
+  return productText(product.metal_type).includes(metal.toLowerCase()) &&
+    (metal !== 'Gold' || !isDiamond);
+}
+
 function HomeProductsSection({
   products,
+  metal,
   isLoading,
   error,
   onSelectProduct,
@@ -22,16 +41,22 @@ function HomeProductsSection({
   isFavorite,
   onToggleFavorite,
 }: HomeProductsSectionProps) {
+  const sectionProducts = products.filter(product => matchesMetal(product, metal));
+  const title =
+    metal === 'Silver'
+      ? 'Silver Articles'
+      : `${metal} Jewellery`;
+
   return (
     <View className="mb-5">
       <View className="mb-3 flex-row items-end justify-between">
         <View>
-          <Text className="text-lg font-bold text-[#153b2e]">Featured jewellery</Text>
+          <Text className="text-lg font-bold text-[#153b2e]">{title}</Text>
           <Text className="mt-0.5 text-xs text-[#777066]">
-            A selection from our collection
+            Curated collection
           </Text>
         </View>
-        {isLoading && products.length === 0 ? (
+        {isLoading && sectionProducts.length === 0 ? (
           <ActivityIndicator size="small" color="#004D40" />
         ) : null}
       </View>
@@ -39,11 +64,13 @@ function HomeProductsSection({
         <Text className="text-xs text-red-700" accessibilityRole="alert">
           {error}
         </Text>
-      ) : products.length === 0 && !isLoading ? (
-        <Text className="text-sm text-[#777066]">No products available.</Text>
+      ) : sectionProducts.length === 0 && !isLoading ? (
+        <Text className="text-sm text-[#777066]">
+          No {metal.toLowerCase()} products available.
+        </Text>
       ) : (
         <View className="flex-row flex-wrap justify-between">
-          {products.map(product => (
+          {sectionProducts.map(product => (
             <ProductCard
               key={product.id}
               product={product}

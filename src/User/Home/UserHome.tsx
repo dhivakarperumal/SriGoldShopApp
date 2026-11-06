@@ -33,6 +33,8 @@ const EMPTY_DATA: HomeData = {
   rates: [],
 };
 
+const HOME_PRODUCT_METALS = ['Gold', 'Silver', 'Platinum', 'Diamond'] as const;
+
 const DATA_REQUESTS: {
   key: HomeDataKey;
   path: string;
@@ -64,7 +66,7 @@ const DATA_REQUESTS: {
   },
   {
     key: 'products',
-    path: '/products?page=1&limit=8&status=Active',
+    path: '/products?page=1&limit=100&status=Active',
     validate: data => {
       const products = Array.isArray(data)
         ? data
@@ -74,7 +76,7 @@ const DATA_REQUESTS: {
       if (!Array.isArray(products)) {
         throw new TypeError('Expected a products array.');
       }
-      return (products as HomeProduct[]).slice(0, 8);
+      return products as HomeProduct[];
     },
   },
   {
@@ -197,15 +199,19 @@ function UserHome({
           isLoading={isLoading}
           error={errors.rates}
         />
-        <HomeProductsSection
-          products={data.products}
-          isLoading={isLoading}
-          error={errors.products}
-          onSelectProduct={onSelectProduct}
-          onEnquireProduct={onEnquireProduct}
-          isFavorite={isFavorite}
-          onToggleFavorite={onToggleFavorite}
-        />
+        {HOME_PRODUCT_METALS.map(metal => (
+          <HomeProductsSection
+            key={metal}
+            metal={metal}
+            products={data.products}
+            isLoading={isLoading}
+            error={errors.products}
+            onSelectProduct={onSelectProduct}
+            onEnquireProduct={onEnquireProduct}
+            isFavorite={isFavorite}
+            onToggleFavorite={onToggleFavorite}
+          />
+        ))}
         <HomeBannerSections />
       </View>
       <HomeReviewsSection refreshVersion={refreshVersion} />
