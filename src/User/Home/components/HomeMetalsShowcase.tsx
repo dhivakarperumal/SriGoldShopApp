@@ -77,7 +77,7 @@ function HomeMetalsShowcase({
       {background ? (
         <Image
           source={background}
-          resizeMode="contain"
+          resizeMode="cover"
           style={styles.background}
           accessible={false}
         />
