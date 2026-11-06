@@ -1,5 +1,6 @@
 import { ActivityIndicator, Text, View } from 'react-native';
 import ProductCard from '../../../Components/ProductCard';
+import type { ProductCardData } from '../../../Components/ProductCard';
 import type { HomeProduct } from '../types';
 
 type HomeProductsSectionProps = {
@@ -7,6 +8,7 @@ type HomeProductsSectionProps = {
   isLoading: boolean;
   error?: string;
   onSelectProduct: (productId: string) => void;
+  onEnquireProduct: (product: ProductCardData) => void;
 };
 
 function HomeProductsSection({
@@ -14,6 +16,7 @@ function HomeProductsSection({
   isLoading,
   error,
   onSelectProduct,
+  onEnquireProduct,
 }: HomeProductsSectionProps) {
   return (
     <View className="mb-5">
@@ -42,6 +45,7 @@ function HomeProductsSection({
               product={product}
               layout="catalog"
               onPress={() => onSelectProduct(String(product.id))}
+              onEnquire={onEnquireProduct}
             />
           ))}
         </View>

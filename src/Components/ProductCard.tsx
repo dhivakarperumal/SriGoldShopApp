@@ -29,6 +29,7 @@ type ProductCardProps = {
   footer?: ReactNode;
   className?: string;
   onPress?: () => void;
+  onEnquire?: (product: ProductCardData) => void;
 };
 
 function getText(value: unknown, fallback = '') {
@@ -63,6 +64,7 @@ function ProductCard({
   footer,
   className,
   onPress,
+  onEnquire,
 }: ProductCardProps) {
   const imageUrl = getProductImageUrl(product);
   const [hasImageError, setHasImageError] = useState(false);
@@ -203,7 +205,22 @@ function ProductCard({
       ) : (
         cardContent
       )}
-      {footer}
+      {footer || onEnquire ? (
+        <View className="border-t border-[#e8e7e3] px-3 py-2.5 sm:px-4">
+          {footer}
+          {onEnquire ? (
+            <Pressable
+              className="min-h-9 w-full flex-row items-center justify-center rounded-lg bg-primary px-3 py-2 active:opacity-80"
+              onPress={() => onEnquire(product)}
+              accessibilityRole="button"
+              accessibilityLabel={`Enquire about ${productName}`}
+            >
+              <Text className="mr-2 text-sm text-white">◉</Text>
+              <Text className="text-xs font-semibold text-white">Enquire Now</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
     </View>
   );
 }

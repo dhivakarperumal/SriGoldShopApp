@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, View } from 'react-native';
 import api from '../../api';
+import type { ProductCardData } from '../../Components/ProductCard';
 import type { AuthenticatedUser } from '../../Admin/Auth/Login';
 import HomeBanner from './components/HomeBanner';
 import HomeBannerSections from './components/HomeBannerSections';
@@ -96,9 +97,11 @@ const DATA_REQUESTS: {
 function UserHome({
   user,
   onSelectProduct,
+  onEnquireProduct,
 }: {
   user: AuthenticatedUser;
   onSelectProduct: (productId: string) => void;
+  onEnquireProduct: (product: ProductCardData) => void;
 }) {
   const [data, setData] = useState<HomeData>(EMPTY_DATA);
   const [errors, setErrors] = useState<HomeErrors>({});
@@ -195,6 +198,7 @@ function UserHome({
           isLoading={isLoading}
           error={errors.products}
           onSelectProduct={onSelectProduct}
+          onEnquireProduct={onEnquireProduct}
         />
         <HomeBannerSections />
       </View>

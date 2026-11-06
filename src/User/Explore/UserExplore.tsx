@@ -11,6 +11,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
 import ProductCard from '../../Components/ProductCard';
+import type { ProductCardData } from '../../Components/ProductCard';
 import type { HomeProduct } from '../Home/types';
 
 type ExploreProduct = HomeProduct & {
@@ -61,8 +62,10 @@ const getDiscount = (product: ExploreProduct) => {
 
 function UserExplore({
   onSelectProduct,
+  onEnquireProduct,
 }: {
   onSelectProduct: (productId: string) => void;
+  onEnquireProduct: (product: ProductCardData) => void;
 }) {
   const [products, setProducts] = useState<ExploreProduct[]>([]);
   const [categories, setCategories] = useState<Facet[]>([]);
@@ -536,6 +539,7 @@ function UserExplore({
               onPress={() => {
                 if (product.id != null) onSelectProduct(String(product.id));
               }}
+              onEnquire={onEnquireProduct}
             />
           ))}
         </View>

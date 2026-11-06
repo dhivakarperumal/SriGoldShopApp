@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  Linking,
   Pressable,
   ScrollView,
   Share,
@@ -11,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import api from '../../api';
+import type { ProductCardData } from '../../Components/ProductCard';
 import { getProductImageUrl } from '../../utils/productImage';
 
 type Product = Record<string, unknown> & {
@@ -23,6 +23,7 @@ type ProductVariant = Record<string, unknown>;
 type UserProductDetailsProps = {
   productId: string;
   onBack: () => void;
+  onEnquireProduct: (product: ProductCardData) => void;
 };
 
 type ProductField = readonly [string, unknown];
@@ -94,7 +95,11 @@ function getErrorMessage(error: unknown): string {
   return 'Product details could not be loaded.';
 }
 
-function UserProductDetails({ productId, onBack }: UserProductDetailsProps) {
+function UserProductDetails({
+  productId,
+  onBack,
+  onEnquireProduct,
+}: UserProductDetailsProps) {
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -205,21 +210,6 @@ function UserProductDetails({ productId, onBack }: UserProductDetailsProps) {
     } catch (error) {
       console.error('Failed to share product:', error);
       Alert.alert('Share failed', 'Could not share this product.');
-    }
-  };
-
-  const enquireProduct = async () => {
-    const message = `Hello, I am interested in ${productName}${productCode ? ` (Code: ${productCode})` : ''}.`;
-    try {
-      await Linking.openURL(
-        `https://wa.me/9659133504?text=${encodeURIComponent(message)}`,
-      );
-    } catch (error) {
-      console.error('Failed to open product enquiry:', error);
-      Alert.alert(
-        'Unable to open WhatsApp',
-        'Please try again or contact the showroom directly.',
-      );
     }
   };
 
@@ -473,11 +463,11 @@ function UserProductDetails({ productId, onBack }: UserProductDetailsProps) {
 
             <Pressable
               className="mt-5 min-h-12 items-center justify-center rounded-full bg-[#d9a441] px-4 py-3 active:opacity-80"
-              onPress={enquireProduct}
+              onPress={() => onEnquireProduct(product)}
               accessibilityRole="button"
             >
               <Text className="text-sm font-bold text-[#23382c]">
-                Enquire about this product
+                Enquire Now
               </Text>
             </Pressable>
           </View>

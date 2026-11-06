@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StatusBar, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import type { ProductCardData } from '../Components/ProductCard';
 import type { AuthenticatedUser } from '../Admin/Auth/Login';
 import UserBottomNavigation, {
   type UserTab,
@@ -13,6 +14,7 @@ import UserContact from './More/Contact/UserContact';
 import MoreMenu, { type MorePage } from './More/MoreMenu';
 import UserProfile from './Profile/UserProfile';
 import UserProductDetails from './ProductDetails/UserProductDetails';
+import UserProductEnquiry from './Enquiry/UserProductEnquiry';
 
 type UserLayoutProps = {
   user: AuthenticatedUser;
@@ -24,6 +26,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
   const [activeTab, setActiveTab] = useState<UserTab>('home');
   const [morePage, setMorePage] = useState<MorePage>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [enquiryProduct, setEnquiryProduct] = useState<ProductCardData | null>(null);
 
   const selectTab = (tab: UserTab) => {
     setActiveTab(tab);
@@ -49,14 +52,19 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
             <UserProductDetails
               productId={selectedProductId}
               onBack={() => setSelectedProductId(null)}
+              onEnquireProduct={setEnquiryProduct}
             />
           ) : activeTab === 'home' ? (
             <UserHome
               user={user}
               onSelectProduct={setSelectedProductId}
+              onEnquireProduct={setEnquiryProduct}
             />
           ) : activeTab === 'explore' ? (
-            <UserExplore onSelectProduct={setSelectedProductId} />
+            <UserExplore
+              onSelectProduct={setSelectedProductId}
+              onEnquireProduct={setEnquiryProduct}
+            />
           ) : activeTab === 'more' ? (
             morePage === 'about' ? (
               <UserAbout onBack={() => setMorePage(null)} />
@@ -88,6 +96,19 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
           />
         </View>
       </SafeAreaView>
+      {enquiryProduct ? (
+        <UserProductEnquiry
+          key={String(
+            enquiryProduct.id ??
+              enquiryProduct.product_id ??
+              enquiryProduct.productId ??
+              enquiryProduct.name,
+          )}
+          product={enquiryProduct}
+          user={user}
+          onClose={() => setEnquiryProduct(null)}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }
