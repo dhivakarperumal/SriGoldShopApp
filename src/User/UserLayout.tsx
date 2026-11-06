@@ -310,20 +310,25 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
     return () => subscription.remove();
   }, [activeTab, enquiryProduct, morePage, selectedProductId]);
 
+  const isStandalonePage =
+    Boolean(selectedProductId) || (activeTab === 'more' && morePage !== null);
+
   return (
     <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
       <StatusBar barStyle="light-content" />
-      <UserHeader
-        user={user}
-        onLogout={onLogout}
-        onOpenProfile={() => {
-          setActiveTab('more');
-          setVisitedTabs(current => new Set(current).add('more'));
-          setHasVisitedProfile(true);
-          setSelectedProductId(null);
-          setMorePage('profile');
-        }}
-      />
+      {!isStandalonePage ? (
+        <UserHeader
+          user={user}
+          onLogout={onLogout}
+          onOpenProfile={() => {
+            setActiveTab('more');
+            setVisitedTabs(current => new Set(current).add('more'));
+            setHasVisitedProfile(true);
+            setSelectedProductId(null);
+            setMorePage('profile');
+          }}
+        />
+      ) : null}
       <SafeAreaView className="flex-1 bg-[#fffaf0]" edges={['left', 'right']}>
         <View className="flex-1">
           {lastSelectedProductId ? (
@@ -435,7 +440,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
               </View>
             ) : null}
           </View>
-          {!selectedProductId && !(activeTab === 'more' && morePage) ? (
+          {!isStandalonePage ? (
             <UserBottomNavigation
               activeTab={activeTab}
               onSelect={selectTab}
