@@ -339,7 +339,9 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
       {!isStandalonePage ? (
         <UserHeader
           user={user}
+          favoritesCount={favorites.length}
           onLogout={onLogout}
+          onOpenFavorites={() => selectTab('favorites')}
           onOpenProfile={() => {
             setActiveTab('more');
             setVisitedTabs(current => new Set(current).add('more'));
