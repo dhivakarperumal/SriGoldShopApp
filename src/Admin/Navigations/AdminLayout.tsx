@@ -26,6 +26,7 @@ function AdminLayout({
   const showBottomNav = activeRoute ? isMainTab(activeRoute) : false;
   const showAppHeader =
     activeRoute !== 'profile' &&
+    activeRoute !== 'billing' &&
     activeRoute !== 'categories' &&
     activeRoute !== 'addCategory' &&
     activeRoute !== 'editCategory' &&

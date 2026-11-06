@@ -41,6 +41,7 @@ function App() {
   const [newCategoryId, setNewCategoryId] = useState('CAT001');
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingGoldRateSet, setEditingGoldRateSet] = useState<CurrentRateSet | null>(null);
+  const [billingSession, setBillingSession] = useState(0);
   const isLoggingOut = useRef(false);
 
   useEffect(() => {
@@ -130,6 +131,9 @@ function App() {
   };
 
   const navigateAdmin = (route: AdminRoute) => {
+    if (route === 'billing') {
+      setBillingSession(current => current + 1);
+    }
     setAdminRoute(route);
   };
 
@@ -152,7 +156,7 @@ function App() {
       : adminRoute === 'loans'
         ? <Loans />
         : adminRoute === 'billing'
-          ? <Billing />
+          ? <Billing key={billingSession} />
           : adminRoute === 'products'
             ? <Products onNavigate={navigateAdmin} />
             : adminRoute === 'categories'

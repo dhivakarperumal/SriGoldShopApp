@@ -214,13 +214,13 @@ export default function Billing() {
   const [isSaving, setIsSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'FULL_PAYMENT' | 'EXCHANGE_GOLD'>('ALL');
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(true);
   const [billStep, setBillStep] = useState<1 | 2 | 3>(1);
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
   const [customer, setCustomer] = useState<Customer>(EMPTY_CUSTOMER);
   const [products, setProducts] = useState<BillProduct[]>([]);
   const [productSearch, setProductSearch] = useState('');
-  const [showProductPicker, setShowProductPicker] = useState(false);
+  const [showProductPicker, setShowProductPicker] = useState(true);
   const [paymentType, setPaymentType] = useState<'FULL_PAYMENT' | 'EXCHANGE_GOLD'>('FULL_PAYMENT');
   const [exchanges, setExchanges] = useState<ExchangeItem[]>([]);
   const [gstRate, setGstRate] = useState('0');
@@ -764,7 +764,7 @@ export default function Billing() {
           contentContainerClassName="gap-4 px-4 pb-8 pt-4"
           keyboardShouldPersistTaps="handled"
         >
-          <View className="flex-row items-center gap-3">
+          <View className="-mx-4 -mt-4 flex-row items-center gap-3 border-b border-[#00382E] bg-primary px-4 py-3">
             <Pressable
               onPress={() => {
                 if (!isSaving) {
@@ -772,16 +772,18 @@ export default function Billing() {
                   resetForm();
                 }
               }}
-              className="h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white"
+              className="h-10 w-10 items-center justify-center rounded-xl border border-emerald-700/60 bg-emerald-900/40 active:bg-emerald-900/70"
               accessibilityRole="button"
               accessibilityLabel="Back to bills"
             >
-              <Text className="text-xl text-slate-700">‹</Text>
+              <Text className="text-xl text-white">‹</Text>
             </Pressable>
             <View className="flex-1">
-              <Text className="text-xs font-semibold text-slate-500">Billing / {editingBill ? 'Edit' : 'New'}</Text>
-              <Text className="text-xl font-extrabold text-slate-900">
+              <Text className="text-xl font-extrabold text-white">
                 {editingBill ? 'Edit Bill' : 'New Bill'}
+              </Text>
+              <Text className="text-[10px] font-medium text-emerald-200">
+                Sri Golds Jewellery
               </Text>
             </View>
           </View>
