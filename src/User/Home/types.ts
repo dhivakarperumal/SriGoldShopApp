@@ -37,6 +37,14 @@ export type HomeGoldRate = {
   rate_unit?: string;
 };
 
+export type HomeMetal = {
+  id: string | number;
+  name: string;
+  status?: string;
+  purity?: string;
+  description?: string;
+};
+
 export type HomeReview = {
   id: string | number;
   user_name?: string;
