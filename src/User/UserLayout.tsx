@@ -317,8 +317,11 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
     : (['left', 'right'] as const);
 
   return (
-    <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView
+      className={`flex-1 ${isStandalonePage ? 'bg-white' : 'bg-primary'}`}
+      edges={['top']}
+    >
+      <StatusBar barStyle={isStandalonePage ? 'dark-content' : 'light-content'} />
       {!isStandalonePage ? (
         <UserHeader
           user={user}
