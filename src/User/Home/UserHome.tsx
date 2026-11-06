@@ -14,6 +14,7 @@ import type {
   HomeBanner as HomeBannerData,
   HomeCategory as HomeCategoryData,
   HomeGoldRate,
+  HomeMetal,
   HomeProduct,
 } from './types';
 
@@ -22,6 +23,7 @@ type HomeData = {
   categories: HomeCategoryData[];
   products: HomeProduct[];
   rates: HomeGoldRate[];
+  metals: HomeMetal[];
 };
 
 type HomeErrors = Partial<Record<keyof HomeData, string>>;
@@ -32,6 +34,7 @@ const EMPTY_DATA: HomeData = {
   categories: [],
   products: [],
   rates: [],
+  metals: [],
 };
 
 const HOME_PRODUCT_METALS = ['Gold', 'Silver', 'Platinum', 'Diamond'] as const;
@@ -93,6 +96,18 @@ const DATA_REQUESTS: {
         throw new TypeError('Expected a rates array.');
       }
       return data.rates as HomeGoldRate[];
+    },
+  },
+  {
+    key: 'metals',
+    path: '/metals',
+    validate: data => {
+      if (!Array.isArray(data)) throw new TypeError('Expected metals array.');
+      return (data as HomeMetal[]).filter(
+        metal =>
+          typeof metal.name === 'string' &&
+          String(metal.status || '').toLowerCase() === 'active',
+      );
     },
   },
 ];
@@ -199,6 +214,13 @@ function UserHome({
         />
         {HOME_PRODUCT_METALS.map((metal, index) => (
           <View key={metal}>
+            <HomeMetalsShowcase
+              metalName={metal}
+              metal={data.metals.find(metalData =>
+                metalData.name.toLowerCase().includes(metal.toLowerCase()),
+              )}
+              onExploreMetal={onExploreMetal}
+            />
             <HomeProductsSection
               metal={metal}
               products={data.products}
@@ -215,9 +237,6 @@ function UserHome({
                 isLoading={isLoading}
                 error={errors.rates}
               />
-            ) : null}
-            {index === 1 ? (
-              <HomeMetalsShowcase onExploreMetal={onExploreMetal} />
             ) : null}
           </View>
         ))}
