@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -28,31 +28,32 @@ type HomeCategoryProps = {
 function HomeCategory({ categories, isLoading, error }: HomeCategoryProps) {
   const { width } = useWindowDimensions();
   const scrollViewRef = useRef<ScrollViewInstance>(null);
-  const [activePage, setActivePage] = useState(0);
+  const physicalIndexRef = useRef(0);
   const listWidth = width - HOME_HORIZONTAL_PADDING;
   const cardWidth =
     (listWidth - CATEGORY_GAP * (VISIBLE_CATEGORIES - 1)) /
     VISIBLE_CATEGORIES;
+  const itemStep = cardWidth + CATEGORY_GAP;
   const imageSize = Math.min(76, cardWidth - 8);
-  const pageCount = Math.ceil(categories.length / VISIBLE_CATEGORIES);
-  const lastPage = Math.max(0, pageCount - 1);
-  const contentWidth =
-    categories.length * cardWidth +
-    Math.max(0, categories.length - 1) * CATEGORY_GAP;
-  const maxOffset = Math.max(0, contentWidth - listWidth);
+  const repeatedCategories =
+    categories.length > VISIBLE_CATEGORIES
+      ? [...categories, ...categories, ...categories]
+      : categories;
 
   useEffect(() => {
-    if (pageCount < 2) return undefined;
+    if (categories.length <= VISIBLE_CATEGORIES) return undefined;
 
     const timer = setInterval(() => {
-      const nextPage = activePage >= lastPage ? 0 : activePage + 1;
-      const offset = Math.min(nextPage * listWidth, maxOffset);
-      scrollViewRef.current?.scrollTo({ x: offset, animated: true });
-      setActivePage(nextPage);
+      const nextIndex = physicalIndexRef.current + 1;
+      scrollViewRef.current?.scrollTo({
+        x: nextIndex * itemStep,
+        animated: true,
+      });
+      physicalIndexRef.current = nextIndex;
     }, 3500);
 
     return () => clearInterval(timer);
-  }, [activePage, lastPage, listWidth, maxOffset, pageCount]);
+  }, [categories.length, itemStep]);
 
   return (
     <View className="mb-5">
@@ -77,27 +78,39 @@ function HomeCategory({ categories, isLoading, error }: HomeCategoryProps) {
         <ScrollView
           ref={scrollViewRef}
           horizontal
-          pagingEnabled
-          snapToInterval={listWidth}
+          snapToInterval={itemStep}
           snapToAlignment="start"
           decelerationRate="fast"
           showsHorizontalScrollIndicator={false}
           style={{ width: listWidth }}
           contentContainerStyle={styles.content}
           onMomentumScrollEnd={event => {
-            const offset = event.nativeEvent.contentOffset.x;
-            const nextPage =
-              offset >= maxOffset - 1
-                ? lastPage
-                : Math.round(offset / listWidth);
-            setActivePage(nextPage);
+            const physicalIndex = Math.max(
+              0,
+              Math.round(event.nativeEvent.contentOffset.x / itemStep),
+            );
+            const nextIndex =
+              categories.length > VISIBLE_CATEGORIES
+                ? physicalIndex % categories.length
+                : physicalIndex;
+
+            physicalIndexRef.current = nextIndex;
+            if (
+              categories.length > VISIBLE_CATEGORIES &&
+              physicalIndex !== nextIndex
+            ) {
+              scrollViewRef.current?.scrollTo({
+                x: nextIndex * itemStep,
+                animated: false,
+              });
+            }
           }}
         >
-          {categories.map((category, index) => {
+          {repeatedCategories.map((category, index) => {
             const image = getCategoryImage(category);
             return (
               <View
-                key={category.catId ?? category.id ?? `${category.name}-${index}`}
+                key={`${category.catId ?? category.id ?? category.name}-${index}`}
                 className="items-center"
                 style={{ width: cardWidth }}
               >
