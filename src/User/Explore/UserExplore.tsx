@@ -639,7 +639,7 @@ function FilterChips({
       <Text className="mb-1.5 text-xs font-bold text-[#514b42]">{title}</Text>
       {options.length ? (
         <View className="flex-row flex-wrap">
-          {options.map(option => {
+          {options.map((option, index) => {
             const isSelected = selected === option;
             return (
               <Pressable
