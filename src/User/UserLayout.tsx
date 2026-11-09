@@ -408,21 +408,13 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
   return (
     <SafeAreaView
       className={`flex-1 ${
-        selectedProductId
+        isStandalonePage
           ? 'bg-[#003B2D]'
-          : isStandalonePage
-          ? 'bg-white'
           : 'bg-primary'
       }`}
       edges={isStandalonePage ? (['top'] as const) : []}
     >
-      <StatusBar
-        barStyle={
-          isStandalonePage && !selectedProductId
-            ? 'dark-content'
-            : 'light-content'
-        }
-      />
+      <StatusBar barStyle="light-content" />
       {!isStandalonePage ? (
         <UserHeader
           user={user}
