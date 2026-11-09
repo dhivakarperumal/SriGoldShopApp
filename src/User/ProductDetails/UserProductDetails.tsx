@@ -68,7 +68,8 @@ function parseArray(value: unknown): unknown[] {
 function displayValue(value: unknown): string {
   if (value == null || value === '') return '';
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-  if (Array.isArray(value)) return value.map(displayValue).filter(Boolean).join(', ');
+  if (Array.isArray(value))
+    return value.map(displayValue).filter(Boolean).join(', ');
   if (isRecord(value)) {
     return Object.entries(value)
       .map(([key, item]) => {
@@ -168,9 +169,12 @@ function UserProductDetails({
   }, [productId, refreshVersion]);
 
   const variants = useMemo(
-    () => (product ? parseArray(product.variants).map(asVariant).filter(
-      (variant): variant is ProductVariant => variant !== null,
-    ) : []),
+    () =>
+      product
+        ? parseArray(product.variants)
+            .map(asVariant)
+            .filter((variant): variant is ProductVariant => variant !== null)
+        : [],
     [product],
   );
   const currentVariant = variants[activeVariantIndex];
@@ -193,7 +197,8 @@ function UserProductDetails({
     currentVariant?.stock ??
     product?.total_stock;
   const stock = number(selectedStock);
-  const stockLabel = text(product?.stock_status) || (stock > 0 ? 'In Stock' : 'Out of Stock');
+  const stockLabel =
+    text(product?.stock_status) || (stock > 0 ? 'In Stock' : 'Out of Stock');
   const price =
     currentVariant?.offer_price ??
     currentVariant?.final_selling_price ??
@@ -202,14 +207,34 @@ function UserProductDetails({
     product?.offer_price ??
     product?.mrp;
   const mrp = number(currentVariant?.mrp ?? product?.mrp);
-  const discount = number(product?.discount) > 0
-    ? number(product?.discount)
-    : mrp > number(price)
+  const discount =
+    number(product?.discount) > 0
+      ? number(product?.discount)
+      : mrp > number(price)
       ? Math.round(((mrp - number(price)) / mrp) * 100)
       : 0;
   const productName = text(product?.name) || 'Product Details';
   const productCode = text(product?.product_code);
   const description = text(product?.description || product?.full_description);
+  const goldRate = product?.gold_rate_per_gram;
+  const metalWeight = product?.net_gold_weight ?? product?.gross_weight;
+  const goldAmount =
+    goldRate != null && metalWeight != null
+      ? money(number(goldRate) * number(metalWeight))
+      : '';
+  const makingCharge =
+    product?.making_charge == null
+      ? ''
+      : String(product.making_charge_type || '').toLowerCase() === 'percentage'
+      ? `${number(product.making_charge).toFixed(2)}%`
+      : money(product.making_charge);
+  const wastage =
+    product?.wastage == null
+      ? ''
+      : String(product.wastage_type || '').toLowerCase() === 'percentage'
+      ? `${number(product.wastage).toFixed(3)}%`
+      : `${text(product.wastage)} g`;
+  const offerPrice = product?.offer_price ?? (discount > 0 ? price : undefined);
 
   const shareProduct = async () => {
     try {
@@ -240,7 +265,10 @@ function UserProductDetails({
           <Text className="text-2xl leading-7 text-primary-dark">‹</Text>
         </Pressable>
         <View className="min-w-0 flex-1">
-          <Text className="text-base font-bold text-primary-dark" numberOfLines={1}>
+          <Text
+            className="text-base font-bold text-primary-dark"
+            numberOfLines={1}
+          >
             {isLoading ? 'Product Details' : productName}
           </Text>
           <Text className="text-[10px] text-slate-500" numberOfLines={1}>
@@ -374,7 +402,9 @@ function UserProductDetails({
                   <Pressable
                     className="h-9 w-9 items-center justify-center rounded-full bg-white/95"
                     onPress={() =>
-                      setActiveImage(index => (index + images.length - 1) % images.length)
+                      setActiveImage(
+                        index => (index + images.length - 1) % images.length,
+                      )
                     }
                     accessibilityRole="button"
                     accessibilityLabel="Previous image"
@@ -383,7 +413,9 @@ function UserProductDetails({
                   </Pressable>
                   <Pressable
                     className="h-9 w-9 items-center justify-center rounded-full bg-white/95"
-                    onPress={() => setActiveImage(index => (index + 1) % images.length)}
+                    onPress={() =>
+                      setActiveImage(index => (index + 1) % images.length)
+                    }
                     accessibilityRole="button"
                     accessibilityLabel="Next image"
                   >
@@ -407,13 +439,19 @@ function UserProductDetails({
                     <Pressable
                       key={`${image}-${index}`}
                       className={`h-16 w-16 overflow-hidden rounded-lg border-2 ${
-                        activeImage === index ? 'border-primary' : 'border-slate-200'
+                        activeImage === index
+                          ? 'border-primary'
+                          : 'border-slate-200'
                       }`}
                       onPress={() => setActiveImage(index)}
                       accessibilityRole="button"
                       accessibilityLabel={`View product image ${index + 1}`}
                     >
-                      <Image source={{ uri }} className="h-full w-full" resizeMode="cover" />
+                      <Image
+                        source={{ uri }}
+                        className="h-full w-full"
+                        resizeMode="cover"
+                      />
                     </Pressable>
                   );
                 })}
@@ -454,7 +492,9 @@ function UserProductDetails({
                   </Text>
                 ) : null}
                 {productCode ? (
-                  <Text className="text-xs text-slate-500">SKU: {productCode}</Text>
+                  <Text className="text-xs text-slate-500">
+                    SKU: {productCode}
+                  </Text>
                 ) : null}
               </View>
             ) : null}
@@ -543,7 +583,7 @@ function UserProductDetails({
           </View>
 
           <ProductDetailCard
-            title="Product information"
+            title="Basic information"
             fields={[
               ['Product code', product.product_code],
               ['Brand', product.brand],
@@ -556,34 +596,59 @@ function UserProductDetails({
             ]}
           />
           <ProductDetailCard
-            title="Weight and material"
+            title="Pricing information"
             fields={[
-              ['Gross weight', product.gross_weight != null ? `${text(product.gross_weight)} g` : ''],
-              ['Net metal weight', product.net_gold_weight != null ? `${text(product.net_gold_weight)} g` : ''],
-              ['Stone weight', product.stone_weight != null ? `${text(product.stone_weight)} g` : ''],
-              ['Stone type', product.stone_type],
+              ['Gold rate', goldRate != null ? `${money(goldRate)} / g` : ''],
               [
-                'Gold rate / gram',
-                product.gold_rate_per_gram != null
-                  ? `${money(product.gold_rate_per_gram)} / g`
+                'Product weight',
+                product.gross_weight != null
+                  ? `${text(product.gross_weight)} g`
                   : '',
               ],
-              ['HUID', product.huid],
-              ['Material', product.material],
-              ['Artisan work', product.work_type],
+              ['Gold amount', goldAmount],
+              ['Making charges', makingCharge],
+              ['Wastage', wastage],
+              [
+                'Stone charges',
+                product.stone_charges != null
+                  ? money(product.stone_charges)
+                  : '',
+              ],
+              [
+                'Other charges',
+                product.other_charges != null
+                  ? money(product.other_charges)
+                  : '',
+              ],
+              [
+                'GST',
+                product.gst_rate != null ? `${text(product.gst_rate)}%` : '',
+              ],
+              ['Offer price', offerPrice != null ? money(offerPrice) : ''],
+              ['Discount', discount > 0 ? `${discount}%` : ''],
+              ['Final price', money(product.final_selling_price ?? price)],
+              ['Price includes GST', product.price_includes_gst],
             ]}
           />
           <ProductDetailCard
-            title="Pricing and stock"
+            title="Weight and material"
             fields={[
-              ['Price', money(price)],
-              ['MRP', mrp > 0 ? money(mrp) : ''],
-              ['Discount', discount > 0 ? `${discount}%` : ''],
-              ['Making charge', product.making_charge],
-              ['Wastage', product.wastage],
-              ['GST', product.gst_rate != null ? `${text(product.gst_rate)}%` : ''],
-              ['Stock quantity', selectedStock != null ? `${stock} units` : ''],
-              ['Warehouse', product.warehouse],
+              [
+                'Net metal weight',
+                product.net_gold_weight != null
+                  ? `${text(product.net_gold_weight)} g`
+                  : '',
+              ],
+              [
+                'Stone weight',
+                product.stone_weight != null
+                  ? `${text(product.stone_weight)} g`
+                  : '',
+              ],
+              ['Stone type', product.stone_type],
+              ['HUID', product.huid],
+              ['Material', product.material],
+              ['Artisan work', product.work_type],
             ]}
           />
           <ProductDetailCard
@@ -600,8 +665,16 @@ function UserProductDetails({
             ]}
           />
           <ProductDetailCard
-            title="Care and additional details"
+            title="Additional details"
             fields={[
+              ['Collection', product.collection ?? product.category],
+              ['Brand', product.brand],
+              ['Product type', product.product_type],
+              ['Metal', product.metal_type],
+              ['Purity', product.purity],
+              ['Collection', product.collection ?? product.category],
+              ['Highlights', product.highlights],
+              ['Additional details', product.additional_details],
               ['Care instructions', product.care_instructions],
               ['Wash care', product.wash_care],
               ['Warranty', product.warranty],
@@ -610,16 +683,47 @@ function UserProductDetails({
               ['Video', product.video ? 'Available' : ''],
             ]}
           />
+          {variants.map((variant, index) => (
+            <ProductDetailCard
+              key={`variant-details-${index}`}
+              title={`Variant ${index + 1}`}
+              fields={Object.entries(variant)
+                .filter(([key]) => key !== 'images')
+                .map(
+                  ([key, value]) =>
+                    [
+                      key
+                        .replace(/([a-z])([A-Z])/g, '$1 $2')
+                        .replace(/_/g, ' ')
+                        .replace(/^./, character => character.toUpperCase()),
+                      value,
+                    ] as const,
+                )}
+            />
+          ))}
           {product.specifications != null ? (
             <ProductDetailCard
               title="Specifications"
-              fields={parseArray(product.specifications).map((item, index) =>
-                Array.isArray(item) && item.length >= 2
-                  ? [text(item[0]), item[1]] as const
-                  : [`Specification ${index + 1}`, item] as const,
-              )}
+              fields={
+                parseArray(product.specifications).length
+                  ? parseArray(product.specifications).map((item, index) =>
+                      Array.isArray(item) && item.length >= 2
+                        ? ([text(item[0]), item[1]] as const)
+                        : ([`Specification ${index + 1}`, item] as const),
+                    )
+                  : [['Specifications', product.specifications]]
+              }
             />
           ) : null}
+          <ProductDetailCard
+            title="Stock and availability"
+            fields={[
+              ['Stock quantity', selectedStock != null ? `${stock} units` : ''],
+              ['Warehouse', product.warehouse],
+              ['Availability', stockLabel],
+              ['Status', product.status],
+            ]}
+          />
         </ScrollView>
       )}
     </View>
@@ -646,7 +750,9 @@ function ProductDetailCard({
           <View
             key={`${label}-${index}`}
             className={`flex-row gap-3 py-3 ${
-              index < visibleFields.length - 1 ? 'border-b border-[#f3eee5]' : ''
+              index < visibleFields.length - 1
+                ? 'border-b border-[#f3eee5]'
+                : ''
             }`}
           >
             <Text className="flex-1 text-xs text-[#887c69]">{label}</Text>
