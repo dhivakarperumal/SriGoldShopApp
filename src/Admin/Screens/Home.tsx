@@ -138,14 +138,14 @@ type HomeProps = {
 };
 
 const STAT_CARDS = [
-  { id: 'today_collection', fallbackLabel: "Today's Collection", icon: 'rupee', color: '#F97316' },
-  { id: 'total_customers', fallbackLabel: 'Total Customers', icon: 'users', color: '#1685E8' },
-  { id: 'active_gold_loans', fallbackLabel: 'Active Gold Loans', icon: 'gold', color: '#8B27C8' },
-  { id: 'gold_stock_value', fallbackLabel: 'Gold Stock Value', icon: 'gem', color: '#9A3412' },
-  { id: 'total_products', fallbackLabel: 'Total Products', icon: 'box', color: '#0F766E' },
-  { id: 'total_categories', fallbackLabel: 'Total Categories', icon: 'layers', color: '#6D28D9' },
-  { id: 'completed_loans', fallbackLabel: 'Completed Loans', icon: 'check', color: '#0F766E' },
-  { id: 'low_stock_products', fallbackLabel: 'Low Stock Products', icon: 'alert', color: '#BE123C' },
+  { id: 'today_collection', fallbackLabel: "Today's Collection", icon: 'rupee', color: '#F97316', backgroundColor: '#FFF7ED' },
+  { id: 'total_customers', fallbackLabel: 'Total Customers', icon: 'users', color: '#1685E8', backgroundColor: '#EFF6FF' },
+  { id: 'active_gold_loans', fallbackLabel: 'Active Gold Loans', icon: 'gold', color: '#8B27C8', backgroundColor: '#FAF5FF' },
+  { id: 'gold_stock_value', fallbackLabel: 'Gold Stock Value', icon: 'gem', color: '#9A3412', backgroundColor: '#FEF2F2' },
+  { id: 'total_products', fallbackLabel: 'Total Products', icon: 'box', color: '#0F766E', backgroundColor: '#F0FDFA' },
+  { id: 'total_categories', fallbackLabel: 'Total Categories', icon: 'layers', color: '#6D28D9', backgroundColor: '#F5F3FF' },
+  { id: 'completed_loans', fallbackLabel: 'Completed Loans', icon: 'check', color: '#0F766E', backgroundColor: '#ECFDF5' },
+  { id: 'low_stock_products', fallbackLabel: 'Low Stock Products', icon: 'alert', color: '#BE123C', backgroundColor: '#FFF1F2' },
 ] as const;
 
 const FILTERS = [
@@ -416,19 +416,19 @@ function Home({ user, onNavigate }: HomeProps) {
           return (
             <View
               key={card.id}
-              className="mb-3 min-h-[164px] w-[48%] overflow-hidden rounded-[5px] border px-2 py-4 shadow-sm"
+              className="mb-3 min-h-[144px] w-[48%] overflow-hidden rounded-[5px] border px-2 py-3 shadow-sm"
               style={{
-                backgroundColor: `${card.color}18`,
+                backgroundColor: card.backgroundColor,
                 borderColor: `${card.color}35`,
               }}
             >
               <DashboardCardArtwork icon={card.icon} color={card.color} />
-              <View className="z-10 mb-3 flex-row items-center">
+              <View className="z-10 mb-2 flex-row items-center">
                 <View
-                  className="mr-3 h-12 w-12 items-center justify-center rounded-2xl shadow-sm"
+                  className="mr-3 h-10 w-10 items-center justify-center rounded-2xl shadow-sm"
                   style={{ backgroundColor: card.color }}
                 >
-                  <DashboardIcon name={card.icon} color="#FFFFFF" size={25} />
+                  <DashboardIcon name={card.icon} color="#FFFFFF" size={22} />
                 </View>
                 <View className="min-w-0 flex-1">
                   <Text
@@ -440,7 +440,7 @@ function Home({ user, onNavigate }: HomeProps) {
                 </View>
               </View>
               <Text
-                className="z-10 text-[27px] font-extrabold tracking-tight text-slate-950"
+                className="z-10 text-[25px] font-extrabold tracking-tight text-slate-950"
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.75}
@@ -449,7 +449,7 @@ function Home({ user, onNavigate }: HomeProps) {
               </Text>
               {stat?.trend ? (
                 <View
-                  className="z-10 mt-2 self-start rounded-full border px-3 py-1.5"
+                  className="z-10 mt-1 self-start rounded-full border px-2.5 py-1"
                   style={{
                     backgroundColor: `${card.color}12`,
                     borderColor: `${card.color}22`,
