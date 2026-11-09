@@ -133,6 +133,20 @@ type DashboardResponse = {
   topProducts?: DashboardRecord[];
 };
 
+type HomeGoldRate = {
+  metal_type: string;
+  purity: string;
+  rate_per_gram?: number | string;
+  rate_per_unit?: number | string;
+  rate_unit?: string;
+};
+
+type HomeGoldRateSet = {
+  rates: HomeGoldRate[];
+  rate_date?: string;
+  effective_from?: string;
+};
+
 type HomeProps = {
   user: AuthenticatedUser;
   onNavigate?: (route: AdminRoute) => void;
@@ -188,6 +202,49 @@ const formatCurrency = (value: unknown): string => {
   return `₹${amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 };
 
+const formatGoldRate = (value: unknown): string => {
+  const amount = getNumber(value);
+  return `₹${amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+};
+
+const GOLD_RATE_METALS = ['Gold', 'Silver', 'Platinum', 'Diamond'];
+const GOLD_PURITY_ORDER = ['585', '750', '833', '916', '999'];
+const GOLD_KARAT_LABELS: Record<string, string> = {
+  '585': '14K (585)',
+  '750': '18K (750)',
+  '833': '20K (833)',
+  '916': '22K (916)',
+  '999': '24K (999)',
+  '14K': '14K (585)',
+  '18K': '18K (750)',
+  '20K': '20K (833)',
+  '22K': '22K (916)',
+  '24K': '24K (999)',
+};
+const GOLD_PURITY_CODES: Record<string, string> = {
+  '14K': '585',
+  '18K': '750',
+  '20K': '833',
+  '22K': '916',
+  '24K': '999',
+};
+
+const getRatePurityLabel = (rate: HomeGoldRate): string => {
+  if (rate.metal_type.toLowerCase() === 'gold') {
+    const key = rate.purity.trim().toUpperCase().replace(/\s+/g, '');
+    return GOLD_KARAT_LABELS[key] ?? rate.purity;
+  }
+  return rate.purity;
+};
+
+const formatRateDate = (value?: string): string => {
+  if (!value) return 'Latest available rates';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
 const getDisplayName = (record: DashboardRecord, keys: string[], fallback: string) => {
   for (const key of keys) {
     const value = record[key];
@@ -206,6 +263,9 @@ function Home({ user, onNavigate }: HomeProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [goldRateSet, setGoldRateSet] = useState<HomeGoldRateSet | null>(null);
+  const [isLoadingGoldRates, setIsLoadingGoldRates] = useState(true);
+  const [goldRateError, setGoldRateError] = useState(false);
 
   useEffect(() => {
     const refreshInterval = setInterval(() => {
@@ -285,6 +345,31 @@ function Home({ user, onNavigate }: HomeProps) {
         }
       });
 
+    setIsLoadingGoldRates(true);
+    setGoldRateError(false);
+    api
+      .get<HomeGoldRateSet>('/gold-rates/current', { signal: controller.signal })
+      .then(({ data }) => {
+        if (!isCurrentRequest) return;
+        if (!Array.isArray(data?.rates)) {
+          throw new Error('Gold rates API returned an invalid rate list.');
+        }
+        setGoldRateSet({
+          ...data,
+          rates: data.rates.filter(
+            rate => typeof rate?.metal_type === 'string' && typeof rate?.purity === 'string',
+          ),
+        });
+      })
+      .catch(error => {
+        if (!isCurrentRequest || error?.name === 'CanceledError') return;
+        console.error('Failed to load daily gold rates for dashboard:', error);
+        setGoldRateError(true);
+      })
+      .finally(() => {
+        if (isCurrentRequest) setIsLoadingGoldRates(false);
+      });
+
     return () => {
       isCurrentRequest = false;
       controller.abort();
@@ -341,6 +426,122 @@ function Home({ user, onNavigate }: HomeProps) {
             {loadError ? 'Dashboard needs a refresh' : 'Business dashboard'}
           </Text>
         </View>
+      </View>
+
+      <View className="mb-5 overflow-hidden rounded-3xl border border-[#145b52] bg-[#003f39] p-4">
+        <View className="flex-row items-center justify-between gap-2">
+          <View className="min-w-0 flex-1 flex-row items-center">
+            <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-accent/30 bg-white/10">
+              <Svg width={23} height={23} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="m3 9 4-5h10l4 5-9 12L3 9Z"
+                  stroke="#F5C45E"
+                  strokeWidth={1.8}
+                  strokeLinejoin="round"
+                />
+                <Path
+                  d="M3 9h18M7 4l5 17 5-17"
+                  stroke="#F5C45E"
+                  strokeWidth={1.4}
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </View>
+            <View className="min-w-0 flex-1">
+              <Text className="text-[9px] font-extrabold uppercase tracking-[1.5px] text-[#c5d9d4]">
+                Daily market snapshot
+              </Text>
+              <Text className="mt-1 text-[15px] font-extrabold text-white" numberOfLines={1}>
+                Precious metal rates
+              </Text>
+              <Text className="mt-0.5 text-[10px] font-medium text-[#c5d9d4]">
+                {goldRateSet
+                  ? `Effective ${formatRateDate(goldRateSet.effective_from ?? goldRateSet.rate_date)}`
+                  : 'Gold, silver, platinum & diamond'}
+              </Text>
+            </View>
+          </View>
+          <Pressable
+            onPress={() => onNavigate?.('dailyGoldRates')}
+            className="flex-row items-center rounded-xl bg-white px-3 py-2.5"
+            accessibilityRole="button"
+            accessibilityLabel="Manage daily gold rates"
+          >
+            <Text className="text-[10px] font-extrabold text-primary-dark">Manage</Text>
+            <Text className="ml-1 text-sm font-bold text-primary-dark">›</Text>
+          </Pressable>
+        </View>
+
+        {isLoadingGoldRates ? (
+          <View className="mt-4 flex-row items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-5">
+            <ActivityIndicator size="small" color="#F5C45E" />
+            <Text className="ml-2 text-xs font-semibold text-emerald-100">Loading today’s rates…</Text>
+          </View>
+        ) : goldRateError ? (
+          <Pressable
+            onPress={() => setRefreshVersion(version => version + 1)}
+            className="mt-4 items-center rounded-2xl border border-white/15 bg-white/5 px-4 py-4"
+            accessibilityRole="button"
+            accessibilityLabel="Retry loading daily gold rates"
+          >
+            <Text className="text-center text-xs font-semibold text-white">
+              Could not load today’s rates. Tap to retry.
+            </Text>
+          </Pressable>
+        ) : goldRateSet?.rates.length ? (
+          <View className="mt-4">
+            {GOLD_RATE_METALS.map(metal => {
+              const metalRates = goldRateSet.rates
+                .filter(rate => rate.metal_type.toLowerCase() === metal.toLowerCase())
+                .sort((first, second) => {
+                  if (metal !== 'Gold') return 0;
+                  const firstPurity = first.purity.trim().toUpperCase().replace(/\s+/g, '');
+                  const secondPurity = second.purity.trim().toUpperCase().replace(/\s+/g, '');
+                  const firstIndex = GOLD_PURITY_ORDER.indexOf(GOLD_PURITY_CODES[firstPurity] ?? firstPurity);
+                  const secondIndex = GOLD_PURITY_ORDER.indexOf(GOLD_PURITY_CODES[secondPurity] ?? secondPurity);
+                  return firstIndex - secondIndex;
+                });
+              if (!metalRates.length) return null;
+              return (
+                <View
+                  key={metal}
+                  className="flex-row items-center border-t border-white/15 py-3"
+                >
+                  <Text className="w-[66px] text-xs font-extrabold text-white">{metal}</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerClassName="gap-2 pr-1"
+                    className="flex-1"
+                  >
+                    {metalRates.map(rate => (
+                      <View
+                        key={`${rate.metal_type}-${rate.purity}-${rate.rate_unit ?? ''}`}
+                        className="min-w-[118px] rounded-xl border border-white/10 bg-white/[0.08] px-3 py-2"
+                      >
+                        <Text className="text-[9px] font-bold text-[#c5d9d4]" numberOfLines={1}>
+                          {getRatePurityLabel(rate)}
+                        </Text>
+                        <Text className="mt-1 text-[13px] font-extrabold text-white" numberOfLines={1}>
+                          {formatGoldRate(rate.rate_per_unit ?? rate.rate_per_gram)}
+                          <Text className="text-[9px] font-semibold text-[#c5d9d4]">
+                            {rate.rate_unit === 'carat' ? ' /ct' : ' /g'}
+                          </Text>
+                        </Text>
+                      </View>
+                    ))}
+                  </ScrollView>
+                </View>
+              );
+            })}
+          </View>
+        ) : (
+          <View className="mt-4 items-center rounded-2xl border border-white/10 bg-white/5 py-5">
+            <Text className="text-xs font-semibold text-emerald-100">
+              {isLoadingGoldRates ? 'Loading rates…' : 'No rates have been configured yet.'}
+            </Text>
+          </View>
+        )}
       </View>
 
       <View className="mb-3 flex-row items-center justify-between">
