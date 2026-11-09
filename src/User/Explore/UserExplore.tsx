@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
-  ActivityIndicator,
   Modal,
   Pressable,
   RefreshControl,
@@ -15,6 +14,7 @@ import api from '../../api';
 import ProductCard from '../../Components/ProductCard';
 import type { ProductCardData } from '../../Components/ProductCard';
 import type { HomeProduct } from '../Home/types';
+import HomeSkeleton from '../Home/components/HomeSkeleton';
 
 type ExploreProduct = HomeProduct & {
   category?: string;
@@ -555,11 +555,14 @@ function UserExplore({
         ) : null}
 
         {isLoading && products.length === 0 ? (
-          <View className="items-center rounded-xl border border-[#eee7dc] bg-white py-12">
-            <ActivityIndicator color="#004D40" />
-            <Text className="mt-3 text-xs text-[#81786b]">
-              Loading the collection…
-            </Text>
+          <View
+            className="flex-row flex-wrap justify-between"
+            accessibilityRole="progressbar"
+            accessibilityLabel="Loading products"
+          >
+            {[0, 1, 2, 3].map(index => (
+              <ExploreProductSkeleton key={index} />
+            ))}
           </View>
         ) : error ? (
           <View className="items-center rounded-xl border border-rose-200 bg-white px-5 py-10">
@@ -793,6 +796,25 @@ function UserExplore({
           </SafeAreaView>
         </View>
       </Modal>
+    </View>
+  );
+}
+
+function ExploreProductSkeleton() {
+  return (
+    <View className="mb-2.5 h-[310px] w-[48.5%] overflow-hidden rounded-[14px] border border-[#eadfc8] bg-white">
+      <HomeSkeleton className="h-[148px] w-full rounded-none bg-[#eee8dc]" />
+      <View className="px-2.5 pt-2">
+        <HomeSkeleton className="h-2.5 w-3/5 bg-[#e8dfd0]" />
+        <HomeSkeleton className="mt-2 h-3.5 w-4/5 bg-[#e8dfd0]" />
+        <HomeSkeleton className="mt-2 h-2.5 w-2/5 bg-[#e8dfd0]" />
+        <HomeSkeleton className="mt-3 h-4 w-1/2 bg-[#e8dfd0]" />
+        <View className="mt-3 flex-row">
+          <HomeSkeleton className="mr-1.5 h-8 flex-1 rounded-lg bg-[#f0ece4]" />
+          <HomeSkeleton className="h-8 flex-1 rounded-lg bg-[#f0ece4]" />
+        </View>
+        <HomeSkeleton className="mt-3 h-9 w-full rounded-lg bg-[#e8dfd0]" />
+      </View>
     </View>
   );
 }
