@@ -144,15 +144,17 @@ function UserHeader({
             accessibilityLabel="Open account menu"
             accessibilityState={{ expanded: isAccountMenuOpen }}
           >
-            <Svg width={27} height={27} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"
-                stroke="#FFFFFF"
-                strokeWidth={1.7}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: '800',
+                color: '#F5C45E',
+                lineHeight: 22,
+                textAlign: 'center',
+              }}
+            >
+              {initial}
+            </Text>
           </Pressable>
         </View>
       </View>
