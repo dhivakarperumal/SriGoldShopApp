@@ -129,7 +129,7 @@ function Login({ onLoginSuccess }: LoginProps) {
             className="flex-1"
             contentContainerClassName={
               keyboardVisible
-                ? 'grow justify-center px-6 py-4'
+                ? 'grow justify-center px-6 py-6'
                 : 'grow justify-center px-6 py-8'
             }
             keyboardShouldPersistTaps="handled"
