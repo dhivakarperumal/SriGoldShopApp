@@ -657,10 +657,10 @@ function UserExplore({
                     </Svg>
                   </View>
                   <View>
-                    <Text className="text-lg font-bold text-[#173c31]">
+                    <Text className="text-xl font-bold text-[#173c31]">
                       Filters
                     </Text>
-                    <Text className="mt-0.5 text-[10px] text-[#81786b]">
+                    <Text className="mt-0.5 text-xs text-[#81786b]">
                       Refine your product selection
                     </Text>
                   </View>
@@ -671,7 +671,7 @@ function UserExplore({
                   accessibilityRole="button"
                   accessibilityLabel="Clear all filters"
                 >
-                  <Text className="text-sm font-semibold text-[#9a6817]">
+                  <Text className="text-base font-semibold text-[#9a6817]">
                     Clear All
                   </Text>
                 </Pressable>
@@ -824,7 +824,7 @@ function UserExplore({
                 accessibilityRole="button"
                 accessibilityLabel={`Show ${filteredProducts.length} filtered products`}
               >
-                <Text className="text-base font-bold text-white">
+                <Text className="text-lg font-bold text-white">
                   Show {filteredProducts.length} products
                 </Text>
               </Pressable>
@@ -898,7 +898,7 @@ function FilterSection({
         accessibilityRole="button"
         accessibilityState={{ expanded }}
       >
-        <Text className="text-xs font-bold text-[#30271b]">{title}</Text>
+        <Text className="text-sm font-bold text-[#30271b]">{title}</Text>
         <Chevron direction={expanded ? 'down' : 'right'} />
       </Pressable>
       {expanded ? <View className="pb-2">{children}</View> : null}
@@ -917,7 +917,7 @@ function CheckboxFilterList({
 }) {
   if (!options.length) {
     return (
-      <Text className="py-1 text-[10px] text-[#81786b]">
+      <Text className="py-1 text-xs text-[#81786b]">
         No options available.
       </Text>
     );
@@ -943,18 +943,18 @@ function CheckboxFilterList({
               }`}
             >
               {isSelected ? (
-                <Text className="text-[10px] font-bold leading-3 text-white">
+                <Text className="text-xs font-bold leading-4 text-white">
                   ✓
                 </Text>
               ) : null}
             </View>
             <Text
-              className="flex-1 text-[11px] text-[#514638]"
+              className="flex-1 text-xs text-[#514638]"
               numberOfLines={1}
             >
               {option.label}
             </Text>
-            <Text className="text-[10px] text-[#9a9286]">{option.count}</Text>
+            <Text className="text-xs text-[#9a9286]">{option.count}</Text>
           </Pressable>
         );
       })}
@@ -1041,10 +1041,10 @@ function PriceRangeSelector({
         />
       </View>
       <View className="mb-2 flex-row justify-between">
-        <Text className="text-[9px] text-[#81786b]">
+        <Text className="text-[11px] text-[#81786b]">
           ₹{lowerValue.toLocaleString('en-IN')}
         </Text>
-        <Text className="text-[9px] text-[#81786b]">
+        <Text className="text-[11px] text-[#81786b]">
           ₹{upperValue.toLocaleString('en-IN')}
         </Text>
       </View>
@@ -1065,7 +1065,7 @@ function PriceRangeSelector({
               accessibilityState={{ selected: isSelected }}
             >
               <Text
-                className={`text-[9px] ${
+                className={`text-[11px] ${
                   isSelected ? 'font-semibold text-[#9a6814]' : 'text-[#62594d]'
                 }`}
               >
