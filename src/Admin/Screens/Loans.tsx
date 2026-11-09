@@ -374,10 +374,14 @@ function Loans({
           {[summaryCards.slice(0, 3), summaryCards.slice(3)].map((row, rowIndex) => (
             <View
               key={rowIndex}
-              className={`flex-row ${rowIndex === 0 ? 'justify-between' : 'justify-center gap-3'}`}
+              className="flex-row justify-between"
             >
               {row.map(card => (
-                <SummaryCard key={card.label} {...card} />
+                <SummaryCard
+                  key={card.label}
+                  {...card}
+                  widthClass={rowIndex === 0 ? 'w-[31.5%]' : 'w-[48.5%]'}
+                />
               ))}
             </View>
           ))}
@@ -739,11 +743,13 @@ function SummaryCard({
   value,
   color,
   backgroundColor,
+  widthClass,
 }: {
   label: string;
   value: number;
   color: string;
   backgroundColor: string;
+  widthClass: 'w-[31.5%]' | 'w-[48.5%]';
 }) {
   const iconPaths: Record<string, string[]> = {
     'Total loans': ['M3 7h18l-2 12H5L3 7Z', 'M3 7 2 4H1', 'M8 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z', 'M17 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z'],
@@ -755,7 +761,7 @@ function SummaryCard({
 
   return (
     <View
-      className="mb-3 min-h-[132px] w-[31.5%] overflow-hidden rounded-xl border px-2.5 py-2.5 shadow-sm"
+      className={`mb-3 min-h-[112px] ${widthClass} overflow-hidden rounded-xl border px-2.5 py-2 shadow-sm`}
       style={{ backgroundColor, borderColor: `${color}45` }}
       accessibilityLabel={`${label}: ${value}`}
       accessible
@@ -793,7 +799,7 @@ function SummaryCard({
         </Text>
       </View>
       <Text
-        className="z-10 mt-2 text-[22px] font-extrabold tracking-tight text-slate-950"
+        className="z-10 mt-1.5 text-[22px] font-extrabold tracking-tight text-slate-950"
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.7}
