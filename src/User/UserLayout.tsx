@@ -50,6 +50,21 @@ function mediaPath(value: unknown): string | undefined {
   return undefined;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function getProductPayload(value: unknown): Record<string, unknown> {
+  if (!isRecord(value)) {
+    throw new TypeError('The product response must be an object.');
+  }
+  const product = isRecord(value.product) ? value.product : value;
+  if (product.id == null && !product.name) {
+    throw new TypeError('The product response is missing product details.');
+  }
+  return product;
+}
+
 function getFirstImage(product: ProductCardData): string | undefined {
   const imageFields = [
     product.image,
@@ -154,7 +169,52 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
         if (!Array.isArray(response.data)) {
           throw new TypeError('The wishlist response must be an array.');
         }
-        setFavorites(response.data as WishlistItem[]);
+        const wishlistItems = response.data as WishlistItem[];
+        const itemsWithProductDetails = await Promise.all(
+          wishlistItems.map(async item => {
+            const productId = item.product_id ?? item.productId ?? item.id;
+            if (productId == null) {
+              console.error(
+                'Cannot load wishlist product details: the item has no product ID.',
+                item,
+              );
+              return item;
+            }
+
+            try {
+              const productResponse = await api.get(`/products/${productId}`, {
+                signal: controller.signal,
+              });
+              const product = getProductPayload(productResponse.data);
+              const primaryVariant = Array.isArray(product.variants)
+                ? product.variants.find(isRecord)
+                : undefined;
+              const fullProduct = { ...primaryVariant, ...product };
+              return {
+                ...item,
+                ...fullProduct,
+                id: fullProduct.id ?? productId,
+                product_id: productId,
+                productId: item.productId,
+                price:
+                  fullProduct.offer_price ??
+                  fullProduct.final_selling_price ??
+                  item.price,
+              } as WishlistItem;
+            } catch (error) {
+              if (!controller.signal.aborted) {
+                console.error(
+                  `Failed to load product details for wishlist item ${productId}:`,
+                  error,
+                );
+              }
+              return item;
+            }
+          }),
+        );
+        if (!controller.signal.aborted) {
+          setFavorites(itemsWithProductDetails);
+        }
       } catch (error) {
         if (controller.signal.aborted) return;
         console.error('Failed to load favorites:', error);

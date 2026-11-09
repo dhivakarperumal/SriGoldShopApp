@@ -119,9 +119,9 @@ function displayText(value: unknown): string {
 
 function getNumericPrice(item: WishlistItem): number | null {
   const value =
-    item.price ??
     item.offer_price ??
     item.final_selling_price ??
+    item.price ??
     item.mrp;
   if (value === undefined || value === null || value === '') {
     return null;
@@ -164,12 +164,16 @@ function WishlistCard({
   const metal = displayText(
     item.category_name || item.category || item.metal_type || item.purity,
   );
-  const weight = displayText(item.gross_weight || item.net_weight);
+  const weight = displayText(
+    item.net_gold_weight || item.gross_weight || item.net_weight,
+  );
   const details = [
     metal,
     weight ? `${weight}g` : '',
   ].filter(Boolean).join(' · ');
-  const rating = Number(item.rating);
+  const rating = Number(
+    item.rating ?? item.average_rating ?? item.avg_rating,
+  );
   const hasRating = Number.isFinite(rating) && rating > 0;
   const sellingPrice = getNumericPrice(item);
   const originalPrice = Number(item.mrp);
