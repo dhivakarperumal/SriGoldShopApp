@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   },
   body: {
     paddingHorizontal: 10,
-    paddingTop: 8,
+    paddingTop: 5,
     paddingBottom: 2,
   },
   nameRow: {
