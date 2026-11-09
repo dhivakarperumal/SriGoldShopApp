@@ -45,7 +45,6 @@ function LoanCustomerManagement({
   const [loadError, setLoadError] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<LoanCustomer | null>(null);
-  const [isFabOpen, setIsFabOpen] = useState(false);
   const [verifyingCustomerId, setVerifyingCustomerId] = useState<string | number | null>(null);
   const [expandedCustomerId, setExpandedCustomerId] = useState<string | number | null>(null);
   const [detailsCustomerId, setDetailsCustomerId] = useState<string | number | null>(null);
@@ -294,20 +293,13 @@ function LoanCustomerManagement({
           )}
         </ScrollView>
         <View className="absolute bottom-4 right-5 z-20">
-          <PulseFab accessibilityLabel={isFabOpen ? 'Close loan customer actions' : 'Open loan customer actions'} expanded={isFabOpen} onPress={() => setIsFabOpen(open => !open)} />
-          {isFabOpen ? (
-            <Pressable
-              onPress={() => { setIsFabOpen(false); setEditingCustomer(null); setIsFormOpen(true); }}
-              accessibilityRole="button"
-              accessibilityLabel="Create loan customer"
-              className="absolute bottom-[68px] right-0 flex-row items-center rounded-full border border-slate-200 bg-white py-2 pl-3 pr-2 shadow-md"
-            >
-              <Text className="mr-3 text-xs font-bold text-slate-800">Add customer</Text>
-              <View className="h-9 w-9 items-center justify-center rounded-full bg-primary">
-                <Text className="text-xl font-bold text-white">+</Text>
-              </View>
-            </Pressable>
-          ) : null}
+          <PulseFab
+            accessibilityLabel="Create loan customer"
+            onPress={() => {
+              setEditingCustomer(null);
+              setIsFormOpen(true);
+            }}
+          />
         </View>
       </SafeAreaView>
     </View>
