@@ -341,11 +341,11 @@ function Loans({
   };
 
   const summaryCards = [
-    { label: 'Total loans', value: loans.length, color: '#006B5A', backgroundColor: '#EAF8F4' },
-    { label: 'Active', value: loanCounts.active, color: '#168B55', backgroundColor: '#EFF9F0' },
-    { label: 'Inactive', value: loanCounts.inactive, color: '#D88912', backgroundColor: '#FFF7E9' },
-    { label: 'Completed', value: loanCounts.completed, color: '#3977C5', backgroundColor: '#EFF6FF' },
-    { label: 'Overdue', value: loanCounts.overdue, color: '#C43F59', backgroundColor: '#FFF1F2' },
+    { label: 'Total loans', value: loans.length, color: '#E6BF5A', backgroundColor: '#063D32' },
+    { label: 'Active', value: loanCounts.active, color: '#E6BF5A', backgroundColor: '#0A3768' },
+    { label: 'Inactive', value: loanCounts.inactive, color: '#E6BF5A', backgroundColor: '#4B164E' },
+    { label: 'Completed', value: loanCounts.completed, color: '#E6BF5A', backgroundColor: '#123E57' },
+    { label: 'Overdue', value: loanCounts.overdue, color: '#E6BF5A', backgroundColor: '#571E38' },
   ];
 
   if (isCreateOpen) {
@@ -766,29 +766,33 @@ function SummaryCard({
 
   return (
     <View
-      className={`mb-3 min-h-[96px] ${widthClass} overflow-hidden rounded-xl border px-2.5 py-1.5 shadow-sm`}
-      style={{ backgroundColor, borderColor: `${color}45` }}
+      className={`relative mb-3 min-h-[126px] ${widthClass} overflow-hidden rounded-[24px] border-2 px-2.5 pb-3 pt-3 shadow-lg`}
+      style={{ backgroundColor, borderColor: color }}
       accessibilityLabel={`${label}: ${value}`}
       accessible
     >
-      <View className="absolute -left-2 -right-2 bottom-0 h-14" pointerEvents="none">
+      <View className="absolute inset-x-0 bottom-0 h-10" pointerEvents="none">
         <Svg width="100%" height="100%" viewBox="0 0 300 56" preserveAspectRatio="none">
-          <Path d="M0 32 C55 18 91 45 150 31 C210 17 249 7 300 13 V56 H0Z" fill={color} opacity={0.1} />
-          <Path d="M0 42 C60 28 103 53 164 40 C222 28 258 18 300 24 V56 H0Z" fill={color} opacity={0.18} />
-          <Path d="M0 50 C70 40 112 57 178 48 C230 41 267 31 300 35 V56 H0Z" fill={color} opacity={0.3} />
+          <Path d="M0 33 C55 16 92 48 151 34 C212 19 251 8 300 14 V56 H0Z" fill={color} opacity={0.12} />
+          <Path d="M0 34 C55 17 92 49 151 35 C212 20 251 9 300 15" fill="none" stroke={color} strokeWidth={3} />
         </Svg>
       </View>
-      <View className="z-10 flex-row items-center">
-        <View
-          className="mr-2 h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-          style={{ backgroundColor: color }}
-        >
-          <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+      <View
+        className="absolute right-2 top-2 h-9 w-9 items-center justify-center rounded-xl border"
+        style={{
+          borderColor: color,
+          backgroundColor: `${color}22`,
+          transform: [{ rotate: '45deg' }],
+        }}
+        pointerEvents="none"
+      >
+        <View style={{ transform: [{ rotate: '-45deg' }] }}>
+          <Svg width={21} height={21} viewBox="0 0 24 24" fill="none">
             {(iconPaths[label] || []).map(path => (
               <Path
                 key={path}
                 d={path}
-                stroke="#FFFFFF"
+                stroke={color}
                 strokeWidth={1.9}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -796,15 +800,18 @@ function SummaryCard({
             ))}
           </Svg>
         </View>
+      </View>
+      <View className="z-10 flex-row items-center pr-8">
+        <View className="mr-1.5 h-7 w-1 rounded-full" style={{ backgroundColor: color }} />
         <Text
-          className="min-w-0 flex-1 text-[11px] font-bold leading-[14px] text-slate-900"
+          className="min-w-0 flex-1 text-[11px] font-bold leading-[14px] text-white"
           numberOfLines={2}
         >
           {label}
         </Text>
       </View>
       <Text
-        className="z-10 mt-1 text-[22px] font-extrabold tracking-tight text-slate-950"
+        className="z-10 mt-3 text-[24px] font-extrabold tracking-tight text-white"
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.7}
