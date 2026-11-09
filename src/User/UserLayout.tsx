@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, BackHandler, StatusBar, View } from 'react-native';
+import { Alert, BackHandler, Platform, StatusBar, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../api';
 import type { ProductCardData } from '../Components/ProductCard';
@@ -69,7 +69,11 @@ function getFirstImage(product: ProductCardData): string | undefined {
 
   if (Array.isArray(product.variants)) {
     for (const variant of product.variants) {
-      if (typeof variant !== 'object' || variant === null || !('images' in variant)) {
+      if (
+        typeof variant !== 'object' ||
+        variant === null ||
+        !('images' in variant)
+      ) {
         continue;
       }
       const image = mediaPath(variant.images);
@@ -104,10 +108,12 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
   );
   const [morePage, setMorePage] = useState<MorePage>(null);
   const [hasVisitedProfile, setHasVisitedProfile] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-  const [lastSelectedProductId, setLastSelectedProductId] = useState<string | null>(
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
     null,
   );
+  const [lastSelectedProductId, setLastSelectedProductId] = useState<
+    string | null
+  >(null);
   const [exploreMetalSelection, setExploreMetalSelection] = useState<{
     name: string;
     requestId: number;
@@ -116,7 +122,9 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
     name: string;
     requestId: number;
   } | null>(null);
-  const [enquiryProduct, setEnquiryProduct] = useState<ProductCardData | null>(null);
+  const [enquiryProduct, setEnquiryProduct] = useState<ProductCardData | null>(
+    null,
+  );
   const [favorites, setFavorites] = useState<WishlistItem[]>([]);
   const [isLoadingFavorites, setIsLoadingFavorites] = useState(true);
   const [isRefreshingFavorites, setIsRefreshingFavorites] = useState(false);
@@ -179,7 +187,10 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
         !Number.isSafeInteger(Number(productId)) ||
         Number(productId) < 1
       ) {
-        Alert.alert('Unable to update favorites', 'This product has no valid ID.');
+        Alert.alert(
+          'Unable to update favorites',
+          'This product has no valid ID.',
+        );
         return;
       }
       const normalizedId = String(productId);
@@ -187,7 +198,8 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
 
       setUpdatingFavoriteIds(current => new Set(current).add(normalizedId));
       const isFavorite = favorites.some(
-        item => String(item.product_id ?? item.productId ?? item.id) === normalizedId,
+        item =>
+          String(item.product_id ?? item.productId ?? item.id) === normalizedId,
       );
       try {
         if (isFavorite) {
@@ -195,7 +207,8 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
           setFavorites(current =>
             current.filter(
               item =>
-                String(item.product_id ?? item.productId ?? item.id) !== normalizedId,
+                String(item.product_id ?? item.productId ?? item.id) !==
+                normalizedId,
             ),
           );
         } else {
@@ -232,10 +245,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
         }
       } catch (error) {
         console.error('Failed to update favorite:', error);
-        Alert.alert(
-          'Favorites update failed',
-          getErrorMessage(error),
-        );
+        Alert.alert('Favorites update failed', getErrorMessage(error));
       } finally {
         setUpdatingFavoriteIds(current => {
           const next = new Set(current);
@@ -250,7 +260,8 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
   const isFavorite = useCallback(
     (productId: string) =>
       favorites.some(
-        item => String(item.product_id ?? item.productId ?? item.id) === productId,
+        item =>
+          String(item.product_id ?? item.productId ?? item.id) === productId,
       ),
     [favorites],
   );
@@ -334,12 +345,37 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
     ? (['left', 'right', 'bottom'] as const)
     : (['left', 'right'] as const);
 
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      StatusBar.setBackgroundColor(
+        selectedProductId
+          ? '#003B2D'
+          : isStandalonePage
+          ? '#FFFFFF'
+          : '#004D40',
+        true,
+      );
+    }
+  }, [isStandalonePage, selectedProductId]);
+
   return (
     <SafeAreaView
-      className={`flex-1 ${isStandalonePage ? 'bg-white' : 'bg-primary'}`}
+      className={`flex-1 ${
+        selectedProductId
+          ? 'bg-[#003B2D]'
+          : isStandalonePage
+          ? 'bg-white'
+          : 'bg-primary'
+      }`}
       edges={isStandalonePage ? (['top'] as const) : []}
     >
-      <StatusBar barStyle={isStandalonePage ? 'dark-content' : 'light-content'} />
+      <StatusBar
+        barStyle={
+          isStandalonePage && !selectedProductId
+            ? 'dark-content'
+            : 'light-content'
+        }
+      />
       {!isStandalonePage ? (
         <UserHeader
           user={user}
@@ -361,9 +397,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
       >
         <View className="flex-1">
           {lastSelectedProductId ? (
-            <View
-              className={selectedProductId ? 'flex-1' : 'hidden'}
-            >
+            <View className={selectedProductId ? 'flex-1' : 'hidden'}>
               <UserProductDetails
                 productId={lastSelectedProductId}
                 onBack={() => setSelectedProductId(null)}
@@ -392,7 +426,9 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
           </View>
           <View
             className={
-              !selectedProductId && activeTab === 'explore' ? 'flex-1' : 'hidden'
+              !selectedProductId && activeTab === 'explore'
+                ? 'flex-1'
+                : 'hidden'
             }
           >
             {visitedTabs.has('explore') ? (
@@ -441,9 +477,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
               <MoreMenu onSelect={selectMorePage} />
             )}
             {hasVisitedProfile ? (
-              <View
-                className={morePage === 'profile' ? 'flex-1' : 'hidden'}
-              >
+              <View className={morePage === 'profile' ? 'flex-1' : 'hidden'}>
                 <UserProfile
                   user={user}
                   onUserUpdated={onUserUpdated}
@@ -469,10 +503,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
             ) : null}
           </View>
           {!isStandalonePage ? (
-            <UserBottomNavigation
-              activeTab={activeTab}
-              onSelect={selectTab}
-            />
+            <UserBottomNavigation activeTab={activeTab} onSelect={selectTab} />
           ) : null}
         </View>
       </SafeAreaView>
