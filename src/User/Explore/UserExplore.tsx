@@ -92,6 +92,7 @@ const getDiscount = (product: ExploreProduct) => {
 };
 
 function UserExplore({
+  isActive,
   onSelectProduct,
   onEnquireProduct,
   isFavorite,
@@ -99,6 +100,7 @@ function UserExplore({
   metalSelection,
   categorySelection,
 }: {
+  isActive: boolean;
   onSelectProduct: (productId: string) => void;
   onEnquireProduct: (product: ProductCardData) => void;
   isFavorite: (productId: string) => boolean;
@@ -124,6 +126,21 @@ function UserExplore({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [refreshVersion, setRefreshVersion] = useState(0);
+
+  useEffect(() => {
+    if (isActive) return;
+    setSearch('');
+    setSelectedCategory('');
+    setSelectedMetal('');
+    setOfferThreshold(0);
+    setMinimumPrice(undefined);
+    setMaximumPrice(undefined);
+    setMinimumRating(0);
+    setAvailability('');
+    setSortBy('newest');
+    setFiltersVisible(false);
+    setSortDropdownVisible(false);
+  }, [isActive]);
 
   useEffect(() => {
     if (Platform.OS !== 'android' || !systemNavigationBar) return;
@@ -171,7 +188,6 @@ function UserExplore({
     setMinimumRating(0);
     setAvailability('');
     setSortBy('newest');
-    setFiltersVisible(true);
   }, [categorySelection]);
 
   useEffect(() => {

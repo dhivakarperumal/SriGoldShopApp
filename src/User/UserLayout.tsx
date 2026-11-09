@@ -472,6 +472,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
           >
             {visitedTabs.has('explore') ? (
               <UserExplore
+                isActive={activeTab === 'explore'}
                 onSelectProduct={selectProduct}
                 onEnquireProduct={openEnquiry}
                 isFavorite={isFavorite}
