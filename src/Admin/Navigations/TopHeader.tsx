@@ -34,6 +34,7 @@ export type AdminRoute =
   | 'addGoldrate'
   | 'customers'
   | 'loanCustomers'
+  | 'overdueLoans'
   | 'stockDetails'
   | 'enquiries'
   | 'fundManagement'

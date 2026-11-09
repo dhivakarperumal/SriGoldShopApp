@@ -2,6 +2,7 @@ import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
 import api from '../src/api';
 import Loans from '../src/Admin/Screens/Loans';
+import OverdueLoans from '../src/Admin/Loanmanegements/OverdueLoans';
 import LoanCustomerManagement from '../src/Admin/Loanmanegements/LoanCustomerManagement';
 import CreateCustomers from '../src/Admin/Loanmanegements/CreateCustomers';
 
@@ -149,6 +150,87 @@ test('filters loans by overdue, unrenewed, gold release, and completed status', 
   expect(visibleLoanNumbers()).toEqual(['LN-COMPLETE']);
   act(() => renderer.unmount());
 }, 30000);
+
+test('opens the dedicated overdue loans screen from the loan filter', async () => {
+  const onOpenOverdueLoans = jest.fn();
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<Loans onOpenOverdueLoans={onOpenOverdueLoans} />);
+  });
+
+  await act(async () => {
+    renderer.root
+      .findAll(
+        node =>
+          typeof node.props.accessibilityLabel === 'string' &&
+          node.props.accessibilityLabel.startsWith('Filter loans, current filter '),
+      )[0]
+      .props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Loan list filter Overdue Loans' }).props.onPress();
+  });
+
+  expect(onOpenOverdueLoans).toHaveBeenCalledTimes(1);
+  act(() => renderer.unmount());
+});
+
+test('shows only overdue active or suspended loans and filters the list', async () => {
+  const overdueLoans = [
+    {
+      ...loans[0],
+      id: 31,
+      loan_number: 'LN-OVERDUE-1',
+      customer_id: 8,
+      maturity_date: '2000-01-01',
+      loan_status: 'Active',
+      loan_date: '2000-01-01',
+    },
+    {
+      ...loans[0],
+      id: 32,
+      loan_number: 'LN-OVERDUE-2',
+      customer_id: 8,
+      customer_name: 'Meena Devi',
+      maturity_date: '2000-01-01',
+      loan_status: 'Suspended',
+      outstanding_principal: 3000,
+    },
+    {
+      ...loans[0],
+      id: 33,
+      loan_number: 'LN-PAID',
+      maturity_date: '2000-01-01',
+      outstanding_principal: 0,
+    },
+    {
+      ...loans[0],
+      id: 34,
+      loan_number: 'LN-NOT-DUE',
+      maturity_date: '2099-01-01',
+    },
+  ];
+  (api.get as jest.Mock).mockResolvedValue({ data: overdueLoans });
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<OverdueLoans onBack={jest.fn()} />);
+  });
+
+  expect(api.get).toHaveBeenCalledWith('/loans', {
+    params: { startDate: '', endDate: '' },
+  });
+  expect(renderer.root.findAll(node => node.props.children === 'LN-OVERDUE-1').length).toBeGreaterThan(0);
+  expect(renderer.root.findAll(node => node.props.children === 'LN-OVERDUE-2').length).toBeGreaterThan(0);
+  expect(renderer.root.findAll(node => node.props.children === 'LN-PAID')).toHaveLength(0);
+  expect(renderer.root.findAll(node => node.props.children === 'LN-NOT-DUE')).toHaveLength(0);
+
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Search overdue loans' }).props.onChangeText('Meena');
+  });
+  expect(renderer.root.findAll(node => node.props.children === 'LN-OVERDUE-1')).toHaveLength(0);
+  expect(renderer.root.findAll(node => node.props.children === 'LN-OVERDUE-2').length).toBeGreaterThan(0);
+  act(() => renderer.unmount());
+});
 
 test('shows an explicit retry state when the loan request fails', async () => {
   (api.get as jest.Mock).mockRejectedValueOnce({ message: 'Network unavailable' });

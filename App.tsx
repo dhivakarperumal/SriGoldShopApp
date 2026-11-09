@@ -24,6 +24,7 @@ import AllGoldRate, {
 import AddGoldrate from './src/Admin/DailyGoldRate/AddGoldrate';
 import Customers from './src/Admin/MorePages/Customer';
 import LoanCustomerManagement from './src/Admin/Loanmanegements/LoanCustomerManagement';
+import OverdueLoans from './src/Admin/Loanmanegements/OverdueLoans';
 import StockDetails from './src/Admin/MorePages/StockDetails';
 import AllEnquries from './src/Admin/Enquries/AllEnquries';
 import FundManagement from './src/Admin/FundManagement/Fundmanegement';
@@ -161,12 +162,15 @@ function App() {
         ? (
           <Loans
             onFormVisibilityChange={setIsLoanFormOpen}
+            onOpenOverdueLoans={() => navigateAdmin('overdueLoans')}
             onCreateCustomer={() => {
               setIsLoanCustomerCreateRequested(true);
               navigateAdmin('loanCustomers');
             }}
           />
         )
+        : adminRoute === 'overdueLoans'
+          ? <OverdueLoans onBack={() => navigateAdmin('loans')} />
         : adminRoute === 'billing'
           ? <Billing key={billingSession} onFormVisibilityChange={setIsBillingFormOpen} />
           : adminRoute === 'products'

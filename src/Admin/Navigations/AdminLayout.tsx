@@ -45,6 +45,7 @@ function AdminLayout({
     activeRoute !== 'addGoldrate' &&
     activeRoute !== 'customers' &&
     activeRoute !== 'loanCustomers' &&
+    activeRoute !== 'overdueLoans' &&
     activeRoute !== 'stockDetails' &&
     activeRoute !== 'enquiries' &&
     activeRoute !== 'fundManagement' &&

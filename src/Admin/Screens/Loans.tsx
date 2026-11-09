@@ -173,9 +173,11 @@ const getErrorMessage = (error: unknown): string => {
 function Loans({
   onFormVisibilityChange,
   onCreateCustomer,
+  onOpenOverdueLoans,
 }: {
   onFormVisibilityChange?: (visible: boolean) => void;
   onCreateCustomer?: () => void;
+  onOpenOverdueLoans?: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const [loans, setLoans] = useState<Loan[]>([]);
@@ -642,6 +644,11 @@ function Loans({
                 <Pressable
                   key={filter}
                   onPress={() => {
+                    if (filter === 'Overdue Loans' && onOpenOverdueLoans) {
+                      setIsFilterModalOpen(false);
+                      onOpenOverdueLoans();
+                      return;
+                    }
                     setLoanListFilter(filter);
                     setCurrentPage(1);
                     setExpandedLoanId(null);
