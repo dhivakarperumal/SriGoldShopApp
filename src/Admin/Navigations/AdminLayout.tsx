@@ -73,7 +73,6 @@ function isMainTab(route: AdminRoute): route is MainTabRoute {
   return (
     route === 'home' ||
     route === 'loans' ||
-    route === 'billing' ||
     route === 'products' ||
     route === 'more'
   );

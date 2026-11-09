@@ -11,6 +11,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../api';
 import { getProductImageUrl } from '../../utils/productImage';
 
@@ -221,7 +222,9 @@ export default function Billing() {
   const [customer, setCustomer] = useState<Customer>(EMPTY_CUSTOMER);
   const [products, setProducts] = useState<BillProduct[]>([]);
   const [productSearch, setProductSearch] = useState('');
-  const [showProductPicker, setShowProductPicker] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('All categories');
+  const [metalTypeFilter, setMetalTypeFilter] = useState('All metals');
+  const [showProductPicker, setShowProductPicker] = useState(true);
   const [showProductPreview, setShowProductPreview] = useState(false);
   const [paymentType, setPaymentType] = useState<'FULL_PAYMENT' | 'EXCHANGE_GOLD'>('FULL_PAYMENT');
   const [exchanges, setExchanges] = useState<ExchangeItem[]>([]);
@@ -381,8 +384,34 @@ export default function Billing() {
       `${product.name} ${product.category ?? ''} ${product.purity ?? ''} ${product.product_code ?? ''}`
         .toLowerCase()
         .includes(query);
-    return matchesSearch && String(product.status ?? 'Active').toLowerCase() === 'active';
+    const matchesCategory =
+      categoryFilter === 'All categories' ||
+      String(product.category ?? '').toLowerCase() === categoryFilter.toLowerCase();
+    const matchesMetalType =
+      metalTypeFilter === 'All metals' ||
+      String(product.metal_type ?? 'Gold').toLowerCase() === metalTypeFilter.toLowerCase();
+    return (
+      matchesSearch &&
+      matchesCategory &&
+      matchesMetalType &&
+      String(product.status ?? 'Active').toLowerCase() === 'active'
+    );
   });
+
+  const categoryOptions = useMemo(
+    () => [
+      'All categories',
+      ...Array.from(new Set(catalog.map(product => String(product.category || '').trim()).filter(Boolean))),
+    ],
+    [catalog],
+  );
+  const metalTypeOptions = useMemo(
+    () => [
+      'All metals',
+      ...Array.from(new Set(catalog.map(product => String(product.metal_type || 'Gold').trim()).filter(Boolean))),
+    ],
+    [catalog],
+  );
 
   const resetForm = () => {
     setBillStep(1);
@@ -394,7 +423,9 @@ export default function Billing() {
     setGstRate('0');
     setDiscount('');
     setProductSearch('');
-    setShowProductPicker(false);
+    setCategoryFilter('All categories');
+    setMetalTypeFilter('All metals');
+    setShowProductPicker(true);
   };
 
   const openNewBill = () => {
@@ -763,7 +794,7 @@ export default function Billing() {
       <View className="flex-1 bg-background">
         <ScrollView
           className="flex-1"
-          contentContainerClassName="gap-4 px-4 pb-8 pt-4"
+          contentContainerClassName={`gap-4 px-4 pt-4 ${billStep === 1 ? 'pb-4' : 'pb-8'}`}
           keyboardShouldPersistTaps="handled"
         >
           <View className="-mx-4 -mt-4 flex-row items-center gap-3 border-b border-[#00382E] bg-primary px-4 py-3">
@@ -808,83 +839,7 @@ export default function Billing() {
           </View>
 
           {billStep === 1 ? (
-          <View className="gap-3 rounded-2xl border border-slate-100 bg-white p-4">
-            <View className="flex-row items-center justify-between">
-              <View>
-                <Text className="text-base font-extrabold text-slate-900">Products in bill</Text>
-                <Text className="mt-1 text-xs text-slate-500">
-                  {products.length} item{products.length === 1 ? '' : 's'} added
-                </Text>
-              </View>
-              <Pressable
-                onPress={() => setShowProductPicker(current => !current)}
-                className="flex-row items-center rounded-xl bg-primary px-3 py-2.5"
-                accessibilityRole="button"
-                accessibilityLabel="Add product"
-              >
-                <Text className="mr-1 text-lg font-bold text-white">+</Text>
-                <Text className="text-xs font-bold text-white">
-                  {showProductPicker ? 'Close products' : 'Add product'}
-                </Text>
-              </Pressable>
-            </View>
-
-            {products.length ? (
-              <>
-              <View className="gap-2">
-                {products.map((product, index) => {
-                  const image = getProductImageUrl(product);
-                  return (
-                    <View
-                      key={`${product.product_id}-${index}`}
-                      className="flex-row items-center rounded-xl border border-slate-100 p-3"
-                    >
-                      {image ? (
-                        <Image
-                          source={{ uri: image }}
-                          className="mr-3 h-12 w-12 rounded-lg bg-slate-100"
-                          resizeMode="cover"
-                          accessibilityLabel={`${product.product_name || 'Product'} image`}
-                        />
-                      ) : null}
-                      <View className="min-w-0 flex-1">
-                        <Text className="text-sm font-bold text-slate-800" numberOfLines={1}>
-                          {product.product_name || 'Product'}
-                        </Text>
-                        <Text className="mt-1 text-xs text-slate-500" numberOfLines={1}>
-                          {[product.category, product.purity].filter(Boolean).join(' · ') || '—'}
-                        </Text>
-                        <Text className="mt-1 text-sm font-bold text-primary-dark">
-                          {currency(product.price)}
-                        </Text>
-                      </View>
-                      <Pressable
-                        onPress={() => setProducts(current => current.filter((_, i) => i !== index))}
-                        className="ml-2 rounded-lg bg-rose-50 px-3 py-2"
-                        accessibilityRole="button"
-                        accessibilityLabel={`Remove ${product.product_name || 'product'}`}
-                      >
-                        <Text className="font-bold text-rose-700">×</Text>
-                      </Pressable>
-                    </View>
-                  );
-                })}
-              </View>
-              <Pressable
-                onPress={() => setShowProductPreview(true)}
-                className="items-center rounded-xl border border-primary bg-primary/5 py-3"
-                accessibilityRole="button"
-                accessibilityLabel="Preview products in bill"
-              >
-                <Text className="text-sm font-bold text-primary">Preview products</Text>
-              </Pressable>
-              </>
-            ) : (
-              <Text className="rounded-xl border border-dashed border-slate-300 px-4 py-5 text-center text-sm text-slate-500">
-                No products added yet. Tap “Add product” to choose from the catalog.
-              </Text>
-            )}
-
+          <View className="gap-3">
             {showProductPicker ? (
               <View className="gap-3 border-t border-slate-100 pt-3">
                 <Text className="text-sm font-extrabold text-slate-900">Product catalog</Text>
@@ -896,6 +851,48 @@ export default function Billing() {
                     placeholderTextColor="#94A3B8"
                     autoCapitalize="none"
                   />
+                  <View className="flex-row gap-2">
+                    <Pressable
+                      onPress={() => Alert.alert(
+                        'Category',
+                        'Select a category',
+                        [
+                          ...categoryOptions.map(option => ({
+                            text: option,
+                            onPress: () => setCategoryFilter(option),
+                          })),
+                          { text: 'Cancel', style: 'cancel' },
+                        ],
+                      )}
+                      className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3"
+                      accessibilityRole="button"
+                    >
+                      <Text className="text-[10px] font-semibold text-slate-500">Category</Text>
+                      <Text className="mt-1 text-xs font-bold text-slate-800" numberOfLines={1}>
+                        {categoryFilter}
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => Alert.alert(
+                        'Metal type',
+                        'Select a metal type',
+                        [
+                          ...metalTypeOptions.map(option => ({
+                            text: option,
+                            onPress: () => setMetalTypeFilter(option),
+                          })),
+                          { text: 'Cancel', style: 'cancel' },
+                        ],
+                      )}
+                      className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3"
+                      accessibilityRole="button"
+                    >
+                      <Text className="text-[10px] font-semibold text-slate-500">Metal type</Text>
+                      <Text className="mt-1 text-xs font-bold text-slate-800" numberOfLines={1}>
+                        {metalTypeFilter}
+                      </Text>
+                    </Pressable>
+                  </View>
                   <ScrollView className="mt-3" nestedScrollEnabled keyboardShouldPersistTaps="handled">
                     {catalogError ? (
                       <View className="gap-2 rounded-xl bg-rose-50 p-3">
@@ -976,7 +973,10 @@ export default function Billing() {
                   accessibilityRole="button"
                   accessibilityLabel="Close product preview"
                 />
-                <View className="max-h-[75%] rounded-t-3xl bg-white px-4 pb-6 pt-3">
+                <SafeAreaView
+                  edges={['bottom', 'left', 'right']}
+                  className="max-h-[75%] rounded-t-3xl bg-white px-4 pt-3"
+                >
                   <View className="mx-auto mb-3 h-1 w-12 rounded-full bg-slate-300" />
                   <View className="mb-3 flex-row items-center justify-between">
                     <View>
@@ -1010,21 +1010,9 @@ export default function Billing() {
                   >
                     <Text className="text-sm font-bold text-white">Close preview</Text>
                   </Pressable>
-                </View>
+                </SafeAreaView>
               </View>
             </Modal>
-            <ActionButton
-              label="Continue to customer address"
-              onPress={() => {
-                if (!products.length) {
-                  Alert.alert('Products required', 'Add at least one product to continue.');
-                  return;
-                }
-                setShowProductPicker(false);
-                setBillStep(2);
-              }}
-              disabled={!products.length}
-            />
           </View>
           ) : null}
 
@@ -1152,6 +1140,43 @@ export default function Billing() {
           </>
           ) : null}
         </ScrollView>
+
+        {billStep === 1 ? (
+          <View className="border-t border-slate-200 bg-white px-4 py-3">
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => setShowProductPreview(true)}
+                disabled={!products.length}
+                className={`flex-1 items-center rounded-xl border py-3 ${
+                  products.length ? 'border-primary bg-white' : 'border-slate-200 bg-slate-100'
+                }`}
+                accessibilityRole="button"
+              >
+                <Text className={`text-sm font-bold ${products.length ? 'text-primary' : 'text-slate-400'}`}>
+                  Preview
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  if (!products.length) {
+                    Alert.alert('Products required', 'Add at least one product to continue.');
+                    return;
+                  }
+                  setShowProductPicker(false);
+                  setBillStep(2);
+                }}
+                disabled={!products.length}
+                className={`flex-1 items-center rounded-xl py-3 ${
+                  products.length ? 'bg-primary' : 'bg-slate-300'
+                }`}
+                accessibilityRole="button"
+              >
+                <Text className="text-sm font-bold text-white">Next</Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
+
       </View>
     );
   }
