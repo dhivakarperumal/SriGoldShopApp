@@ -335,6 +335,14 @@ function Loans({
     }
   };
 
+  const summaryCards = [
+    { label: 'Total loans', value: loans.length, color: '#006B5A', backgroundColor: '#EAF8F4' },
+    { label: 'Active', value: loanCounts.active, color: '#168B55', backgroundColor: '#EFF9F0' },
+    { label: 'Inactive', value: loanCounts.inactive, color: '#D88912', backgroundColor: '#FFF7E9' },
+    { label: 'Completed', value: loanCounts.completed, color: '#3977C5', backgroundColor: '#EFF6FF' },
+    { label: 'Overdue', value: loanCounts.overdue, color: '#C43F59', backgroundColor: '#FFF1F2' },
+  ];
+
   if (isCreateOpen) {
     return (
       <CreateLoan
@@ -362,12 +370,21 @@ function Loans({
           />
         }
       >
-        <View className="flex-row flex-wrap gap-3">
-          <SummaryCard label="Total loans" value={loans.length} color="bg-primary" />
-          <SummaryCard label="Active" value={loanCounts.active} color="bg-emerald-700" />
-          <SummaryCard label="Inactive" value={loanCounts.inactive} color="bg-amber-700" />
-          <SummaryCard label="Completed" value={loanCounts.completed} color="bg-slate-700" />
-          <SummaryCard label="Overdue" value={loanCounts.overdue} color="bg-rose-700" />
+        <View className="gap-1">
+          {[summaryCards.slice(0, 3), summaryCards.slice(3)].map((row, rowIndex) => (
+            <View
+              key={rowIndex}
+              className="flex-row justify-between"
+            >
+              {row.map(card => (
+                <SummaryCard
+                  key={card.label}
+                  {...card}
+                  widthClass={rowIndex === 0 ? 'w-[31.5%]' : 'w-[48.5%]'}
+                />
+              ))}
+            </View>
+          ))}
         </View>
 
         {!isLoading && loanCounts.overdue > 0 ? (
@@ -725,15 +742,70 @@ function SummaryCard({
   label,
   value,
   color,
+  backgroundColor,
+  widthClass,
 }: {
   label: string;
   value: number;
   color: string;
+  backgroundColor: string;
+  widthClass: 'w-[31.5%]' | 'w-[48.5%]';
 }) {
+  const iconPaths: Record<string, string[]> = {
+    'Total loans': ['M3 7h18l-2 12H5L3 7Z', 'M3 7 2 4H1', 'M8 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z', 'M17 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z'],
+    Active: ['M12 8v4l3 2', 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
+    Inactive: ['M12 8v4', 'M12 16h.01', 'M10.3 3.9 1.8 18.1A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.9L13.7 3.9a2 2 0 0 0-3.4 0Z'],
+    Completed: ['M20 6 9 17l-5-5', 'M22 12a10 10 0 1 1-5.8-9.1'],
+    Overdue: ['M12 8v4l3 2', 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
+  };
+
   return (
-    <View className={`min-w-[30%] flex-1 rounded-2xl p-4 ${color}`}>
-      <Text className="text-xs font-semibold text-white/80">{label}</Text>
-      <Text className="mt-2 text-2xl font-extrabold text-white">{value}</Text>
+    <View
+      className={`mb-3 min-h-[96px] ${widthClass} overflow-hidden rounded-xl border px-2.5 py-1.5 shadow-sm`}
+      style={{ backgroundColor, borderColor: `${color}45` }}
+      accessibilityLabel={`${label}: ${value}`}
+      accessible
+    >
+      <View className="absolute -left-2 -right-2 bottom-0 h-14" pointerEvents="none">
+        <Svg width="100%" height="100%" viewBox="0 0 300 56" preserveAspectRatio="none">
+          <Path d="M0 32 C55 18 91 45 150 31 C210 17 249 7 300 13 V56 H0Z" fill={color} opacity={0.1} />
+          <Path d="M0 42 C60 28 103 53 164 40 C222 28 258 18 300 24 V56 H0Z" fill={color} opacity={0.18} />
+          <Path d="M0 50 C70 40 112 57 178 48 C230 41 267 31 300 35 V56 H0Z" fill={color} opacity={0.3} />
+        </Svg>
+      </View>
+      <View className="z-10 flex-row items-center">
+        <View
+          className="mr-2 h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+          style={{ backgroundColor: color }}
+        >
+          <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+            {(iconPaths[label] || []).map(path => (
+              <Path
+                key={path}
+                d={path}
+                stroke="#FFFFFF"
+                strokeWidth={1.9}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
+          </Svg>
+        </View>
+        <Text
+          className="min-w-0 flex-1 text-[11px] font-bold leading-[14px] text-slate-900"
+          numberOfLines={2}
+        >
+          {label}
+        </Text>
+      </View>
+      <Text
+        className="z-10 mt-1 text-[22px] font-extrabold tracking-tight text-slate-950"
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
+        {value.toLocaleString('en-IN')}
+      </Text>
     </View>
   );
 }
