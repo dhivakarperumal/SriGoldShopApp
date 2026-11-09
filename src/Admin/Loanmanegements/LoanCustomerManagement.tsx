@@ -200,12 +200,12 @@ function LoanCustomerManagement({
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadCustomers(true)} tintColor="#004D40" />}
           keyboardShouldPersistTaps="handled"
         >
-          <View className="flex-row gap-3">
+          <View className="flex-row gap-2.5">
             <Summary label="Total customers" value={customers.length} />
             <Summary label="KYC verified" value={verifiedCount} />
             <Summary label="KYC pending" value={pendingCount} />
           </View>
-          <View className="gap-3 rounded-2xl border border-slate-200 bg-white p-3">
+          <View className="gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
             <TextInput
               value={search}
               onChangeText={setSearch}
@@ -250,7 +250,7 @@ function LoanCustomerManagement({
             filteredCustomers.map(customer => {
               const expanded = String(expandedCustomerId) === String(customer.id);
               return (
-                <View key={String(customer.id)} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                <View key={String(customer.id)} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                   <Pressable
                     onPress={() => setExpandedCustomerId(expanded ? null : customer.id)}
                     accessibilityRole="button"
@@ -258,17 +258,23 @@ function LoanCustomerManagement({
                     accessibilityState={{ expanded }}
                     className="flex-row items-center p-4"
                   >
-                    <View className="mr-3 h-12 w-12 items-center justify-center rounded-full bg-emerald-50">
-                      <Text className="text-lg font-extrabold text-primary">{customer.full_name.trim().charAt(0).toUpperCase()}</Text>
+                    <View className="mr-3 h-14 w-14 items-center justify-center rounded-2xl border border-emerald-100 bg-emerald-50">
+                      <Text className="text-xl font-extrabold text-primary">{customer.full_name.trim().charAt(0).toUpperCase()}</Text>
                     </View>
                     <View className="min-w-0 flex-1">
-                      <Text className="text-sm font-extrabold text-slate-900">{customer.full_name}</Text>
-                      <Text className="mt-1 text-xs text-slate-500">{customer.customer_code || 'Borrower'} · {customer.mobile}</Text>
-                      <Text className="mt-1 text-[11px] text-slate-500">{[customer.city, customer.district].filter(Boolean).join(', ') || 'Location not provided'}</Text>
+                      <Text className="text-[15px] font-extrabold text-slate-900" numberOfLines={1}>{customer.full_name}</Text>
+                      <Text className="mt-1 text-xs font-medium text-slate-500" numberOfLines={1}>
+                        {customer.customer_code || 'Borrower'}{customer.mobile ? ` · ${customer.mobile}` : ''}
+                      </Text>
+                      <Text className="mt-1 text-[11px] text-slate-500" numberOfLines={1}>
+                        {[customer.city, customer.district].filter(Boolean).join(', ') || 'Location not provided'}
+                      </Text>
                     </View>
-                    <Text className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${customer.kyc_status === 'Verified' ? 'bg-emerald-50 text-emerald-700' : customer.kyc_status === 'Rejected' ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-700'}`}>
-                      {customer.kyc_status || 'Pending'}
-                    </Text>
+                    <View className={`ml-2 rounded-full px-2.5 py-1.5 ${customer.kyc_status === 'Verified' ? 'bg-emerald-50' : customer.kyc_status === 'Rejected' ? 'bg-rose-50' : 'bg-amber-50'}`}>
+                      <Text className={`text-[10px] font-extrabold ${customer.kyc_status === 'Verified' ? 'text-emerald-700' : customer.kyc_status === 'Rejected' ? 'text-rose-700' : 'text-amber-700'}`}>
+                        {customer.kyc_status || 'Pending'}
+                      </Text>
+                    </View>
                   </Pressable>
                   {expanded ? (
                     <View className="gap-2 border-t border-slate-100 p-4">
@@ -308,7 +314,7 @@ function LoanCustomerManagement({
 
 function Summary({ label, value }: { label: string; value: number }) {
   return (
-    <View className="min-h-20 flex-1 justify-center rounded-2xl border border-slate-100 bg-white p-3">
+    <View className="min-h-20 flex-1 justify-center rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
       <Text className="text-[10px] font-semibold text-slate-500">{label}</Text>
       <Text className="mt-1 text-xl font-extrabold text-primary">{value.toLocaleString()}</Text>
     </View>
