@@ -12,6 +12,7 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   View,
@@ -718,14 +719,8 @@ interface StatConfig {
   label: string;
   tag: string;
   icon: ProductIconName;
-  iconColor: string;
-  dotColor: string;
-  tagBg: string;
-  tagText: string;
-  cardBg: string;
-  border: string;
-  activeBorder: string;
-  valueColor: string;
+  color: string;
+  backgroundColor: string;
 }
 
 const STAT_CONFIGS: Record<StatType, StatConfig> = {
@@ -733,55 +728,47 @@ const STAT_CONFIGS: Record<StatType, StatConfig> = {
     label: 'Total Products',
     tag: 'All',
     icon: 'box',
-    iconColor: '#004D40',
-    dotColor: 'bg-[#004D40]',
-    tagBg: 'bg-emerald-100/70',
-    tagText: 'text-[#004D40]',
-    cardBg: 'bg-emerald-50/40',
-    border: 'border-emerald-200/60',
-    activeBorder: 'border-[#004D40] ring-2 ring-[#004D40]/20 bg-emerald-50/70',
-    valueColor: 'text-slate-900',
+    color: '#E6BF5A',
+    backgroundColor: '#063D32',
   },
   active: {
     label: 'Active Products',
     tag: 'Live',
     icon: 'check-circle',
-    iconColor: '#16A34A',
-    dotColor: 'bg-emerald-500',
-    tagBg: 'bg-emerald-100/70',
-    tagText: 'text-emerald-700',
-    cardBg: 'bg-emerald-50/40',
-    border: 'border-emerald-200/60',
-    activeBorder: 'border-emerald-600 ring-2 ring-emerald-500/20 bg-emerald-50/70',
-    valueColor: 'text-slate-900',
+    color: '#E6BF5A',
+    backgroundColor: '#0A3768',
   },
   inactive: {
     label: 'Inactive',
     tag: 'Paused',
     icon: 'pause-circle',
-    iconColor: '#D97706',
-    dotColor: 'bg-amber-500',
-    tagBg: 'bg-amber-100/70',
-    tagText: 'text-amber-800',
-    cardBg: 'bg-amber-50/40',
-    border: 'border-amber-200/60',
-    activeBorder: 'border-amber-600 ring-2 ring-amber-500/20 bg-amber-50/70',
-    valueColor: 'text-slate-900',
+    color: '#E6BF5A',
+    backgroundColor: '#4B164E',
   },
   outOfStock: {
     label: 'Out of Stock',
     tag: '0 Qty',
     icon: 'alert-triangle',
-    iconColor: '#DC2626',
-    dotColor: 'bg-rose-500',
-    tagBg: 'bg-rose-100/70',
-    tagText: 'text-rose-700',
-    cardBg: 'bg-rose-50/40',
-    border: 'border-rose-200/60',
-    activeBorder: 'border-rose-600 ring-2 ring-rose-500/20 bg-rose-50/70',
-    valueColor: 'text-rose-600',
+    color: '#E6BF5A',
+    backgroundColor: '#571E38',
   },
 };
+
+const statCardStyles = StyleSheet.create({
+  iconBadge: {
+    borderWidth: 1.5,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 7,
+    elevation: 5,
+  },
+  selectedCard: {
+    shadowColor: '#E6BF5A',
+    shadowOpacity: 0.5,
+    shadowRadius: 9,
+    elevation: 8,
+  },
+});
 
 function StatCard({
   type,
@@ -799,33 +786,79 @@ function StatCard({
   return (
     <Pressable
       onPress={onPress}
-      className={`mb-3 w-[48.5%] rounded-2xl border p-3.5 shadow-xs active:scale-[0.98] ${
-        isSelected
-          ? `${cfg.activeBorder} shadow-sm`
-          : `${cfg.cardBg} ${cfg.border}`
-      }`}
+      className="relative mb-3 min-h-[108px] w-[48.5%] overflow-hidden rounded-[18px] border-2 px-2.5 pb-2 pt-2 shadow-lg active:scale-[0.98]"
+      style={[
+        { backgroundColor: cfg.backgroundColor, borderColor: cfg.color },
+        isSelected ? statCardStyles.selectedCard : undefined,
+      ]}
       accessibilityRole="button"
       accessibilityLabel={`${cfg.label}: ${value}`}
+      accessibilityState={{ selected: Boolean(isSelected) }}
     >
-      <View className="flex-row items-center justify-between">
-        <View className="h-10 w-10 items-center justify-center rounded-xl bg-white shadow-xs">
-          <ProductIcon name={cfg.icon} color={cfg.iconColor} size={20} />
-        </View>
-        <View className={`flex-row items-center rounded-full px-2 py-0.5 ${cfg.tagBg}`}>
-          <View className={`mr-1 h-1.5 w-1.5 rounded-full ${cfg.dotColor}`} />
-          <Text className={`text-[10px] font-bold ${cfg.tagText}`}>
-            {cfg.tag}
-          </Text>
+      <View className="absolute -left-3 -right-3 bottom-0 h-24" pointerEvents="none">
+        <Svg width="100%" height="100%" viewBox="0 0 300 96" preserveAspectRatio="none">
+          <Path d="M0 64 C52 48 85 80 143 66 C210 49 245 22 300 18 V96 H0Z" fill={cfg.color} opacity={0.1} />
+          <Path d="M0 78 C58 60 93 92 157 76 C213 62 258 39 300 36 V96 H0Z" fill={cfg.color} opacity={0.18} />
+          <Path d="M0 90 C72 76 106 98 174 86 C224 76 265 55 300 52 V96 H0Z" fill={cfg.color} opacity={0.34} />
+        </Svg>
+      </View>
+      <View className="z-10 min-h-10 flex-row items-center">
+        <View className="mr-1.5 h-6 w-1 shrink-0 rounded-full" style={{ backgroundColor: cfg.color }} />
+        <Text
+          className="min-w-0 flex-1 pr-1 text-[11px] font-bold leading-[14px] text-white"
+          numberOfLines={2}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+        >
+          {cfg.label}
+        </Text>
+        <View
+          className="h-10 w-10 shrink-0 items-center justify-center"
+          pointerEvents="none"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
+          <View
+            className="h-7 w-7 items-center justify-center rounded-lg border"
+            style={[
+              statCardStyles.iconBadge,
+              {
+                borderColor: cfg.color,
+                backgroundColor: `${cfg.color}35`,
+                transform: [{ rotate: '45deg' }],
+                shadowColor: cfg.color,
+              },
+            ]}
+          >
+            <View style={{ transform: [{ rotate: '-45deg' }] }}>
+              <ProductIcon name={cfg.icon} color={cfg.color} size={18} />
+            </View>
+          </View>
+          <Svg width={10} height={10} viewBox="0 0 24 24" className="absolute right-1 top-0">
+            <Path
+              d="M12 1.5 14.2 9.8 22.5 12l-8.3 2.2-2.2 8.3-2.2-8.3L1.5 12l8.3-2.2L12 1.5Z"
+              fill="#FFF4C2"
+            />
+          </Svg>
         </View>
       </View>
 
-      <Text className={`mt-3 text-2xl font-black tracking-tight ${cfg.valueColor}`}>
+      <Text
+        className="z-10 mt-1 text-[24px] font-extrabold tracking-tight text-white"
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
         {value.toLocaleString('en-IN')}
       </Text>
-
-      <Text className="mt-0.5 text-xs font-bold text-slate-700" numberOfLines={1}>
-        {cfg.label}
-      </Text>
+      <View
+        className="z-10 mt-1 max-w-full self-start rounded-full border px-2.5 py-1"
+        style={{ backgroundColor: `${cfg.color}12`, borderColor: `${cfg.color}35` }}
+      >
+        <Text className="text-[10px] font-bold" style={{ color: cfg.color }} numberOfLines={1}>
+          {cfg.tag}
+        </Text>
+      </View>
     </Pressable>
   );
 }
