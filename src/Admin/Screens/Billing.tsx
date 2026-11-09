@@ -39,6 +39,7 @@ type BillProduct = RecordValue & {
   purity?: string;
   images?: unknown;
   image_url?: string;
+  quantity?: number;
 };
 type ExchangeItem = {
   product_name: string;
@@ -359,7 +360,10 @@ export default function Billing() {
     return sum + getNumber(bill.total_amount);
   }, 0);
 
-  const subtotal = products.reduce((sum, product) => sum + getNumber(product.price), 0);
+  const subtotal = products.reduce(
+    (sum, product) => sum + getNumber(product.price) * (product.quantity || 1),
+    0,
+  );
   const exchangeCredit = exchanges.reduce((sum, exchange) => {
     const weight = getNumber(exchange.weight);
     const wastage = getNumber(exchange.wastage_weight);
@@ -441,7 +445,20 @@ export default function Billing() {
       return;
     }
     const savedCustomers = decodeArray<Customer>(bill.customers);
-    const savedProducts = decodeArray<BillProduct>(bill.products);
+    const savedProducts = decodeArray<BillProduct>(bill.products).reduce<BillProduct[]>(
+      (items, product) => {
+        const productId = String(product.product_id ?? '');
+        const quantity = Math.max(1, Math.floor(getNumber(product.quantity) || 1));
+        const existing = items.find(item => String(item.product_id) === productId);
+        if (existing) {
+          existing.quantity = (existing.quantity || 1) + quantity;
+        } else {
+          items.push({ ...product, product_id: productId, quantity });
+        }
+        return items;
+      },
+      [],
+    );
     const savedExchanges = decodeArray<RecordValue>(bill.exchanges);
     setEditingBill(bill);
     setCustomer(savedCustomers[0] ?? EMPTY_CUSTOMER);
@@ -483,9 +500,16 @@ export default function Billing() {
       Alert.alert('Price unavailable', `${product.name} has no valid selling price.`);
       return;
     }
-    setProducts(current => [
-      ...current,
-      {
+    setProducts(current => {
+      const existing = current.find(item => String(item.product_id) === String(product.id));
+      if (existing) {
+        return current.map(item =>
+          String(item.product_id) === String(product.id)
+            ? { ...item, quantity: (item.quantity || 1) + 1 }
+            : item,
+        );
+      }
+      return [...current, {
         product_id: String(product.id),
         product_name: product.name,
         category: product.category,
@@ -495,9 +519,20 @@ export default function Billing() {
         images: product.images,
         rate_per_gram: product.gold_rate_per_gram,
         rate_unit: product.rate_unit || 'gram',
+        quantity: 1,
         price,
-      },
-    ]);
+      }];
+    });
+  };
+
+  const decreaseProductQuantity = (productId: string | number) => {
+    setProducts(current =>
+      current.flatMap(item => {
+        if (String(item.product_id) !== String(productId)) return [item];
+        const quantity = item.quantity || 1;
+        return quantity <= 1 ? [] : [{ ...item, quantity: quantity - 1 }];
+      }),
+    );
   };
 
   const addExchange = () => {
@@ -575,7 +610,12 @@ export default function Billing() {
     try {
       const payload = {
         customers: [customer],
-        products: products.map(product => ({ product_id: Number(product.product_id) })),
+        products: products.flatMap(product =>
+          Array.from(
+            { length: product.quantity || 1 },
+            () => ({ product_id: Number(product.product_id) }),
+          ),
+        ),
         exchanges:
           paymentType === 'EXCHANGE_GOLD'
             ? exchanges.map(item => ({
@@ -910,9 +950,10 @@ export default function Billing() {
                     ) : visibleProducts.length ? (
                       <View className="flex-row flex-wrap">
                         {visibleProducts.map(product => {
-                          const alreadyAdded = products.some(
+                          const selectedProduct = products.find(
                             item => String(item.product_id) === String(product.id),
                           );
+                          const quantity = selectedProduct?.quantity || 0;
                           const image = getProductImageUrl(product);
                           return (
                             <View key={product.id} className="w-1/2 px-1 pb-2">
@@ -938,16 +979,36 @@ export default function Billing() {
                                 <Text className="mt-1 text-sm font-bold text-primary-dark" numberOfLines={1}>
                                   {currency(getProductPrice(product))}
                                 </Text>
-                                <Pressable
-                                  onPress={() => addProduct(product)}
-                                  className={`mt-2 items-center rounded-lg py-2 ${alreadyAdded ? 'bg-emerald-50' : 'bg-primary'}`}
-                                  accessibilityRole="button"
-                                  accessibilityLabel={`Add ${product.name} to bill`}
-                                >
-                                  <Text className={`text-xs font-bold ${alreadyAdded ? 'text-emerald-700' : 'text-white'}`}>
-                                    {alreadyAdded ? '+ Add again' : '+ Add'}
-                                  </Text>
-                                </Pressable>
+                                {quantity === 0 ? (
+                                  <Pressable
+                                    onPress={() => addProduct(product)}
+                                    className="mt-2 items-center rounded-lg bg-primary py-2"
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Increase ${product.name} quantity`}
+                                  >
+                                    <Text className="text-lg font-bold text-white">+</Text>
+                                  </Pressable>
+                                ) : (
+                                  <View className="mt-2 flex-row items-center justify-between rounded-lg bg-emerald-50 px-2 py-1">
+                                    <Pressable
+                                      onPress={() => decreaseProductQuantity(product.id)}
+                                      className="h-8 w-9 items-center justify-center rounded-md"
+                                      accessibilityRole="button"
+                                      accessibilityLabel={`Decrease ${product.name} quantity`}
+                                    >
+                                      <Text className="text-lg font-bold text-emerald-800">−</Text>
+                                    </Pressable>
+                                    <Text className="text-sm font-bold text-emerald-800">{quantity}</Text>
+                                    <Pressable
+                                      onPress={() => addProduct(product)}
+                                      className="h-8 w-9 items-center justify-center rounded-md"
+                                      accessibilityRole="button"
+                                      accessibilityLabel={`Increase ${product.name} quantity`}
+                                    >
+                                      <Text className="text-lg font-bold text-emerald-800">+</Text>
+                                    </Pressable>
+                                  </View>
+                                )}
                               </View>
                             </View>
                           );
@@ -1019,8 +1080,13 @@ export default function Billing() {
                               {[product.category, product.purity].filter(Boolean).join(' · ') || '—'}
                             </Text>
                             <Text className="mt-2 text-sm font-extrabold text-primary-dark">
-                              {currency(product.price)}
+                              {currency(getNumber(product.price) * (product.quantity || 1))}
                             </Text>
+                            {(product.quantity || 1) > 1 ? (
+                              <Text className="mt-1 text-xs text-slate-500">
+                                Qty: {product.quantity}
+                              </Text>
+                            ) : null}
                           </View>
                         </View>
                       );
