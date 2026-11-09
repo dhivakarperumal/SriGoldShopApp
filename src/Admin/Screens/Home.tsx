@@ -417,7 +417,7 @@ function Home({ user, onNavigate }: HomeProps) {
           return (
             <View
               key={card.id}
-              className="mb-3 min-h-[148px] w-[48.5%] overflow-hidden rounded-2xl border px-3 py-3.5 shadow-sm"
+              className="mb-3 min-h-[128px] w-[48.5%] overflow-hidden rounded-2xl border px-3 py-2.5 shadow-sm"
               style={{
                 backgroundColor: card.backgroundColor,
                 borderColor: `${card.color}35`,
@@ -447,7 +447,7 @@ function Home({ user, onNavigate }: HomeProps) {
                 </View>
               </View>
               <Text
-                className="z-10 mt-2 text-[25px] font-extrabold tracking-tight text-slate-950"
+                className="z-10 mt-1 text-[24px] font-extrabold tracking-tight text-slate-950"
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.65}
@@ -456,7 +456,7 @@ function Home({ user, onNavigate }: HomeProps) {
               </Text>
               {stat?.trend ? (
                 <View
-                  className="z-10 mt-1.5 max-w-full self-start rounded-full border px-2.5 py-1"
+                  className="z-10 mt-1 max-w-full self-start rounded-full border px-2.5 py-1"
                   style={{
                     backgroundColor: `${card.color}12`,
                     borderColor: `${card.color}22`,
