@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import Svg, { Circle, G, Path, Rect } from 'react-native-svg';
 import api from '../../api';
 import ProductCard from '../../Components/ProductCard';
 import { getProductImageUrl } from '../../utils/productImage';
@@ -417,7 +417,7 @@ function Home({ user, onNavigate }: HomeProps) {
           return (
             <View
               key={card.id}
-              className="mb-3 min-h-[112px] w-[48.5%] overflow-hidden rounded-2xl border px-3 py-2 shadow-sm"
+              className="mb-3 min-h-[120px] w-[48.5%] overflow-hidden rounded-xl border px-3 py-2 shadow-sm"
               style={{
                 backgroundColor: card.backgroundColor,
                 borderColor: `${card.color}35`,
@@ -734,6 +734,7 @@ function DashboardCardArtwork({
         <Path d="M0 64 C52 48 85 80 143 66 C210 49 245 22 300 18 V96 H0Z" fill={color} opacity={0.1} />
         <Path d="M0 78 C58 60 93 92 157 76 C213 62 258 39 300 36 V96 H0Z" fill={color} opacity={0.18} />
         <Path d="M0 90 C72 76 106 98 174 86 C224 76 265 55 300 52 V96 H0Z" fill={color} opacity={0.34} />
+        <G transform="translate(-22 0)">
         {icon === 'rupee' ? (
           <>
             <Rect x="210" y="66" width="12" height="22" rx="2" fill={color} opacity={0.72} />
@@ -766,6 +767,7 @@ function DashboardCardArtwork({
             <Path d="M250 58 L258 66 L272 48" fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
           </>
         )}
+        </G>
       </Svg>
     </View>
   );
