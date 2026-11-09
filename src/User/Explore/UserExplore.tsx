@@ -671,7 +671,7 @@ function UserExplore({
                   accessibilityRole="button"
                   accessibilityLabel="Clear all filters"
                 >
-                  <Text className="text-xs font-semibold text-[#9a6817]">
+                  <Text className="text-sm font-semibold text-[#9a6817]">
                     Clear All
                   </Text>
                 </Pressable>
