@@ -1,5 +1,12 @@
-import { useEffect, useState } from 'react';
-import { Image, ScrollView, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Image,
+  ScrollView,
+  Text,
+  useWindowDimensions,
+  View,
+  type ScrollViewInstance,
+} from 'react-native';
 import api from '../../../api';
 import { resolveImageUrl } from '../homeUtils';
 import type { HomeReview } from '../types';
@@ -17,6 +24,10 @@ function getInitials(name?: string) {
 function HomeReviewsSection({ refreshVersion }: { refreshVersion: number }) {
   const [reviews, setReviews] = useState<HomeReview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { width } = useWindowDimensions();
+  const reviewWidth = width - 32;
+  const scrollViewRef = useRef<ScrollViewInstance>(null);
+  const activeIndexRef = useRef(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -46,6 +57,27 @@ function HomeReviewsSection({ refreshVersion }: { refreshVersion: number }) {
     return () => controller.abort();
   }, [refreshVersion]);
 
+  useEffect(() => {
+    activeIndexRef.current = 0;
+    scrollViewRef.current?.scrollTo({ x: 0, y: 0, animated: false });
+  }, [reviews]);
+
+  useEffect(() => {
+    if (isLoading || reviews.length < 2) return undefined;
+
+    const timer = setInterval(() => {
+      const nextIndex = (activeIndexRef.current + 1) % reviews.length;
+      scrollViewRef.current?.scrollTo({
+        x: nextIndex * reviewWidth,
+        y: 0,
+        animated: true,
+      });
+      activeIndexRef.current = nextIndex;
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [isLoading, reviewWidth, reviews.length]);
+
   if (!isLoading && reviews.length === 0) return null;
 
   return (
@@ -62,14 +94,15 @@ function HomeReviewsSection({ refreshVersion }: { refreshVersion: number }) {
         {isLoading ? (
           <ScrollView
             horizontal
+            style={{ width: reviewWidth }}
             showsHorizontalScrollIndicator={false}
-            contentContainerClassName="gap-3 pb-2"
             accessibilityLabel="Loading customer reviews"
           >
-            {[0, 1].map(index => (
+            {[0].map(index => (
               <View
                 key={index}
-                className="w-[280px] rounded-xl border border-[#eadfc8] bg-white p-4"
+                className="rounded-xl border border-[#eadfc8] bg-white p-4"
+                style={{ width: reviewWidth }}
               >
                 <View className="flex-row items-center">
                   <HomeSkeleton className="mr-3 h-10 w-10 rounded-full bg-[#e8dfd0]" />
@@ -87,9 +120,22 @@ function HomeReviewsSection({ refreshVersion }: { refreshVersion: number }) {
           </ScrollView>
         ) : (
           <ScrollView
+            ref={scrollViewRef}
             horizontal
+            pagingEnabled
             showsHorizontalScrollIndicator={false}
-            contentContainerClassName="gap-3 pb-2"
+            style={{ width: reviewWidth }}
+            onMomentumScrollEnd={event => {
+              activeIndexRef.current = Math.max(
+                0,
+                Math.min(
+                  reviews.length - 1,
+                  Math.round(
+                    event.nativeEvent.contentOffset.x / reviewWidth,
+                  ),
+                ),
+              );
+            }}
           >
             {reviews.map(review => {
               const rating = Math.min(5, Math.max(0, Number(review.rating) || 0));
@@ -98,7 +144,8 @@ function HomeReviewsSection({ refreshVersion }: { refreshVersion: number }) {
               return (
                 <View
                   key={review.id}
-                  className="w-[280px] rounded-2xl border border-[#d4a017]/20 bg-white p-4"
+                  className="rounded-2xl border border-[#d4a017]/20 bg-white p-4"
+                  style={{ width: reviewWidth }}
                 >
                   <View className="flex-row items-center">
                     <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-primary">
