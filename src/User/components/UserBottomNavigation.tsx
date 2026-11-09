@@ -32,14 +32,11 @@ const TABS: { id: UserTab; label: string; path: string }[] = [
   },
 ];
 
-// Height of the pill bar itself (not counting bottom safe area extension)
 const PILL_HEIGHT = 72;
-// Horizontal margin so the pill floats inside the screen
 const PILL_MARGIN_H = 10;
 
 const styles = StyleSheet.create({
   outerWrapper: {
-    // Transparent outer wrapper that also covers the bottom safe area
     backgroundColor: '#fffaf0',
   },
   pillWrapper: {
@@ -59,17 +56,28 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    // Small horizontal padding so tabs don't sit on the gold border decoration
     paddingHorizontal: 6,
   },
-  activeTabBg: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+  tabPressable: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Pre-computed static styles so Android always renders borderRadius correctly
+  // overflow: 'hidden' is required on Android to clip the rounded corners
+  tabBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 54,
+    height: 54,
     borderRadius: 14,
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    overflow: 'hidden',
+  },
+  tabBoxActive: {
+    backgroundColor: 'rgba(0, 0, 0, 0.28)',
+  },
+  tabBoxInactive: {
+    backgroundColor: 'transparent',
   },
   activeIndicator: {
     height: 3,
@@ -77,6 +85,21 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: '#F5C45E',
     marginBottom: 2,
+  },
+  inactiveIndicatorSpacer: {
+    height: 5,
+  },
+  labelActive: {
+    marginTop: 2,
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#F5C45E',
+  },
+  labelInactive: {
+    marginTop: 2,
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#FFFFFF',
   },
 });
 
@@ -120,31 +143,24 @@ function UserBottomNavigation({
             return (
               <Pressable
                 key={tab.id}
-                style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+                style={styles.tabPressable}
                 onPress={() => onSelect(tab.id)}
                 accessibilityRole="tab"
                 accessibilityLabel={tab.label}
                 accessibilityState={{ selected: isActive }}
               >
-                {/* Active tab rounded square highlight */}
+                {/* Active rounded-square highlight — uses pre-computed styles */}
                 <View
-                  style={{
-                    position: 'relative',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 54,
-                    height: 54,
-                    borderRadius: 14,
-                    backgroundColor: isActive
-                      ? 'rgba(0, 0, 0, 0.28)'
-                      : 'transparent',
-                  }}
+                  style={[
+                    styles.tabBox,
+                    isActive ? styles.tabBoxActive : styles.tabBoxInactive,
+                  ]}
                 >
-                  {/* Gold indicator line above icon when active */}
+                  {/* Gold bar indicator at top when active, spacer when inactive */}
                   {isActive ? (
                     <View style={styles.activeIndicator} />
                   ) : (
-                    <View style={{ height: 5 }} />
+                    <View style={styles.inactiveIndicatorSpacer} />
                   )}
 
                   <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
@@ -157,14 +173,7 @@ function UserBottomNavigation({
                     />
                   </Svg>
 
-                  <Text
-                    style={{
-                      marginTop: 2,
-                      fontSize: 10,
-                      fontWeight: isActive ? '700' : '500',
-                      color: iconColor,
-                    }}
-                  >
+                  <Text style={isActive ? styles.labelActive : styles.labelInactive}>
                     {tab.label}
                   </Text>
                 </View>
