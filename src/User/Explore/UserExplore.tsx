@@ -638,20 +638,14 @@ function UserExplore({
         animationType="fade"
         onRequestClose={() => setFiltersVisible(false)}
       >
-        <View className="flex-1 flex-row bg-black/40">
-          <Pressable
-            className="flex-1"
-            onPress={() => setFiltersVisible(false)}
-            accessibilityRole="button"
-            accessibilityLabel="Close filters"
-          />
+        <View className="flex-1 bg-black/40">
           <SafeAreaView
-            className="h-full w-[88%] bg-[#fffdf8] shadow-2xl"
+            className="h-full w-full flex-1 bg-[#fffdf8]"
             edges={['top', 'bottom']}
           >
             <View className="border-b border-[#eee7dc] bg-white px-4 pb-4 pt-3">
-              <View className="flex-row items-start justify-between">
-                <View className="flex-row items-center">
+              <View className="flex-row items-center">
+                <View className="mr-2 flex-1 flex-row items-center">
                   <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-[#edf5f1]">
                     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
                       <Path
@@ -672,6 +666,16 @@ function UserExplore({
                   </View>
                 </View>
                 <Pressable
+                  onPress={clearFilters}
+                  className="mr-2 rounded-full border border-[#e7d6b2] bg-[#fffaf0] px-3 py-2"
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear all filters"
+                >
+                  <Text className="text-xs font-semibold text-[#9a6817]">
+                    Clear All
+                  </Text>
+                </Pressable>
+                <Pressable
                   onPress={() => setFiltersVisible(false)}
                   className="h-9 w-9 items-center justify-center rounded-full border border-[#eee7dc] bg-[#fffdf8]"
                   accessibilityRole="button"
@@ -685,18 +689,6 @@ function UserExplore({
                       strokeLinecap="round"
                     />
                   </Svg>
-                </Pressable>
-              </View>
-              <View className="mt-3 flex-row justify-end">
-                <Pressable
-                  onPress={clearFilters}
-                  className="rounded-full border border-[#e7d6b2] bg-[#fffaf0] px-3 py-2"
-                  accessibilityRole="button"
-                  accessibilityLabel="Clear all filters"
-                >
-                  <Text className="text-xs font-semibold text-[#9a6817]">
-                    Clear All
-                  </Text>
                 </Pressable>
               </View>
             </View>
