@@ -143,7 +143,7 @@ function Login({ onLoginSuccess }: LoginProps) {
                 <Image
                   source={require('../../Images/logo.png')}
                   className={`self-center ${
-                    keyboardVisible ? 'h-12 w-36' : 'mb-2 h-[100px] w-60'
+                    keyboardVisible ? 'h-16 w-48' : 'mb-2 h-[100px] w-60'
                   }`}
                   resizeMode="contain"
                   accessibilityLabel="Sri Golds"
