@@ -309,14 +309,6 @@ function Dealers({ onBack, onAddDealer }: Props) {
           <Text className="text-lg font-extrabold text-white">Dealers</Text>
           <Text className="text-xs text-accent-light">Jewellery trade partners</Text>
         </View>
-        <Pressable
-          onPress={onAddDealer}
-          className="rounded-xl bg-accent px-4 py-2.5"
-          accessibilityRole="button"
-          accessibilityLabel="Register dealer"
-        >
-          <Text className="text-xs font-bold text-primary">+ Add dealer</Text>
-        </Pressable>
       </View>
 
       <ScrollView
@@ -415,6 +407,17 @@ function Dealers({ onBack, onAddDealer }: Props) {
           </View>
         )}
       </ScrollView>
+
+      <View className="absolute bottom-5 right-5 items-end">
+        <Pressable
+          onPress={onAddDealer}
+          className="h-14 w-14 items-center justify-center rounded-full border-2 border-accent-light bg-primary shadow-lg"
+          accessibilityRole="button"
+          accessibilityLabel="Register dealer"
+        >
+          <Text className="text-2xl font-bold text-white">+</Text>
+        </Pressable>
+      </View>
 
       <DealerFormModal
         visible={formOpen && Boolean(editing)}
