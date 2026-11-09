@@ -394,7 +394,7 @@ function UserExplore({
           />
         }
       >
-        <View className="mb-4">
+        {/* <View className="mb-4">
           <Text className="text-[10px] font-bold uppercase tracking-[2px] text-[#a67b2e]">
             Sri Golds collection
           </Text>
@@ -404,7 +404,7 @@ function UserExplore({
           <Text className="mt-1 text-xs text-[#777066]">
             Find jewellery for every occasion
           </Text>
-        </View>
+        </View> */}
 
         <View className="mb-4 flex-row items-center rounded-xl border border-[#e8dfd1] bg-white px-3">
           <Svg width={19} height={19} viewBox="0 0 24 24" fill="none">
