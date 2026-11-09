@@ -12,7 +12,7 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.uimanager.ViewManager
 
 class SystemNavigationBarModule(
-  reactContext: ReactApplicationContext,
+  private val reactContext: ReactApplicationContext,
 ) : ReactContextBaseJavaModule(reactContext) {
   override fun getName() = "SystemNavigationBar"
 
@@ -24,7 +24,7 @@ class SystemNavigationBarModule(
     useDarkStatusIcons: Boolean,
     promise: Promise,
   ) {
-    val activity = currentActivity
+    val activity = reactContext.currentActivity
     if (activity == null) {
       promise.reject(
         "E_NO_ACTIVITY",
