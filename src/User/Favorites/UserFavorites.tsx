@@ -30,7 +30,6 @@ type UserFavoritesProps = {
   onRetry: () => void;
   onSelectProduct: (productId: string) => void;
   onRemoveFavorite: (product: ProductCardData) => void;
-  onContinueShopping: () => void;
 };
 
 const styles = StyleSheet.create({
@@ -208,13 +207,13 @@ function WishlistCard({
         )}
         <View className="ml-3 min-w-0 flex-1 justify-center">
           <Text
-            className="text-xs font-extrabold text-[#252525]"
+            className="text-sm font-extrabold text-[#252525]"
             numberOfLines={1}
           >
             {name}
           </Text>
           {details ? (
-            <Text className="mt-1 text-[9px] text-[#35695e]" numberOfLines={1}>
+            <Text className="mt-1 text-[10px] text-[#35695e]" numberOfLines={1}>
               {details}
             </Text>
           ) : null}
@@ -223,7 +222,7 @@ function WishlistCard({
               <Ionicons
                 key={star}
                 name={hasRating && star <= Math.round(rating) ? 'star' : 'star-outline'}
-                size={11}
+                size={12}
                 color={
                   hasRating && star <= Math.round(rating)
                     ? '#e0a51b'
@@ -231,13 +230,13 @@ function WishlistCard({
                 }
               />
             ))}
-            <Text className="ml-1 text-[9px] text-slate-500">
+            <Text className="ml-1 text-[10px] text-slate-500">
               {hasRating ? rating.toFixed(1) : '—'}
             </Text>
           </View>
           <View className="mt-1 flex-row flex-wrap items-center">
             <Text
-              className="text-[11px] font-extrabold text-[#00594a]"
+              className="text-xs font-extrabold text-[#00594a]"
               numberOfLines={1}
             >
               {sellingPrice === null
@@ -247,13 +246,13 @@ function WishlistCard({
             {hasDiscount ? (
               <>
                 <Text
-                  className="ml-1.5 text-[9px] text-slate-400 line-through"
+                  className="ml-1.5 text-[10px] text-slate-400 line-through"
                   numberOfLines={1}
                 >
                   {formatPrice(originalPrice)}
                 </Text>
                 <View className="ml-1.5 rounded bg-[#08796a] px-1.5 py-0.5">
-                  <Text className="text-[8px] font-bold text-white">
+                  <Text className="text-[9px] font-bold text-white">
                     {discount}% OFF
                   </Text>
                 </View>
@@ -284,7 +283,6 @@ function UserFavorites({
   onRetry,
   onSelectProduct,
   onRemoveFavorite,
-  onContinueShopping,
 }: UserFavoritesProps) {
   const [itemToRemove, setItemToRemove] = useState<WishlistItem | null>(null);
   const productToRemove = itemToRemove
@@ -349,15 +347,6 @@ function UserFavorites({
             <Text className="mt-2 text-center text-sm leading-5 text-slate-500">
               Save jewellery you love by tapping the heart on a product.
             </Text>
-            <Pressable
-              className="mt-6 min-h-11 items-center justify-center rounded-full bg-[#08796a] px-6 py-3"
-              onPress={onContinueShopping}
-              accessibilityRole="button"
-            >
-              <Text className="text-xs font-bold text-white">
-                Continue Shopping
-              </Text>
-            </Pressable>
           </View>
         ) : (
           <View className="pt-1">
@@ -377,21 +366,6 @@ function UserFavorites({
           </View>
         )}
       </ScrollView>
-
-      {items.length > 0 ? (
-        <View className="border-t border-[#eadfc8] bg-[#fffaf0] px-4 py-3">
-          <Pressable
-            className="min-h-11 flex-row items-center justify-center rounded-full bg-[#08796a] px-6"
-            onPress={onContinueShopping}
-            accessibilityRole="button"
-          >
-            <Ionicons name="bag-handle-outline" size={16} color="#fff" />
-            <Text className="ml-2 text-xs font-bold text-white">
-              Continue Shopping
-            </Text>
-          </Pressable>
-        </View>
-      ) : null}
 
       <Modal
         visible={itemToRemove !== null}

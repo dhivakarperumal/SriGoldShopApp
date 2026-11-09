@@ -506,7 +506,6 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
                 onRetry={refreshFavorites}
                 onSelectProduct={selectProduct}
                 onRemoveFavorite={toggleFavorite}
-                onContinueShopping={() => selectTab('explore')}
               />
             ) : null}
           </View>
