@@ -480,40 +480,6 @@ function UserExplore({
             />
           </Pressable>
         </View>
-        {sortDropdownVisible ? (
-          <View className="z-10 mb-3 overflow-hidden rounded-lg border border-[#e8dfd1] bg-white">
-            {SORT_OPTIONS.map((option, index) => (
-              <Pressable
-                key={option.value}
-                onPress={() => {
-                  setSortBy(option.value);
-                  setSortDropdownVisible(false);
-                }}
-                className={`flex-row items-center justify-between px-3 py-3 ${
-                  index < SORT_OPTIONS.length - 1
-                    ? 'border-b border-[#f1ece3]'
-                    : ''
-                } ${sortBy === option.value ? 'bg-[#f5f8f3]' : ''}`}
-                accessibilityRole="button"
-                accessibilityState={{ selected: sortBy === option.value }}
-              >
-                <Text
-                  className={`text-xs ${
-                    sortBy === option.value
-                      ? 'font-semibold text-primary'
-                      : 'text-[#514638]'
-                  }`}
-                >
-                  {option.label}
-                </Text>
-                {sortBy === option.value ? (
-                  <Text className="text-sm font-bold text-primary">✓</Text>
-                ) : null}
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
-
         {isLoading && products.length === 0 ? (
           <View
             className="flex-row flex-wrap justify-between"
@@ -581,6 +547,55 @@ function UserExplore({
           </View>
         )}
       </ScrollView>
+      <Modal
+        visible={sortDropdownVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSortDropdownVisible(false)}
+      >
+        <View className="flex-1 items-center justify-center px-8">
+          <Pressable
+            className="absolute inset-0 bg-black/40"
+            onPress={() => setSortDropdownVisible(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Close sort options"
+          />
+          <View className="w-full max-w-sm overflow-hidden rounded-2xl border border-[#e8dfd1] bg-white shadow-xl">
+            <Text className="border-b border-[#f1ece3] px-4 py-3 text-base font-bold text-[#29231c]">
+              Sort products by
+            </Text>
+            {SORT_OPTIONS.map((option, index) => (
+              <Pressable
+                key={option.value}
+                onPress={() => {
+                  setSortBy(option.value);
+                  setSortDropdownVisible(false);
+                }}
+                className={`flex-row items-center justify-between px-4 py-3.5 ${
+                  index < SORT_OPTIONS.length - 1
+                    ? 'border-b border-[#f1ece3]'
+                    : ''
+                } ${sortBy === option.value ? 'bg-[#f5f8f3]' : ''}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected: sortBy === option.value }}
+              >
+                <Text
+                  className={`text-sm ${
+                    sortBy === option.value
+                      ? 'font-semibold text-primary'
+                      : 'text-[#514638]'
+                  }`}
+                >
+                  {option.label}
+                </Text>
+                {sortBy === option.value ? (
+                  <Text className="text-base font-bold text-primary">✓</Text>
+                ) : null}
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </Modal>
       <Modal
         visible={filtersVisible}
         transparent
