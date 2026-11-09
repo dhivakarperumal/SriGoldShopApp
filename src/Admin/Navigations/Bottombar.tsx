@@ -20,9 +20,9 @@ export const MAIN_TABS: {
   icon: TabIconName | 'add';
 }[] = [
   { route: 'home', label: 'Home', icon: 'home' },
-  { route: 'products', label: 'Products', icon: 'products' },
-  { route: 'billing', label: '', icon: 'add' },
   { route: 'loans', label: 'Loans', icon: 'loans' },
+  { route: 'billing', label: '', icon: 'add' },
+  { route: 'products', label: 'Products', icon: 'products' },
   { route: 'more', label: 'More', icon: 'more' },
 ];
 
