@@ -1,5 +1,6 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import UserPageHeader from '../../components/UserPageHeader';
 
 type UserAboutProps = {
   onBack: () => void;
@@ -62,17 +63,11 @@ const JOURNEY = [
 function UserAbout({ onBack }: UserAboutProps) {
   return (
     <View className="flex-1 bg-white">
-      <View className="flex-row items-center bg-[#003B2D] px-4 py-3">
-        <Pressable
-          className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-white/15"
-          onPress={onBack}
-          accessibilityRole="button"
-          accessibilityLabel="Back to More"
-        >
-          <Text className="text-2xl leading-7 text-white">‹</Text>
-        </Pressable>
-        <Text className="text-lg font-bold text-white">About Us</Text>
-      </View>
+      <UserPageHeader
+        title="About Us"
+        onBack={onBack}
+        backAccessibilityLabel="Back to More"
+      />
 
       <ScrollView
         className="flex-1"

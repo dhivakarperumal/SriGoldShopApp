@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Modal,
@@ -16,6 +15,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AuthenticatedUser } from '../../Admin/Auth/Login';
 import api from '../../api';
+import HomeSkeleton from '../Home/components/HomeSkeleton';
+import UserPageHeader from '../components/UserPageHeader';
 
 type UserProfileProps = {
   user: AuthenticatedUser;
@@ -342,26 +343,20 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
 
   return (
     <View className="flex-1 bg-[#fffaf0]">
-      <View className="flex-row items-center border-b border-[#eadcc0] bg-white px-4 py-3">
-        <Pressable
-          className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-[#fff4d9]"
-          onPress={onBack}
-          accessibilityRole="button"
-          accessibilityLabel="Back to More"
-        >
-          <Text className="text-2xl leading-7 text-primary-dark">‹</Text>
-        </Pressable>
-        <Text className="flex-1 text-lg font-bold text-primary-dark">
-          My Profile
-        </Text>
-        <Pressable
-          className="rounded-full px-3 py-2"
-          onPress={confirmLogout}
-          accessibilityRole="button"
-        >
-          <Text className="text-xs font-bold text-red-600">Log out</Text>
-        </Pressable>
-      </View>
+      <UserPageHeader
+        title="My Profile"
+        onBack={onBack}
+        backAccessibilityLabel="Back to More"
+        rightContent={
+          <Pressable
+            className="ml-2 rounded-full bg-white/10 px-3 py-2"
+            onPress={confirmLogout}
+            accessibilityRole="button"
+          >
+            <Text className="text-xs font-bold text-white">Log out</Text>
+          </Pressable>
+        }
+      />
 
       <ScrollView
         className="flex-1"
@@ -376,18 +371,24 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
           />
         }
       >
-        <View className="items-center rounded-2xl border border-[#e9e3d7] bg-white px-4 py-5">
-          <View className="h-16 w-16 items-center justify-center rounded-full bg-[#f5c45e]">
-            <Text className="text-xl font-black text-primary">{initials}</Text>
+        {isLoadingProfile ? (
+          <ProfileHeroSkeleton />
+        ) : (
+          <View className="items-center rounded-2xl border border-[#e9e3d7] bg-white px-4 py-5">
+            <View className="h-16 w-16 items-center justify-center rounded-full bg-[#f5c45e]">
+              <Text className="text-xl font-black text-primary">{initials}</Text>
+            </View>
+            <Text className="mt-3 text-lg font-bold text-[#201a13]">
+              {profile.name || profile.username || 'Guest'}
+            </Text>
+            <Text className="mt-1 text-xs text-slate-500">
+              {profile.email || '—'}
+            </Text>
+            <Text className="mt-2 text-[10px] font-bold uppercase tracking-widest text-[#a67b2e]">
+              {profile.role === 'admin' ? 'Administrator' : 'Member Account'}
+            </Text>
           </View>
-          <Text className="mt-3 text-lg font-bold text-[#201a13]">
-            {profile.name || profile.username || 'Guest'}
-          </Text>
-          <Text className="mt-1 text-xs text-slate-500">{profile.email || '—'}</Text>
-          <Text className="mt-2 text-[10px] font-bold uppercase tracking-widest text-[#a67b2e]">
-            {profile.role === 'admin' ? 'Administrator' : 'Member Account'}
-          </Text>
-        </View>
+        )}
 
         <View className="flex-row rounded-xl border border-[#e9e3d7] bg-white p-1">
           {([
@@ -438,12 +439,7 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
               </Pressable>
             </View>
             {isLoadingProfile ? (
-              <View className="items-center py-8">
-                <ActivityIndicator color="#004D40" />
-                <Text className="mt-2 text-xs text-slate-500">
-                  Loading profile…
-                </Text>
-              </View>
+              <ProfileDetailsSkeleton />
             ) : profileError ? (
               <View className="rounded-xl bg-red-50 p-4">
                 <Text className="text-sm font-semibold text-red-700">
@@ -503,9 +499,7 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
               ) : null}
             </View>
             {isLoadingLoans ? (
-              <View className="items-center rounded-2xl border border-[#eee8dc] bg-white py-12">
-                <ActivityIndicator color="#004D40" />
-              </View>
+              <LoanDetailsSkeleton />
             ) : loansError ? (
               <View className="rounded-2xl border border-red-200 bg-red-50 p-4">
                 <Text className="text-sm text-red-700">{loansError}</Text>
@@ -643,6 +637,69 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
+    </View>
+  );
+}
+
+function ProfileHeroSkeleton() {
+  return (
+    <View className="items-center rounded-2xl border border-[#e9e3d7] bg-white px-4 py-5">
+      <HomeSkeleton className="h-16 w-16 rounded-full bg-[#eee8dc]" />
+      <HomeSkeleton className="mt-3 h-5 w-40 bg-[#eee8dc]" />
+      <HomeSkeleton className="mt-2 h-3 w-32 bg-[#eee8dc]" />
+      <HomeSkeleton className="mt-3 h-3 w-24 bg-[#eee8dc]" />
+    </View>
+  );
+}
+
+function ProfileDetailsSkeleton() {
+  return (
+    <View className="overflow-hidden rounded-xl border border-slate-100 bg-white">
+      {[0, 1, 2, 3, 4, 5].map((row, index) => (
+        <View
+          key={row}
+          className={`min-h-12 flex-row items-center justify-between px-3 ${
+            index < 5 ? 'border-b border-slate-100' : ''
+          }`}
+        >
+          <HomeSkeleton className="h-3 w-24 bg-[#eee8dc]" />
+          <HomeSkeleton className="h-3 w-32 bg-[#eee8dc]" />
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function LoanDetailsSkeleton() {
+  return (
+    <View className="gap-4">
+      <View className="flex-row gap-2">
+        {[0, 1, 2].map(card => (
+          <View
+            key={card}
+            className="min-w-0 flex-1 rounded-xl border border-[#eee8dc] bg-white p-3"
+          >
+            <HomeSkeleton className="h-3 w-14 bg-[#eee8dc]" />
+            <HomeSkeleton className="mt-2 h-4 w-16 bg-[#eee8dc]" />
+          </View>
+        ))}
+      </View>
+      {[0, 1].map(card => (
+        <View
+          key={card}
+          className="overflow-hidden rounded-2xl border border-[#eadcc0] bg-white"
+        >
+          <View className="flex-row items-center justify-between bg-primary px-4 py-3">
+            <HomeSkeleton className="h-3 w-28 bg-white/30" />
+            <HomeSkeleton className="h-5 w-16 rounded-full bg-white/30" />
+          </View>
+          <View className="gap-3 p-4">
+            <HomeSkeleton className="h-3 w-3/4 bg-[#eee8dc]" />
+            <HomeSkeleton className="h-3 w-1/2 bg-[#eee8dc]" />
+            <HomeSkeleton className="h-3 w-2/3 bg-[#eee8dc]" />
+          </View>
+        </View>
+      ))}
     </View>
   );
 }

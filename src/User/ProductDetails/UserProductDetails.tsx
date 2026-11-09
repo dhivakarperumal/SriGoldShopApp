@@ -14,6 +14,7 @@ import api from '../../api';
 import type { ProductCardData } from '../../Components/ProductCard';
 import { getProductImageUrl } from '../../utils/productImage';
 import HomeSkeleton from '../Home/components/HomeSkeleton';
+import UserPageHeader from '../components/UserPageHeader';
 
 type Product = Record<string, unknown> & {
   id?: string | number;
@@ -267,63 +268,57 @@ function UserProductDetails({
 
   return (
     <View className="flex-1 bg-[#fffaf0]">
-      <View className="flex-row items-center bg-[#003B2D] px-4 py-3">
-        <Pressable
-          className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-white/15"
-          onPress={onBack}
-          accessibilityRole="button"
-          accessibilityLabel="Back to products"
-        >
-          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-        </Pressable>
-        <View className="min-w-0 flex-1">
-          <Text className="text-base font-bold text-white" numberOfLines={1}>
-            {isLoading ? 'Product Details' : productName}
-          </Text>
-          <Text className="text-[10px] text-white/65" numberOfLines={1}>
-            {productCode || `Product #${productId}`}
-          </Text>
-        </View>
-        {product ? (
-          <View className="ml-2 flex-row gap-2">
-            <Pressable
-              className="h-10 w-10 items-center justify-center rounded-full bg-white/15"
-              onPress={() => onToggleFavorite(product)}
-              accessibilityRole="button"
-              accessibilityLabel={
-                isFavorite(String(product.id ?? productId))
-                  ? 'Remove from favorites'
-                  : 'Add to favorites'
-              }
-              accessibilityState={{
-                selected: isFavorite(String(product.id ?? productId)),
-              }}
-            >
-              <Ionicons
-                name={
+      <UserPageHeader
+        title={isLoading ? 'Product Details' : productName}
+        subtitle={productCode || `Product #${productId}`}
+        onBack={onBack}
+        backAccessibilityLabel="Back to products"
+        rightContent={
+          product ? (
+            <View className="ml-2 flex-row gap-2">
+              <Pressable
+                className="h-10 w-10 items-center justify-center rounded-full bg-white/15"
+                onPress={() => onToggleFavorite(product)}
+                accessibilityRole="button"
+                accessibilityLabel={
                   isFavorite(String(product.id ?? productId))
-                    ? 'heart'
-                    : 'heart-outline'
+                    ? 'Remove from favorites'
+                    : 'Add to favorites'
                 }
-                size={22}
-                color={
-                  isFavorite(String(product.id ?? productId))
-                    ? '#fb7185'
-                    : '#FFFFFF'
-                }
-              />
-            </Pressable>
-            <Pressable
-              className="h-10 w-10 items-center justify-center rounded-full bg-white/15"
-              onPress={shareProduct}
-              accessibilityRole="button"
-              accessibilityLabel="Share product"
-            >
-              <Ionicons name="share-social-outline" size={21} color="#FFFFFF" />
-            </Pressable>
-          </View>
-        ) : null}
-      </View>
+                accessibilityState={{
+                  selected: isFavorite(String(product.id ?? productId)),
+                }}
+              >
+                <Ionicons
+                  name={
+                    isFavorite(String(product.id ?? productId))
+                      ? 'heart'
+                      : 'heart-outline'
+                  }
+                  size={22}
+                  color={
+                    isFavorite(String(product.id ?? productId))
+                      ? '#fb7185'
+                      : '#FFFFFF'
+                  }
+                />
+              </Pressable>
+              <Pressable
+                className="h-10 w-10 items-center justify-center rounded-full bg-white/15"
+                onPress={shareProduct}
+                accessibilityRole="button"
+                accessibilityLabel="Share product"
+              >
+                <Ionicons
+                  name="share-social-outline"
+                  size={21}
+                  color="#FFFFFF"
+                />
+              </Pressable>
+            </View>
+          ) : null
+        }
+      />
 
       {isLoading ? (
         <ScrollView
