@@ -376,7 +376,7 @@ function Loans({
         }
       >
         <View className="gap-1">
-          {[summaryCards.slice(0, 3), summaryCards.slice(3)].map((row, rowIndex) => (
+          {[summaryCards.slice(0, 2), summaryCards.slice(2)].map((row, rowIndex) => (
             <View
               key={rowIndex}
               className="flex-row justify-between"
@@ -385,7 +385,7 @@ function Loans({
                 <SummaryCard
                   key={card.label}
                   {...card}
-                  widthClass={rowIndex === 0 ? 'w-[31.5%]' : 'w-[48.5%]'}
+                  widthClass={rowIndex === 0 ? 'w-[48.5%]' : 'w-[31.5%]'}
                 />
               ))}
             </View>
