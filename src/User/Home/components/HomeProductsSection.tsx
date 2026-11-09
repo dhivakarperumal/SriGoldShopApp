@@ -41,7 +41,10 @@ function productText(value: unknown): string {
   return typeof value === 'string' ? value.toLowerCase() : '';
 }
 
-function matchesMetal(product: HomeProduct, metal: HomeProductsSectionProps['metal']) {
+function matchesMetal(
+  product: HomeProduct,
+  metal: HomeProductsSectionProps['metal'],
+) {
   const isDiamond = [
     product.name,
     product.category,
@@ -50,8 +53,10 @@ function matchesMetal(product: HomeProduct, metal: HomeProductsSectionProps['met
   ].some(value => productText(value).includes('diamond'));
 
   if (metal === 'Diamond') return isDiamond;
-  return productText(product.metal_type).includes(metal.toLowerCase()) &&
-    (metal !== 'Gold' || !isDiamond);
+  return (
+    productText(product.metal_type).includes(metal.toLowerCase()) &&
+    (metal !== 'Gold' || !isDiamond)
+  );
 }
 
 function HomeProductsSection({
@@ -67,7 +72,9 @@ function HomeProductsSection({
   const { width } = useWindowDimensions();
   const scrollViewRef = useRef<ScrollViewInstance>(null);
   const physicalIndexRef = useRef(0);
-  const sectionProducts = products.filter(product => matchesMetal(product, metal));
+  const sectionProducts = products.filter(product =>
+    matchesMetal(product, metal),
+  );
   const listWidth = width - HOME_HORIZONTAL_PADDING;
   const cardWidth = (listWidth - PRODUCT_GAP) / 2;
   const itemStep = cardWidth + PRODUCT_GAP;
@@ -76,10 +83,7 @@ function HomeProductsSection({
     sectionProducts.length > 2
       ? [...sectionProducts, ...sectionProducts, ...sectionProducts]
       : sectionProducts;
-  const title =
-    metal === 'Silver'
-      ? 'Silver Articles'
-      : `${metal} Jewellery`;
+  const title = metal === 'Silver' ? 'Silver Articles' : `${metal} Jewellery`;
 
   useEffect(() => {
     if (sectionProducts.length <= 2) return undefined;
@@ -149,15 +153,20 @@ function HomeProductsSection({
           {[0, 1].map(index => (
             <View
               key={index}
-              className="mb-3 h-[420px] overflow-hidden rounded-xl border border-[#eadfc8] bg-white"
+              className="mb-2.5 h-[310px] overflow-hidden rounded-[14px] border border-[#eadfc8] bg-white"
               style={{ width: cardWidth }}
             >
-              <HomeSkeleton className="h-40 w-full rounded-none bg-[#eee8dc]" />
-              <View className="flex-1 justify-between p-3">
-                <HomeSkeleton className="h-3 w-4/5 bg-[#e8dfd0]" />
-                <HomeSkeleton className="h-3 w-1/2 bg-[#e8dfd0]" />
-                <HomeSkeleton className="h-4 w-2/3 bg-[#e8dfd0]" />
-                <HomeSkeleton className="h-11 w-full rounded-lg bg-[#e8dfd0]" />
+              <HomeSkeleton className="h-[148px] w-full rounded-none bg-[#eee8dc]" />
+              <View className="px-2.5 pt-2">
+                <HomeSkeleton className="h-2.5 w-3/5 bg-[#e8dfd0]" />
+                <HomeSkeleton className="mt-2 h-3.5 w-4/5 bg-[#e8dfd0]" />
+                <HomeSkeleton className="mt-2 h-2.5 w-2/5 bg-[#e8dfd0]" />
+                <HomeSkeleton className="mt-3 h-4 w-1/2 bg-[#e8dfd0]" />
+                <View className="mt-3 flex-row">
+                  <HomeSkeleton className="mr-1.5 h-8 flex-1 rounded-lg bg-[#f0ece4]" />
+                  <HomeSkeleton className="h-8 flex-1 rounded-lg bg-[#f0ece4]" />
+                </View>
+                <HomeSkeleton className="mt-3 h-9 w-full rounded-lg bg-[#e8dfd0]" />
               </View>
             </View>
           ))}
