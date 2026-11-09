@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -277,6 +277,15 @@ function UserExplore({
     );
     return matchingFacets.length ? matchingFacets : productMetals;
   }, [metals, products]);
+
+  const maximumPriceBound = useMemo(
+    () =>
+      Math.ceil(
+        Math.max(100_000, ...products.map(product => getPrice(product))) /
+          25_000,
+      ) * 25_000,
+    [products],
+  );
 
   const popularProducts = useMemo(
     () => products.filter(product => product.name).slice(0, 8),
@@ -625,131 +634,154 @@ function UserExplore({
             className="h-full w-[88%] bg-[#fffdf8] shadow-2xl"
             edges={['top', 'bottom']}
           >
-            <View className="border-b border-[#eee7dc] bg-white px-5 pb-4 pt-5">
+            <View className="border-b border-[#eee7dc] bg-white px-4 py-3">
               <View className="flex-row items-center justify-between">
-                <View>
-                  <Text className="text-[10px] font-bold uppercase tracking-[1.8px] text-[#a67b2e]">
-                    Refine your search
-                  </Text>
-                  <Text className="mt-1 text-xl font-bold text-[#153b2e]">
+                <View className="flex-row items-center">
+                  <Text className="mr-1.5 text-sm text-primary">☷</Text>
+                  <Text className="text-base font-bold text-[#29231c]">
                     Filters
                   </Text>
                 </View>
                 <Pressable
-                  onPress={() => setFiltersVisible(false)}
-                  className="h-10 w-10 items-center justify-center rounded-full bg-[#f7f3eb]"
+                  onPress={clearFilters}
                   accessibilityRole="button"
-                  accessibilityLabel="Close filters"
+                  accessibilityLabel="Clear all filters"
                 >
-                  <Text className="text-xl text-[#514638]">×</Text>
+                  <Text className="text-[10px] font-medium text-[#a77525]">
+                    Clear All
+                  </Text>
                 </Pressable>
               </View>
             </View>
             <ScrollView
               className="flex-1"
-              contentContainerClassName="px-5 py-4"
+              contentContainerClassName="px-4 py-1"
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-              <FilterChips
-                title="Category"
-                options={availableCategories.map(item => item.name)}
-                selected={selectedCategory}
-                onSelect={value =>
-                  setSelectedCategory(current =>
-                    current === value ? '' : value,
-                  )
-                }
-              />
-              <FilterChips
-                title="Metal"
-                options={availableMetals.map(item => item.name)}
-                selected={selectedMetal}
-                onSelect={value =>
-                  setSelectedMetal(current => (current === value ? '' : value))
-                }
-              />
-              <FilterChips
-                title="Offer"
-                options={OFFER_FILTERS.map(value => `${value}%+`)}
-                selected={offerThreshold ? `${offerThreshold}%+` : ''}
-                onSelect={value => {
-                  const threshold = Number(value.replace('%+', ''));
-                  setOfferThreshold(current =>
-                    current === threshold ? 0 : threshold,
-                  );
-                }}
-              />
-              <FilterChips
-                title="Price"
-                options={PRICE_RANGES.map(range => range.label)}
-                selected={
-                  PRICE_RANGES.find(
-                    range =>
-                      range.min === minimumPrice && range.max === maximumPrice,
-                  )?.label || ''
-                }
-                onSelect={value => {
-                  const range = PRICE_RANGES.find(
-                    option => option.label === value,
-                  );
-                  if (
-                    range &&
-                    minimumPrice === range.min &&
-                    maximumPrice === range.max
-                  ) {
-                    setMinimumPrice(undefined);
-                    setMaximumPrice(undefined);
-                  } else if (range) {
-                    setMinimumPrice(range.min || undefined);
-                    setMaximumPrice(range.max);
+              <FilterSection title="Category">
+                <CheckboxFilterList
+                  options={availableCategories.map(item => ({
+                    label: item.name,
+                    count: products.filter(
+                      product =>
+                        String(product.category || '')
+                          .trim()
+                          .toLowerCase() === item.name.toLowerCase(),
+                    ).length,
+                  }))}
+                  selected={selectedCategory}
+                  onSelect={value =>
+                    setSelectedCategory(current =>
+                      current === value ? '' : value,
+                    )
                   }
-                }}
-              />
-              <FilterChips
-                title="Rating"
-                options={RATING_FILTERS.map(value => `${value}★ & up`)}
-                selected={minimumRating ? `${minimumRating}★ & up` : ''}
-                onSelect={value => {
-                  const rating = Number(value.charAt(0));
-                  setMinimumRating(current =>
-                    current === rating ? 0 : rating,
-                  );
-                }}
-              />
-              <FilterChips
-                title="Availability"
-                options={['In stock', 'Out of stock']}
-                selected={
-                  availability === 'in-stock'
-                    ? 'In stock'
-                    : availability === 'out-of-stock'
-                    ? 'Out of stock'
-                    : ''
-                }
-                onSelect={value => {
-                  const nextValue =
-                    value === 'In stock' ? 'in-stock' : 'out-of-stock';
-                  setAvailability(current =>
-                    current === nextValue ? '' : nextValue,
-                  );
-                }}
-              />
+                />
+              </FilterSection>
+              <FilterSection title="Metal">
+                <CheckboxFilterList
+                  options={availableMetals.map(item => ({
+                    label: item.name,
+                    count: products.filter(
+                      product =>
+                        String(product.metal_type || '')
+                          .trim()
+                          .toLowerCase() === item.name.toLowerCase(),
+                    ).length,
+                  }))}
+                  selected={selectedMetal}
+                  onSelect={value =>
+                    setSelectedMetal(current =>
+                      current === value ? '' : value,
+                    )
+                  }
+                />
+              </FilterSection>
+              <FilterSection title="Offer Percentage">
+                <CheckboxFilterList
+                  options={OFFER_FILTERS.map(value => ({
+                    label: `${value}% and above`,
+                    count: products.filter(
+                      product => getDiscount(product) >= value,
+                    ).length,
+                  }))}
+                  selected={
+                    offerThreshold ? `${offerThreshold}% and above` : ''
+                  }
+                  onSelect={value => {
+                    const threshold = Number(value.replace('% and above', ''));
+                    setOfferThreshold(current =>
+                      current === threshold ? 0 : threshold,
+                    );
+                  }}
+                />
+              </FilterSection>
+              <FilterSection title="Price Range">
+                <PriceRangeSelector
+                  maximumPriceBound={maximumPriceBound}
+                  minimumPrice={minimumPrice}
+                  maximumPrice={maximumPrice}
+                  onChangeMinimum={setMinimumPrice}
+                  onChangeMaximum={setMaximumPrice}
+                />
+              </FilterSection>
+              <FilterSection title="Rating">
+                <CheckboxFilterList
+                  options={RATING_FILTERS.map(value => ({
+                    label: `${value}★ and above`,
+                    count: products.filter(
+                      product => Number(product.rating || 0) >= value,
+                    ).length,
+                  }))}
+                  selected={minimumRating ? `${minimumRating}★ and above` : ''}
+                  onSelect={value => {
+                    const rating = Number(value.charAt(0));
+                    setMinimumRating(current =>
+                      current === rating ? 0 : rating,
+                    );
+                  }}
+                />
+              </FilterSection>
+              <FilterSection title="Availability">
+                <CheckboxFilterList
+                  options={[
+                    {
+                      label: 'In stock',
+                      count: products.filter(
+                        product =>
+                          Number(product.total_stock ?? product.stock ?? 0) > 0,
+                      ).length,
+                    },
+                    {
+                      label: 'Out of stock',
+                      count: products.filter(
+                        product =>
+                          Number(product.total_stock ?? product.stock ?? 0) <=
+                          0,
+                      ).length,
+                    },
+                  ]}
+                  selected={
+                    availability === 'in-stock'
+                      ? 'In stock'
+                      : availability === 'out-of-stock'
+                      ? 'Out of stock'
+                      : ''
+                  }
+                  onSelect={value => {
+                    const nextValue =
+                      value === 'In stock' ? 'in-stock' : 'out-of-stock';
+                    setAvailability(current =>
+                      current === nextValue ? '' : nextValue,
+                    );
+                  }}
+                />
+              </FilterSection>
             </ScrollView>
-            <View className="flex-row border-t border-[#eee7dc] bg-white px-5 py-4">
-              <Pressable
-                onPress={clearFilters}
-                className="mr-3 flex-1 items-center justify-center rounded-lg border border-[#e8dfd1] py-3"
-                accessibilityRole="button"
-                accessibilityLabel="Clear all filters"
-              >
-                <Text className="text-sm font-semibold text-[#62594d]">
-                  Clear all
-                </Text>
-              </Pressable>
+            <View className="border-t border-[#eee7dc] bg-white px-4 py-3">
               <Pressable
                 onPress={() => setFiltersVisible(false)}
-                className="flex-[1.4] items-center justify-center rounded-lg bg-primary py-3"
+                className="items-center justify-center rounded-lg bg-primary py-3"
                 accessibilityRole="button"
               >
                 <Text className="text-sm font-semibold text-white">
@@ -764,52 +796,200 @@ function UserExplore({
   );
 }
 
-function FilterChips({
+function FilterSection({
   title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  const [expanded, setExpanded] = useState(true);
+
+  return (
+    <View className="border-b border-[#eee7dc]">
+      <Pressable
+        onPress={() => setExpanded(current => !current)}
+        className="min-h-10 flex-row items-center justify-between"
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+      >
+        <Text className="text-xs font-bold text-[#30271b]">{title}</Text>
+        <Text className="text-sm text-[#81786b]">{expanded ? '⌄' : '›'}</Text>
+      </Pressable>
+      {expanded ? <View className="pb-2">{children}</View> : null}
+    </View>
+  );
+}
+
+function CheckboxFilterList({
   options,
   selected,
   onSelect,
 }: {
-  title: string;
-  options: string[];
+  options: { label: string; count: number }[];
   selected: string;
   onSelect: (value: string) => void;
 }) {
+  if (!options.length) {
+    return (
+      <Text className="py-1 text-[10px] text-[#81786b]">
+        No options available.
+      </Text>
+    );
+  }
+
   return (
-    <View className="mb-3">
-      <Text className="mb-1.5 text-xs font-bold text-[#514b42]">{title}</Text>
-      {options.length ? (
-        <View className="flex-row flex-wrap">
-          {options.map((option, index) => {
-            const isSelected = selected === option;
-            return (
-              <Pressable
-                key={`${title}-${option}-${index}`}
-                onPress={() => onSelect(option)}
-                className={`mb-1.5 mr-1.5 rounded-full border px-2.5 py-1.5 ${
-                  isSelected
-                    ? 'border-primary bg-[#edf5ef]'
-                    : 'border-[#eee9e0] bg-[#faf9f6]'
-                }`}
-                accessibilityRole="button"
-                accessibilityState={{ selected: isSelected }}
-              >
-                <Text
-                  className={`text-[10px] ${
-                    isSelected ? 'font-semibold text-primary' : 'text-[#777066]'
-                  }`}
-                >
-                  {option}
+    <View>
+      {options.map(option => {
+        const isSelected = selected === option.label;
+        return (
+          <Pressable
+            key={option.label}
+            onPress={() => onSelect(option.label)}
+            className="min-h-7 flex-row items-center"
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: isSelected }}
+          >
+            <View
+              className={`mr-2 h-4 w-4 items-center justify-center rounded-[3px] border ${
+                isSelected
+                  ? 'border-[#c88916] bg-[#c88916]'
+                  : 'border-[#aaa69f] bg-white'
+              }`}
+            >
+              {isSelected ? (
+                <Text className="text-[10px] font-bold leading-3 text-white">
+                  ✓
                 </Text>
-              </Pressable>
-            );
-          })}
+              ) : null}
+            </View>
+            <Text
+              className="flex-1 text-[11px] text-[#514638]"
+              numberOfLines={1}
+            >
+              {option.label}
+            </Text>
+            <Text className="text-[10px] text-[#9a9286]">{option.count}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function PriceRangeSelector({
+  maximumPriceBound,
+  minimumPrice,
+  maximumPrice,
+  onChangeMinimum,
+  onChangeMaximum,
+}: {
+  maximumPriceBound: number;
+  minimumPrice?: number;
+  maximumPrice?: number;
+  onChangeMinimum: (value: number | undefined) => void;
+  onChangeMaximum: (value: number | undefined) => void;
+}) {
+  const [trackWidth, setTrackWidth] = useState(0);
+  const lowerValue = minimumPrice ?? 0;
+  const upperValue = maximumPrice ?? maximumPriceBound;
+  const lowerPosition = (lowerValue / maximumPriceBound) * 100;
+  const upperPosition = (upperValue / maximumPriceBound) * 100;
+
+  const updateFromPosition = (locationX: number) => {
+    if (!trackWidth) return;
+    const value = Math.round(
+      (Math.max(0, Math.min(locationX, trackWidth)) / trackWidth) *
+        maximumPriceBound,
+    );
+    if (Math.abs(value - lowerValue) <= Math.abs(value - upperValue)) {
+      onChangeMinimum(value === 0 ? undefined : Math.min(value, upperValue));
+    } else {
+      onChangeMaximum(
+        value >= maximumPriceBound ? undefined : Math.max(value, lowerValue),
+      );
+    }
+  };
+
+  const selectRange = (range: (typeof PRICE_RANGES)[number]) => {
+    if (minimumPrice === range.min && maximumPrice === range.max) {
+      onChangeMinimum(undefined);
+      onChangeMaximum(undefined);
+    } else {
+      onChangeMinimum(range.min || undefined);
+      onChangeMaximum(range.max);
+    }
+  };
+
+  return (
+    <View>
+      <View
+        className="mx-2 mt-4 h-6 justify-center"
+        onLayout={event => setTrackWidth(event.nativeEvent.layout.width)}
+        onStartShouldSetResponder={() => true}
+        onMoveShouldSetResponder={() => true}
+        onResponderGrant={event =>
+          updateFromPosition(event.nativeEvent.locationX)
+        }
+        onResponderMove={event =>
+          updateFromPosition(event.nativeEvent.locationX)
+        }
+        accessibilityLabel="Adjust price range"
+        accessibilityHint="Touch or drag the range line to adjust its endpoints"
+      >
+        <View className="h-1 rounded-full bg-[#eadfc9]">
+          <View
+            className="absolute h-1 rounded-full bg-[#d49a32]"
+            style={{
+              left: `${lowerPosition}%`,
+              width: `${Math.max(0, upperPosition - lowerPosition)}%`,
+            }}
+          />
         </View>
-      ) : (
-        <Text className="text-[10px] text-[#81786b]">
-          No options available.
+        <View
+          className="absolute -ml-1.5 h-3 w-3 rounded-full border-2 border-[#c88916] bg-white"
+          style={{ left: `${lowerPosition}%` }}
+        />
+        <View
+          className="absolute -ml-1.5 h-3 w-3 rounded-full border-2 border-[#c88916] bg-white"
+          style={{ left: `${upperPosition}%` }}
+        />
+      </View>
+      <View className="mb-2 flex-row justify-between">
+        <Text className="text-[9px] text-[#81786b]">
+          ₹{lowerValue.toLocaleString('en-IN')}
         </Text>
-      )}
+        <Text className="text-[9px] text-[#81786b]">
+          ₹{upperValue.toLocaleString('en-IN')}
+        </Text>
+      </View>
+      <View className="flex-row flex-wrap">
+        {PRICE_RANGES.map(range => {
+          const isSelected =
+            minimumPrice === range.min && maximumPrice === range.max;
+          return (
+            <Pressable
+              key={range.label}
+              onPress={() => selectRange(range)}
+              className={`mb-1.5 mr-1.5 rounded border px-2 py-1.5 ${
+                isSelected
+                  ? 'border-[#d49a32] bg-[#fbf2df]'
+                  : 'border-[#eee7dc] bg-[#fcfbf8]'
+              }`}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
+            >
+              <Text
+                className={`text-[9px] ${
+                  isSelected ? 'font-semibold text-[#9a6814]' : 'text-[#62594d]'
+                }`}
+              >
+                {range.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
