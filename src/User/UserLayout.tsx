@@ -15,7 +15,6 @@ import UserContact from './More/Contact/UserContact';
 import MoreMenu, { type MorePage } from './More/MoreMenu';
 import UserProfile from './Profile/UserProfile';
 import UserProductDetails from './ProductDetails/UserProductDetails';
-import UserProductEnquiry from './Enquiry/UserProductEnquiry';
 import UserFavorites, { type WishlistItem } from './Favorites/UserFavorites';
 import UserEnquiry from './Enquiry/UserEnquiry';
 
@@ -261,7 +260,15 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
     setFavoritesRequestVersion(version => version + 1);
   };
 
+  const openEnquiry = (product?: ProductCardData | null) => {
+    setEnquiryProduct(product ?? null);
+    setActiveTab('enquiry');
+    setVisitedTabs(current => new Set(current).add('enquiry'));
+    setSelectedProductId(null);
+  };
+
   const selectTab = (tab: UserTab) => {
+    if (tab !== 'enquiry') setEnquiryProduct(null);
     setActiveTab(tab);
     setVisitedTabs(current => new Set(current).add(tab));
     setSelectedProductId(null);
@@ -300,10 +307,6 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
     const subscription = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
-        if (enquiryProduct) {
-          setEnquiryProduct(null);
-          return true;
-        }
         if (selectedProductId) {
           setSelectedProductId(null);
           return true;
@@ -323,7 +326,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
     );
 
     return () => subscription.remove();
-  }, [activeTab, enquiryProduct, morePage, selectedProductId]);
+  }, [activeTab, morePage, selectedProductId]);
 
   const isStandalonePage =
     Boolean(selectedProductId) || (activeTab === 'more' && morePage !== null);
@@ -364,7 +367,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
               <UserProductDetails
                 productId={lastSelectedProductId}
                 onBack={() => setSelectedProductId(null)}
-                onEnquireProduct={setEnquiryProduct}
+                onEnquireProduct={openEnquiry}
                 isFavorite={isFavorite}
                 onToggleFavorite={toggleFavorite}
               />
@@ -379,7 +382,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
               <UserHome
                 user={user}
                 onSelectProduct={selectProduct}
-                onEnquireProduct={setEnquiryProduct}
+                onEnquireProduct={openEnquiry}
                 isFavorite={isFavorite}
                 onToggleFavorite={toggleFavorite}
                 onExploreMetal={exploreMetal}
@@ -395,7 +398,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
             {visitedTabs.has('explore') ? (
               <UserExplore
                 onSelectProduct={selectProduct}
-                onEnquireProduct={setEnquiryProduct}
+                onEnquireProduct={openEnquiry}
                 isFavorite={isFavorite}
                 onToggleFavorite={toggleFavorite}
                 metalSelection={exploreMetalSelection}
@@ -419,7 +422,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
                 onRefresh={refreshFavorites}
                 onRetry={refreshFavorites}
                 onSelectProduct={selectProduct}
-                onEnquireProduct={setEnquiryProduct}
+                onEnquireProduct={openEnquiry}
                 onRemoveFavorite={toggleFavorite}
                 onContinueShopping={() => selectTab('explore')}
               />
@@ -458,7 +461,11 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
             }
           >
             {visitedTabs.has('enquiry') ? (
-              <UserEnquiry user={user} />
+              <UserEnquiry
+                user={user}
+                product={enquiryProduct}
+                onSuccess={() => setEnquiryProduct(null)}
+              />
             ) : null}
           </View>
           {!isStandalonePage ? (
@@ -469,19 +476,6 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
           ) : null}
         </View>
       </SafeAreaView>
-      {enquiryProduct ? (
-        <UserProductEnquiry
-          key={String(
-            enquiryProduct.id ??
-              enquiryProduct.product_id ??
-              enquiryProduct.productId ??
-              enquiryProduct.name,
-          )}
-          product={enquiryProduct}
-          user={user}
-          onClose={() => setEnquiryProduct(null)}
-        />
-      ) : null}
     </SafeAreaView>
   );
 }

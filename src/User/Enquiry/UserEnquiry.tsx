@@ -1,13 +1,23 @@
 import { Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import type { AuthenticatedUser } from '../../Admin/Auth/Login';
+import type { ProductCardData } from '../../Components/ProductCard';
 import { EnquiryForm } from './EnquiryForm';
 
 type UserEnquiryProps = {
   user: AuthenticatedUser;
+  /** When set, the form is pre-filled with this product's details */
+  product?: ProductCardData | null;
+  /** Called after a successful submission (e.g. to clear the product) */
+  onSuccess?: () => void;
 };
 
-function UserEnquiry({ user }: UserEnquiryProps) {
+function UserEnquiry({ user, product, onSuccess }: UserEnquiryProps) {
+  const productName =
+    typeof product?.name === 'string' || typeof product?.name === 'number'
+      ? String(product.name)
+      : null;
+
   return (
     <View className="flex-1 bg-slate-50">
       {/* Page header */}
@@ -24,19 +34,62 @@ function UserEnquiry({ user }: UserEnquiryProps) {
               />
             </Svg>
           </View>
-          <View>
+          <View className="min-w-0 flex-1">
             <Text className="text-base font-extrabold text-[#1a1a1a]">
-              Enquiry
+              {product ? 'Enquire About This Product' : 'Enquiry'}
             </Text>
-            <Text className="text-[11px] text-slate-500">
-              We'll get back to you shortly
+            <Text
+              className="text-[11px] text-slate-500"
+              numberOfLines={1}
+            >
+              {productName ?? "We'll get back to you shortly"}
             </Text>
           </View>
         </View>
+
+        {/* Product info chip when pre-filled */}
+        {product ? (
+          <View className="mt-3 flex-row items-center gap-2 rounded-xl border border-[#e7d4a8] bg-[#fffaf0] px-3 py-2">
+            <View className="h-7 w-7 items-center justify-center rounded-lg bg-[#003B2D]">
+              <Text className="text-xs font-bold text-[#F5C45E]">P</Text>
+            </View>
+            <View className="min-w-0 flex-1">
+              <Text
+                className="text-[11px] font-bold text-[#1a1a1a]"
+                numberOfLines={1}
+              >
+                {productName ?? 'Selected Product'}
+              </Text>
+              {product.product_code ? (
+                <Text className="text-[10px] text-slate-500">
+                  {String(product.product_code)}
+                </Text>
+              ) : null}
+            </View>
+            <View className="rounded-full bg-[#003B2D] px-2 py-0.5">
+              <Text className="text-[9px] font-bold text-white">Pre-filled</Text>
+            </View>
+          </View>
+        ) : null}
       </View>
 
-      {/* Shared form — no product pre-fill */}
-      <EnquiryForm user={user} />
+      {/* Shared form — pre-filled with product when available */}
+      <EnquiryForm
+        key={
+          product
+            ? String(
+                product.id ??
+                  product.product_id ??
+                  product.productId ??
+                  product.name ??
+                  'product',
+              )
+            : 'no-product'
+        }
+        user={user}
+        product={product ?? undefined}
+        onSuccess={onSuccess}
+      />
     </View>
   );
 }
