@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AuthenticatedUser } from '../../Admin/Auth/Login';
 import api from '../../api';
 import HomeSkeleton from '../Home/components/HomeSkeleton';
+import LogoutConfirmation from '../components/LogoutConfirmation';
 import UserPageHeader from '../components/UserPageHeader';
 
 type UserProfileProps = {
@@ -145,6 +146,8 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
   const [isLoadingLoans, setIsLoadingLoans] = useState(false);
   const [loansError, setLoansError] = useState('');
   const [loanRequestVersion, setLoanRequestVersion] = useState(0);
+  const [isLogoutConfirmationVisible, setIsLogoutConfirmationVisible] =
+    useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -266,10 +269,7 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
   };
 
   const confirmLogout = () => {
-    Alert.alert('Log out?', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: onLogout },
-    ]);
+    setIsLogoutConfirmationVisible(true);
   };
 
   const refreshCurrentSection = () => {
@@ -356,6 +356,11 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
             <Text className="text-xs font-bold text-white">Log out</Text>
           </Pressable>
         }
+      />
+      <LogoutConfirmation
+        visible={isLogoutConfirmationVisible}
+        onCancel={() => setIsLogoutConfirmationVisible(false)}
+        onConfirm={onLogout}
       />
 
       <ScrollView

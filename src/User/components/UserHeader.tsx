@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  Alert,
   Image,
   Modal,
   Pressable,
@@ -12,6 +11,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { AuthenticatedUser } from '../../Admin/Auth/Login';
+import LogoutConfirmation from './LogoutConfirmation';
 
 const HEADER_CONTENT_HEIGHT = 68;
 
@@ -59,6 +59,8 @@ function UserHeader({
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [isLogoutConfirmationVisible, setIsLogoutConfirmationVisible] =
+    useState(false);
   const displayName = user.name?.trim() || 'Welcome';
   const initial = displayName.charAt(0).toUpperCase() || 'U';
   const favoritesLabel = favoritesCount > 99 ? '99+' : String(favoritesCount);
@@ -68,14 +70,16 @@ function UserHeader({
 
   const confirmLogout = () => {
     setIsAccountMenuOpen(false);
-    Alert.alert('Sign out?', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: onLogout },
-    ]);
+    setIsLogoutConfirmationVisible(true);
   };
 
   return (
     <>
+      <LogoutConfirmation
+        visible={isLogoutConfirmationVisible}
+        onCancel={() => setIsLogoutConfirmationVisible(false)}
+        onConfirm={onLogout}
+      />
       <View style={[styles.headerWrapper, { width, height: totalHeight, paddingTop: insets.top }]}>
         {/* Full-width background image covering status bar + header row */}
         <Image
