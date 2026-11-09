@@ -766,7 +766,7 @@ function SummaryCard({
 
   return (
     <View
-      className={`relative mb-3 min-h-[126px] ${widthClass} overflow-hidden rounded-[24px] border-2 px-2.5 pb-3 pt-3 shadow-lg`}
+      className={`relative mb-3 min-h-[118px] ${widthClass} overflow-hidden rounded-[24px] border-2 px-2.5 pb-2 pt-2.5 shadow-lg`}
       style={{ backgroundColor, borderColor: color }}
       accessibilityLabel={`${label}: ${value}`}
       accessible
@@ -777,41 +777,49 @@ function SummaryCard({
           <Path d="M0 34 C55 17 92 49 151 35 C212 20 251 9 300 15" fill="none" stroke={color} strokeWidth={3} />
         </Svg>
       </View>
-      <View
-        className="absolute right-2 top-2 h-9 w-9 items-center justify-center rounded-xl border"
-        style={{
-          borderColor: color,
-          backgroundColor: `${color}22`,
-          transform: [{ rotate: '45deg' }],
-        }}
-        pointerEvents="none"
-      >
-        <View style={{ transform: [{ rotate: '-45deg' }] }}>
-          <Svg width={21} height={21} viewBox="0 0 24 24" fill="none">
-            {(iconPaths[label] || []).map(path => (
-              <Path
-                key={path}
-                d={path}
-                stroke={color}
-                strokeWidth={1.9}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            ))}
-          </Svg>
-        </View>
-      </View>
-      <View className="z-10 flex-row items-center pr-8">
-        <View className="mr-1.5 h-7 w-1 rounded-full" style={{ backgroundColor: color }} />
+      <View className="z-10 min-h-9 flex-row items-center">
+        <View className="mr-1.5 h-6 w-1 rounded-full" style={{ backgroundColor: color }} />
         <Text
-          className="min-w-0 flex-1 text-[11px] font-bold leading-[14px] text-white"
+          className="min-w-0 flex-1 pr-1 text-[11px] font-bold leading-[14px] text-white"
           numberOfLines={2}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
         >
           {label}
         </Text>
+        <View
+          className="h-8 w-8 shrink-0 items-center justify-center"
+          pointerEvents="none"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
+          <View
+            className="h-5 w-5 items-center justify-center rounded-md border"
+            style={{
+              borderColor: color,
+              backgroundColor: `${color}22`,
+              transform: [{ rotate: '45deg' }],
+            }}
+          >
+            <View style={{ transform: [{ rotate: '-45deg' }] }}>
+              <Svg width={15} height={15} viewBox="0 0 24 24" fill="none">
+                {(iconPaths[label] || []).map(path => (
+                  <Path
+                    key={path}
+                    d={path}
+                    stroke={color}
+                    strokeWidth={1.9}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                ))}
+              </Svg>
+            </View>
+          </View>
+        </View>
       </View>
       <Text
-        className="z-10 mt-3 text-[24px] font-extrabold tracking-tight text-white"
+        className="z-10 mt-2 text-[24px] font-extrabold tracking-tight text-white"
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.7}
