@@ -15,6 +15,7 @@ import type { ProductCardData } from '../../Components/ProductCard';
 import { getProductImageUrl } from '../../utils/productImage';
 import HomeSkeleton from '../Home/components/HomeSkeleton';
 import UserPageHeader from '../components/UserPageHeader';
+import RelatedProductsSection from './RelatedProductsSection';
 
 type Product = Record<string, unknown> & {
   id?: string | number;
@@ -26,6 +27,7 @@ type ProductVariant = Record<string, unknown>;
 type UserProductDetailsProps = {
   productId: string;
   onBack: () => void;
+  onSelectProduct: (productId: string) => void;
   onEnquireProduct: (product: ProductCardData) => void;
   isFavorite: (productId: string) => boolean;
   onToggleFavorite: (product: ProductCardData) => void;
@@ -88,6 +90,13 @@ function asVariant(value: unknown): ProductVariant | null {
   return isRecord(value) ? value : null;
 }
 
+function isProductCardData(value: unknown): value is ProductCardData {
+  return (
+    isRecord(value) &&
+    (typeof value.id === 'string' || typeof value.id === 'number')
+  );
+}
+
 function mediaPath(value: unknown): string {
   if (typeof value === 'string') return value;
   if (!isRecord(value)) return '';
@@ -104,6 +113,7 @@ function getErrorMessage(error: unknown): string {
 function UserProductDetails({
   productId,
   onBack,
+  onSelectProduct,
   onEnquireProduct,
   isFavorite,
   onToggleFavorite,
@@ -112,6 +122,8 @@ function UserProductDetails({
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [relatedProducts, setRelatedProducts] = useState<ProductCardData[]>([]);
+  const [relatedProductsError, setRelatedProductsError] = useState('');
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [activeImage, setActiveImage] = useState(0);
   const [activeVariantIndex, setActiveVariantIndex] = useState(0);
@@ -170,6 +182,38 @@ function UserProductDetails({
     };
   }, [productId, refreshVersion]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    setRelatedProducts([]);
+    setRelatedProductsError('');
+
+    api
+      .get('/products?page=1&limit=100&status=Active', {
+        signal: controller.signal,
+      })
+      .then(({ data }) => {
+        const products = Array.isArray(data)
+          ? data
+          : isRecord(data) && Array.isArray(data.products)
+            ? data.products
+            : null;
+        if (!products) {
+          throw new TypeError('Expected a related products array.');
+        }
+        setRelatedProducts(products.filter(isProductCardData));
+      })
+      .catch(error => {
+        if (!controller.signal.aborted) {
+          console.error('Failed to load related products:', error);
+          setRelatedProductsError(
+            'Related products could not be loaded. Pull down to retry.',
+          );
+        }
+      });
+
+    return () => controller.abort();
+  }, [productId, refreshVersion]);
+
   const variants = useMemo(
     () =>
       product
@@ -217,6 +261,31 @@ function UserProductDetails({
       ? storedDiscount
       : 0;
   const productName = text(product?.name) || 'Product Details';
+  const metalName = text(product?.metal_type);
+  const categoryName = text(product?.category ?? product?.category_name);
+  const currentProductId = String(product?.id ?? productId);
+  const relatedByMetal = useMemo(
+    () =>
+      relatedProducts.filter(
+        relatedProduct =>
+          String(relatedProduct.id) !== currentProductId &&
+          metalName &&
+          text(relatedProduct.metal_type).toLowerCase() ===
+            metalName.toLowerCase(),
+      ),
+    [currentProductId, metalName, relatedProducts],
+  );
+  const relatedByCategory = useMemo(
+    () =>
+      relatedProducts.filter(
+        relatedProduct =>
+          String(relatedProduct.id) !== currentProductId &&
+          categoryName &&
+          text(relatedProduct.category ?? relatedProduct.category_name)
+            .toLowerCase() === categoryName.toLowerCase(),
+      ),
+    [categoryName, currentProductId, relatedProducts],
+  );
   const productCode = text(product?.product_code);
   const description = text(product?.description || product?.full_description);
   const goldRate = product?.gold_rate_per_gram;
@@ -731,6 +800,29 @@ function UserProductDetails({
               ['Availability', stockLabel],
               ['Status', product.status],
             ]}
+          />
+          {relatedProductsError ? (
+            <Text className="text-xs text-red-700" accessibilityRole="alert">
+              {relatedProductsError}
+            </Text>
+          ) : null}
+          <RelatedProductsSection
+            eyebrow="Related by metal"
+            title={`More in ${metalName}`}
+            products={relatedByMetal}
+            onSelectProduct={onSelectProduct}
+            onEnquireProduct={onEnquireProduct}
+            isFavorite={isFavorite}
+            onToggleFavorite={onToggleFavorite}
+          />
+          <RelatedProductsSection
+            eyebrow="Browse category"
+            title={`More ${categoryName}`}
+            products={relatedByCategory}
+            onSelectProduct={onSelectProduct}
+            onEnquireProduct={onEnquireProduct}
+            isFavorite={isFavorite}
+            onToggleFavorite={onToggleFavorite}
           />
         </ScrollView>
       )}

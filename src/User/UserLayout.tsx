@@ -440,6 +440,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
               <UserProductDetails
                 productId={lastSelectedProductId}
                 onBack={() => setSelectedProductId(null)}
+                onSelectProduct={selectProduct}
                 onEnquireProduct={openEnquiry}
                 isFavorite={isFavorite}
                 onToggleFavorite={toggleFavorite}
