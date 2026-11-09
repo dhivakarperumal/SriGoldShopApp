@@ -32,6 +32,7 @@ import StockDetails from './src/Admin/MorePages/StockDetails';
 import AllEnquries from './src/Admin/Enquries/AllEnquries';
 import FundManagement from './src/Admin/FundManagement/Fundmanegement';
 import Receipt from './src/Admin/MorePages/Receipt';
+import Report from './src/Admin/MorePages/Report';
 import HomeSections from './src/Admin/MorePages/HomeSections';
 import AllReview from './src/Admin/Review/AllReview';
 import More from './src/Admin/Screens/More';
@@ -292,6 +293,8 @@ function App() {
                           ? <FundManagement onBack={() => navigateAdmin('more')} />
                         : adminRoute === 'receipt'
                           ? <Receipt onBack={() => navigateAdmin('more')} />
+                          : adminRoute === 'reports'
+                            ? <Report onBack={() => navigateAdmin('more')} />
                           : adminRoute === 'reviews'
                             ? <AllReview onBack={() => navigateAdmin('more')} />
                         : adminRoute === 'homeSections'

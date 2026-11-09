@@ -43,6 +43,7 @@ export type AdminRoute =
   | 'enquiries'
   | 'fundManagement'
   | 'receipt'
+  | 'reports'
   | 'homeSections'
   | 'reviews'
   | 'more';
