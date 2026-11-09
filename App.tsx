@@ -43,6 +43,8 @@ function App() {
   const [editingGoldRateSet, setEditingGoldRateSet] = useState<CurrentRateSet | null>(null);
   const [billingSession, setBillingSession] = useState(0);
   const [isBillingFormOpen, setIsBillingFormOpen] = useState(false);
+  const [isLoanFormOpen, setIsLoanFormOpen] = useState(false);
+  const [isCustomerCreateRequested, setIsCustomerCreateRequested] = useState(false);
   const isLoggingOut = useRef(false);
 
   useEffect(() => {
@@ -155,7 +157,15 @@ function App() {
         />
       )
       : adminRoute === 'loans'
-        ? <Loans />
+        ? (
+          <Loans
+            onFormVisibilityChange={setIsLoanFormOpen}
+            onCreateCustomer={() => {
+              setIsCustomerCreateRequested(true);
+              navigateAdmin('customers');
+            }}
+          />
+        )
         : adminRoute === 'billing'
           ? <Billing key={billingSession} onFormVisibilityChange={setIsBillingFormOpen} />
           : adminRoute === 'products'
@@ -230,7 +240,13 @@ function App() {
                     : adminRoute === 'more'
                       ? <More onNavigate={navigateAdmin} />
                       : adminRoute === 'customers'
-                        ? <Customers onBack={() => navigateAdmin('more')} />
+                        ? (
+                          <Customers
+                            onBack={() => navigateAdmin('more')}
+                            openCreateOnMount={isCustomerCreateRequested}
+                            onCreateOpened={() => setIsCustomerCreateRequested(false)}
+                          />
+                        )
                         : adminRoute === 'stockDetails'
                           ? <StockDetails onBack={() => navigateAdmin('more')} />
                         : adminRoute === 'enquiries'
@@ -260,6 +276,7 @@ function App() {
             user={user}
             route={adminRoute}
             isBillingFormOpen={isBillingFormOpen}
+            isLoanFormOpen={isLoanFormOpen}
             onNavigate={navigateAdmin}
             onLogout={confirmLogout}
           >

@@ -10,6 +10,7 @@ type AdminLayoutProps = {
   currentRoute?: AdminRoute;
   route?: AdminRoute;
   isBillingFormOpen?: boolean;
+  isLoanFormOpen?: boolean;
   children: ReactNode;
   onNavigate: (route: AdminRoute) => void;
   onLogout: () => void;
@@ -20,6 +21,7 @@ function AdminLayout({
   currentRoute,
   route,
   isBillingFormOpen = false,
+  isLoanFormOpen = false,
   children,
   onNavigate,
   onLogout,
@@ -29,10 +31,12 @@ function AdminLayout({
     activeRoute && isMainTab(activeRoute) ? activeRoute : undefined;
   const showBottomNav =
     bottomNavRoute !== undefined &&
-    (bottomNavRoute !== 'billing' || !isBillingFormOpen);
+    (bottomNavRoute !== 'billing' || !isBillingFormOpen) &&
+    (bottomNavRoute !== 'loans' || !isLoanFormOpen);
   const showAppHeader =
     activeRoute !== 'profile' &&
     (activeRoute !== 'billing' || !isBillingFormOpen) &&
+    (activeRoute !== 'loans' || !isLoanFormOpen) &&
     activeRoute !== 'categories' &&
     activeRoute !== 'addCategory' &&
     activeRoute !== 'editCategory' &&
