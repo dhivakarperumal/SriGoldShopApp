@@ -514,9 +514,10 @@ function UserExplore({
             <Text className="mr-3 text-xs font-semibold text-[#30271b]">
               {SORT_OPTIONS.find(option => option.value === sortBy)?.label}
             </Text>
-            <Text className="text-xs text-[#a77525]">
-              {sortDropdownVisible ? '⌃' : '⌄'}
-            </Text>
+            <Chevron
+              direction={sortDropdownVisible ? 'up' : 'down'}
+              color="#A77525"
+            />
           </Pressable>
         </View>
         {sortDropdownVisible ? (
@@ -796,6 +797,32 @@ function UserExplore({
   );
 }
 
+function Chevron({
+  direction,
+  color = '#81786b',
+}: {
+  direction: 'up' | 'down' | 'right';
+  color?: string;
+}) {
+  const paths = {
+    up: 'm6 15 6-6 6 6',
+    down: 'm6 9 6 6 6-6',
+    right: 'm9 18 6-6-6-6',
+  };
+
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+      <Path
+        d={paths[direction]}
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 function FilterSection({
   title,
   children,
@@ -814,7 +841,7 @@ function FilterSection({
         accessibilityState={{ expanded }}
       >
         <Text className="text-xs font-bold text-[#30271b]">{title}</Text>
-        <Text className="text-sm text-[#81786b]">{expanded ? '⌄' : '›'}</Text>
+        <Chevron direction={expanded ? 'down' : 'right'} />
       </Pressable>
       {expanded ? <View className="pb-2">{children}</View> : null}
     </View>
