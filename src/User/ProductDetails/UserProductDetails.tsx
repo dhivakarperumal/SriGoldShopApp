@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
 import type { ProductCardData } from '../../Components/ProductCard';
 import { getProductImageUrl } from '../../utils/productImage';
@@ -207,11 +208,12 @@ function UserProductDetails({
     product?.offer_price ??
     product?.mrp;
   const mrp = number(currentVariant?.mrp ?? product?.mrp);
+  const storedDiscount = number(currentVariant?.discount ?? product?.discount);
   const discount =
-    number(product?.discount) > 0
-      ? number(product?.discount)
-      : mrp > number(price)
+    mrp > number(price)
       ? Math.round(((mrp - number(price)) / mrp) * 100)
+      : storedDiscount >= 0 && storedDiscount <= 100
+      ? storedDiscount
       : 0;
   const productName = text(product?.name) || 'Product Details';
   const productCode = text(product?.product_code);
@@ -272,13 +274,10 @@ function UserProductDetails({
           accessibilityRole="button"
           accessibilityLabel="Back to products"
         >
-          <Text className="text-2xl leading-7 text-white">‹</Text>
+          <ProductDetailIcon name="back" color="#FFFFFF" />
         </Pressable>
         <View className="min-w-0 flex-1">
-          <Text
-            className="text-base font-bold text-white"
-            numberOfLines={1}
-          >
+          <Text className="text-base font-bold text-white" numberOfLines={1}>
             {isLoading ? 'Product Details' : productName}
           </Text>
           <Text className="text-[10px] text-white/65" numberOfLines={1}>
@@ -300,15 +299,15 @@ function UserProductDetails({
                 selected: isFavorite(String(product.id ?? productId)),
               }}
             >
-              <Text
-                className={`text-xl ${
+              <ProductDetailIcon
+                name="favorite"
+                color={
                   isFavorite(String(product.id ?? productId))
-                    ? 'text-rose-600'
-                    : 'text-white'
-                }`}
-              >
-                {isFavorite(String(product.id ?? productId)) ? '♥' : '♡'}
-              </Text>
+                    ? '#fb7185'
+                    : '#FFFFFF'
+                }
+                filled={isFavorite(String(product.id ?? productId))}
+              />
             </Pressable>
             <Pressable
               className="h-10 w-10 items-center justify-center rounded-full bg-white/15"
@@ -316,7 +315,7 @@ function UserProductDetails({
               accessibilityRole="button"
               accessibilityLabel="Share product"
             >
-              <Text className="text-base text-white">↗</Text>
+              <ProductDetailIcon name="share" color="#FFFFFF" />
             </Pressable>
           </View>
         ) : null}
@@ -735,6 +734,37 @@ function UserProductDetails({
         </ScrollView>
       )}
     </View>
+  );
+}
+
+function ProductDetailIcon({
+  name,
+  color,
+  filled = false,
+}: {
+  name: 'back' | 'favorite' | 'share';
+  color: string;
+  filled?: boolean;
+}) {
+  const iconPath = {
+    back: 'm15 18-6-6 6-6',
+    favorite:
+      'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z',
+    share:
+      'M14 3h7v7m-1-6L10 14m4-5v-4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5',
+  }[name];
+
+  return (
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+      <Path
+        d={iconPath}
+        stroke={color}
+        strokeWidth={name === 'favorite' ? 1.8 : 2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill={name === 'favorite' && filled ? color : 'none'}
+      />
+    </Svg>
   );
 }
 
