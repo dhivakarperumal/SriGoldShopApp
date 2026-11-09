@@ -416,7 +416,7 @@ function Home({ user, onNavigate }: HomeProps) {
           return (
             <View
               key={card.id}
-              className="mb-3 min-h-[164px] w-[48%] overflow-hidden rounded-[26px] border p-4 shadow-sm"
+              className="mb-3 min-h-[164px] w-[48%] overflow-hidden rounded-[5px] border px-2 py-4 shadow-sm"
               style={{
                 backgroundColor: `${card.color}18`,
                 borderColor: `${card.color}35`,
