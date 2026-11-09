@@ -30,7 +30,17 @@ import AllGoldRate, {
 } from './src/Admin/DailyGoldRate/AllGoldRate';
 import AddGoldrate from './src/Admin/DailyGoldRate/AddGoldrate';
 import Customers from './src/Admin/MorePages/Customer';
+import LoanCustomerManagement from './src/Admin/Loanmanegements/LoanCustomerManagement';
+import OverdueLoans from './src/Admin/Loanmanegements/OverdueLoans';
+import LoanRenewal from './src/Admin/Loanmanegements/LoanRenewal';
+import GoldRelease from './src/Admin/Loanmanegements/GoldRelease';
+import LoanDetails from './src/Admin/Loanmanegements/LoanDetails';
+import StockDetails from './src/Admin/MorePages/StockDetails';
+import AllEnquries from './src/Admin/Enquries/AllEnquries';
+import FundManagement from './src/Admin/FundManagement/Fundmanegement';
 import Receipt from './src/Admin/MorePages/Receipt';
+import HomeSections from './src/Admin/MorePages/HomeSections';
+import AllReview from './src/Admin/Review/AllReview';
 import More from './src/Admin/Screens/More';
 import AdminLayout from './src/Admin/Navigations/AdminLayout';
 import type { AdminRoute } from './src/Admin/Navigations/TopHeader';
@@ -60,6 +70,11 @@ function App() {
   const [newCategoryId, setNewCategoryId] = useState('CAT001');
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingGoldRateSet, setEditingGoldRateSet] = useState<CurrentRateSet | null>(null);
+  const [billingSession, setBillingSession] = useState(0);
+  const [isBillingFormOpen, setIsBillingFormOpen] = useState(false);
+  const [isLoanFormOpen, setIsLoanFormOpen] = useState(false);
+  const [isLoanCustomerCreateRequested, setIsLoanCustomerCreateRequested] = useState(false);
+  const [selectedLoanDetailsId, setSelectedLoanDetailsId] = useState<string | number | null>(null);
   const isLoggingOut = useRef(false);
 
   useEffect(() => {
@@ -178,6 +193,9 @@ function App() {
   };
 
   const navigateAdmin = (route: AdminRoute) => {
+    if (route === 'billing') {
+      setBillingSession(current => current + 1);
+    }
     setAdminRoute(route);
   };
 
@@ -215,9 +233,42 @@ function App() {
         />
       )
       : adminRoute === 'loans'
-        ? <Loans />
+        ? (
+          <Loans
+            onFormVisibilityChange={setIsLoanFormOpen}
+            onOpenOverdueLoans={() => navigateAdmin('overdueLoans')}
+            onOpenLoanRenewal={() => navigateAdmin('loanRenewal')}
+            onOpenGoldRelease={() => navigateAdmin('goldRelease')}
+            onOpenCompleteLoan={() => navigateAdmin('completeLoan')}
+            onOpenLoanDetails={loanId => {
+              setSelectedLoanDetailsId(loanId);
+              navigateAdmin('loanDetails');
+            }}
+            onCreateCustomer={() => {
+              setIsLoanCustomerCreateRequested(true);
+              navigateAdmin('loanCustomers');
+            }}
+          />
+        )
+        : adminRoute === 'overdueLoans'
+          ? <OverdueLoans onBack={() => navigateAdmin('loans')} />
+        : adminRoute === 'loanRenewal'
+          ? <LoanRenewal onBack={() => navigateAdmin('loans')} />
+        : adminRoute === 'goldRelease'
+          ? <GoldRelease onBack={() => navigateAdmin('loans')} />
+        : adminRoute === 'completeLoan'
+          ? <GoldRelease completionPage onBack={() => navigateAdmin('loans')} />
+        : adminRoute === 'loanDetails' && selectedLoanDetailsId !== null
+          ? (
+            <LoanDetails
+              loanId={selectedLoanDetailsId}
+              onBack={() => navigateAdmin('loans')}
+              onOpenRenewal={() => navigateAdmin('loanRenewal')}
+              onOpenGoldRelease={() => navigateAdmin('goldRelease')}
+            />
+          )
         : adminRoute === 'billing'
-          ? <Billing />
+          ? <Billing key={billingSession} onFormVisibilityChange={setIsBillingFormOpen} />
           : adminRoute === 'products'
             ? <Products onNavigate={navigateAdmin} />
             : adminRoute === 'categories'
@@ -290,10 +341,32 @@ function App() {
                     : adminRoute === 'more'
                       ? <More onNavigate={navigateAdmin} />
                       : adminRoute === 'customers'
-                        ? <Customers onBack={() => navigateAdmin('more')} />
+                        ? (
+                          <Customers
+                            onBack={() => navigateAdmin('more')}
+                          />
+                        )
+                        : adminRoute === 'loanCustomers'
+                          ? (
+                            <LoanCustomerManagement
+                              onBack={() => navigateAdmin('more')}
+                              openCreateOnMount={isLoanCustomerCreateRequested}
+                              onCreateOpened={() => setIsLoanCustomerCreateRequested(false)}
+                            />
+                          )
+                        : adminRoute === 'stockDetails'
+                          ? <StockDetails onBack={() => navigateAdmin('more')} />
+                        : adminRoute === 'enquiries'
+                          ? <AllEnquries onBack={() => navigateAdmin('more')} />
+                        : adminRoute === 'fundManagement'
+                          ? <FundManagement onBack={() => navigateAdmin('more')} />
                         : adminRoute === 'receipt'
                           ? <Receipt onBack={() => navigateAdmin('more')} />
-                      : <AdminHome user={user} onNavigate={navigateAdmin} />
+                          : adminRoute === 'reviews'
+                            ? <AllReview onBack={() => navigateAdmin('more')} />
+                        : adminRoute === 'homeSections'
+                          ? <HomeSections onBack={() => navigateAdmin('more')} />
+                    : <AdminHome user={user} onNavigate={navigateAdmin} />
     : null;
 
   return (
@@ -309,6 +382,8 @@ function App() {
           <AdminLayout
             user={user}
             route={adminRoute}
+            isBillingFormOpen={isBillingFormOpen}
+            isLoanFormOpen={isLoanFormOpen}
             onNavigate={navigateAdmin}
             onLogout={confirmLogout}
           >

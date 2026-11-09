@@ -22,8 +22,8 @@ module.exports = {
   border: '#E2E8E5',
   muted: '#64748B',
   navigation: {
-    active: '#F5C45E',
-    inactive: '#8DBDB4',
-    border: '#00382E',
+    active: '#EDB628',
+    inactive: '#FFFFFF',
+    border: '#01371E',
   },
 };
