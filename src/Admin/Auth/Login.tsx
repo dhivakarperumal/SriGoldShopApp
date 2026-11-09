@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Pressable,
   ScrollView,
@@ -35,11 +36,38 @@ type LoginProps = {
 };
 
 function Login({ onLoginSuccess }: LoginProps) {
+  const scrollViewRef = useRef<ScrollView>(null);
+  const isPasswordFocused = useRef(false);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent =
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSubscription = Keyboard.addListener(showEvent, () => {
+      setKeyboardVisible(true);
+      if (isPasswordFocused.current) {
+        requestAnimationFrame(() =>
+          scrollViewRef.current?.scrollToEnd({ animated: true }),
+        );
+      }
+    });
+    const hideSubscription = Keyboard.addListener(hideEvent, () => {
+      setKeyboardVisible(false);
+      isPasswordFocused.current = false;
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const handleLogin = async () => {
     const trimmedIdentifier = identifier.trim();
@@ -97,32 +125,48 @@ function Login({ onLoginSuccess }: LoginProps) {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
+            ref={scrollViewRef}
             className="flex-1"
-            contentContainerClassName="grow justify-center px-6 py-8"
+            contentContainerClassName={
+              keyboardVisible
+                ? 'grow justify-start px-6 pb-6 pt-3'
+                : 'grow justify-center px-6 py-8'
+            }
             keyboardShouldPersistTaps="handled"
             automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+            nestedScrollEnabled
           >
             <View className="z-10 w-full self-center">
-              <View className="mb-6 items-center">
+              <View
+                className={`items-center ${keyboardVisible ? 'mb-3' : 'mb-6'}`}
+              >
                 <Image
                   source={require('../../Images/logo.png')}
-                  className="h-[100px] w-60 self-center mb-2"
+                  className={`self-center ${
+                    keyboardVisible ? 'h-12 w-36' : 'mb-2 h-[100px] w-60'
+                  }`}
                   resizeMode="contain"
                   accessibilityLabel="Sri Golds"
                 />
-                <View className="-mt-2 flex-row items-center">
-                  <View className="mr-2 h-0.5 w-6 bg-accent" />
-                  <Text className="text-sm font-medium text-slate-800">
-                    Gold · Jewellery · Loans
-                  </Text>
-                  <View className="ml-2 h-0.5 w-6 bg-accent" />
-                </View>
-                <Text className="mt-5 text-2xl font-bold text-slate-950">
-                 Login
+                {!keyboardVisible ? (
+                  <View className="-mt-2 flex-row items-center">
+                    <View className="mr-2 h-0.5 w-6 bg-accent" />
+                    <Text className="text-sm font-medium text-slate-800">
+                      Gold · Jewellery · Loans
+                    </Text>
+                    <View className="ml-2 h-0.5 w-6 bg-accent" />
+                  </View>
+                ) : null}
+                <Text
+                  className={`text-2xl font-bold text-slate-950 ${
+                    keyboardVisible ? 'mt-2' : 'mt-5'
+                  }`}
+                >
+                  Login
                 </Text>
               </View>
 
-              <View className="gap-y-3">
+              <View className={keyboardVisible ? 'gap-y-2' : 'gap-y-3'}>
                 <View>
                   <Text className="mb-1.5 ml-1 text-sm font-semibold text-slate-700">
                     Username
@@ -168,6 +212,19 @@ function Login({ onLoginSuccess }: LoginProps) {
                       value={password}
                       onChangeText={setPassword}
                       secureTextEntry={!showPassword}
+                      onFocus={() => {
+                        isPasswordFocused.current = true;
+                        if (keyboardVisible) {
+                          requestAnimationFrame(() =>
+                            scrollViewRef.current?.scrollToEnd({
+                              animated: true,
+                            }),
+                          );
+                        }
+                      }}
+                      onBlur={() => {
+                        isPasswordFocused.current = false;
+                      }}
                       accessibilityLabel="Password"
                       returnKeyType="done"
                     />
@@ -189,7 +246,11 @@ function Login({ onLoginSuccess }: LoginProps) {
                 </View>
               </View>
 
-              <View className="my-5 flex-row items-center justify-between px-1">
+              <View
+                className={`flex-row items-center justify-between px-1 ${
+                  keyboardVisible ? 'my-3' : 'my-5'
+                }`}
+              >
                 <View className="flex-row items-center">
                   <View className="mr-2.5 h-5 w-5 items-center justify-center rounded border-2 border-primary bg-primary/10">
                     <Text className="-mt-1 text-base font-bold text-primary">✓</Text>
