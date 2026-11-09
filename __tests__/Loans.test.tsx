@@ -3,6 +3,7 @@ import ReactTestRenderer, { act } from 'react-test-renderer';
 import api from '../src/api';
 import Loans from '../src/Admin/Screens/Loans';
 import OverdueLoans from '../src/Admin/Loanmanegements/OverdueLoans';
+import LoanRenewal from '../src/Admin/Loanmanegements/LoanRenewal';
 import LoanCustomerManagement from '../src/Admin/Loanmanegements/LoanCustomerManagement';
 import CreateCustomers from '../src/Admin/Loanmanegements/CreateCustomers';
 
@@ -11,6 +12,7 @@ jest.mock('../src/api', () => ({
   default: {
     get: jest.fn(),
     delete: jest.fn(),
+    post: jest.fn(),
   },
 }));
 
@@ -231,6 +233,70 @@ test('shows only overdue active or suspended loans and filters the list', async 
   expect(renderer.root.findAll(node => node.props.children === 'LN-OVERDUE-2').length).toBeGreaterThan(0);
   act(() => renderer.unmount());
 });
+
+test('opens renewal payment details and posts the supplied renewal payload', async () => {
+  const renewalData = {
+    loan: { ...loans[0], loan_status: 'Active', maturity_date: '2026-01-01' },
+    preview: {
+      current_principal: 2000,
+      regular_interest: 200,
+      late_payment_fee: 100,
+      accrued_interest: 300,
+      total_due: 2300,
+      minimum_payment: 300,
+      renewal_date: '2026-11-09',
+      next_maturity_date: '2027-10-09',
+    },
+    reviewActions: [],
+  };
+  (api.get as jest.Mock).mockImplementation((path: string) => {
+    if (path === '/loans') return Promise.resolve({ data: [{ ...loans[0], outstanding_principal: 2000 }] });
+    if (path === '/loans/1/renewal') return Promise.resolve({ data: renewalData });
+    if (path === '/funds/accounts') return Promise.resolve({ data: [{ id: 8, name: 'Cash Account', is_active: true }] });
+    return Promise.reject(new Error(`Unexpected request: ${path}`));
+  });
+  (api.post as jest.Mock).mockResolvedValue({
+    data: {
+      ...renewalData,
+      loan: { ...renewalData.loan, outstanding_principal: 1800 },
+      preview: { ...renewalData.preview, current_principal: 1800 },
+    },
+  });
+
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<LoanRenewal onBack={jest.fn()} />);
+  });
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Pay loan LN-001' }).props.onPress();
+  });
+  expect(api.get).toHaveBeenCalledWith('/loans/1/renewal');
+  expect(api.get).toHaveBeenCalledWith('/funds/accounts');
+
+  await act(async () => {
+    renderer.root.findByProps({ placeholder: 'Enter amount received' }).props.onChangeText('500');
+  });
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Select deposit account' }).props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Option Cash Account' }).props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Record payment and renew loan' }).props.onPress();
+  });
+
+  expect(api.post).toHaveBeenCalledWith(
+    '/loans/1/renewal',
+    expect.objectContaining({
+      payment_amount: 500,
+      account_id: '8',
+      payment_method: 'Cash',
+      reference_number: '',
+    }),
+  );
+  act(() => renderer.unmount());
+}, 30000);
 
 test('shows an explicit retry state when the loan request fails', async () => {
   (api.get as jest.Mock).mockRejectedValueOnce({ message: 'Network unavailable' });

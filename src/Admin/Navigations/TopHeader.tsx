@@ -35,6 +35,7 @@ export type AdminRoute =
   | 'customers'
   | 'loanCustomers'
   | 'overdueLoans'
+  | 'loanRenewal'
   | 'stockDetails'
   | 'enquiries'
   | 'fundManagement'

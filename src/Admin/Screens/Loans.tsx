@@ -174,10 +174,12 @@ function Loans({
   onFormVisibilityChange,
   onCreateCustomer,
   onOpenOverdueLoans,
+  onOpenLoanRenewal,
 }: {
   onFormVisibilityChange?: (visible: boolean) => void;
   onCreateCustomer?: () => void;
   onOpenOverdueLoans?: () => void;
+  onOpenLoanRenewal?: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const [loans, setLoans] = useState<Loan[]>([]);
@@ -647,6 +649,11 @@ function Loans({
                     if (filter === 'Overdue Loans' && onOpenOverdueLoans) {
                       setIsFilterModalOpen(false);
                       onOpenOverdueLoans();
+                      return;
+                    }
+                    if (filter === 'Loan Renewal' && onOpenLoanRenewal) {
+                      setIsFilterModalOpen(false);
+                      onOpenLoanRenewal();
                       return;
                     }
                     setLoanListFilter(filter);

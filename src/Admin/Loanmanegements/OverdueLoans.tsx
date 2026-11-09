@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import api from '../../api';
+import { LoanPaymentModal } from './LoanRenewal';
 
 type Loan = Record<string, unknown> & {
   id: string | number;
@@ -150,6 +151,7 @@ function OverdueLoans({ onBack }: Props) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [paymentLoan, setPaymentLoan] = useState<Loan | null>(null);
 
   const loadLoans = useCallback(async (refresh = false) => {
     if (refresh) setRefreshing(true);
@@ -466,6 +468,18 @@ function OverdueLoans({ onBack }: Props) {
                     15-month review
                   </Text>
                 ) : null}
+                <View className="flex-row justify-end border-t border-slate-100 pt-3">
+                  {loan.loan_status?.toLowerCase() === 'active' ? (
+                    <Pressable
+                      onPress={() => setPaymentLoan(loan)}
+                      className="min-h-10 items-center justify-center rounded-xl bg-primary px-4 py-2"
+                      accessibilityRole="button"
+                      accessibilityLabel={`Pay loan ${loan.loan_number || loan.id}`}
+                    >
+                      <Text className="text-xs font-bold text-white">Pay / Renew</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
               </View>
             ))}
           </View>
@@ -482,6 +496,17 @@ function OverdueLoans({ onBack }: Props) {
           </View>
         )}
       </ScrollView>
+      {paymentLoan ? (
+        <LoanPaymentModal
+          loan={paymentLoan}
+          onClose={() => setPaymentLoan(null)}
+          onLoanUpdated={updatedLoan => {
+            setLoans(current => current.map(loan =>
+              String(loan.id) === String(updatedLoan.id) ? { ...loan, ...updatedLoan } : loan,
+            ));
+          }}
+        />
+      ) : null}
     </View>
   );
 }

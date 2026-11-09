@@ -46,6 +46,7 @@ function AdminLayout({
     activeRoute !== 'customers' &&
     activeRoute !== 'loanCustomers' &&
     activeRoute !== 'overdueLoans' &&
+    activeRoute !== 'loanRenewal' &&
     activeRoute !== 'stockDetails' &&
     activeRoute !== 'enquiries' &&
     activeRoute !== 'fundManagement' &&
