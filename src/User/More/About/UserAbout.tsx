@@ -61,7 +61,7 @@ const JOURNEY = [
 
 function UserAbout({ onBack }: UserAboutProps) {
   return (
-    <View className="flex-1 bg-[#fffaf0]">
+    <View className="flex-1 bg-white">
       <View className="flex-row items-center bg-[#003B2D] px-4 py-3">
         <Pressable
           className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-white/15"
@@ -79,29 +79,29 @@ function UserAbout({ onBack }: UserAboutProps) {
         contentContainerClassName="pb-8"
         showsVerticalScrollIndicator={false}
       >
-        <View className="m-4 overflow-hidden rounded-3xl bg-[#00382a] p-5">
-          <View className="mb-4 h-11 w-11 items-center justify-center rounded-xl border border-[#e9c66d]/50 bg-white/10">
+        <View className="m-4 overflow-hidden rounded-3xl border border-[#e7e0d5] bg-white p-5">
+          <View className="mb-4 h-11 w-11 items-center justify-center rounded-xl bg-[#edf5f1]">
             <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
               <Path
                 d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"
-                stroke="#f2d58a"
+                stroke="#bd821e"
                 strokeWidth={1.5}
                 strokeLinejoin="round"
               />
             </Svg>
           </View>
-          <Text className="text-[11px] font-bold uppercase tracking-[2px] text-[#f2d58a]">
+          <Text className="text-[11px] font-bold uppercase tracking-[2px] text-[#a87418]">
             About Sri Golds
           </Text>
-          <Text className="mt-2 text-2xl font-bold leading-8 text-white">
+          <Text className="mt-2 text-2xl font-bold leading-8 text-[#003b2d]">
             Crafting Brighter Moments
           </Text>
-          <Text className="mt-3 text-sm leading-6 text-white/90">
+          <Text className="mt-3 text-sm leading-6 text-slate-600">
             Sri Golds is a trusted jewellery brand offering gold, diamond, and
             silver jewellery for every occasion. Thoughtful designs and a
             tradition of craftsmanship help you find pieces worth treasuring.
           </Text>
-          <Text className="mt-3 text-sm leading-6 text-white/90">
+          <Text className="mt-3 text-sm leading-6 text-slate-600">
             From everyday favourites to life’s biggest celebrations, discover
             jewellery chosen with care and a personal touch.
           </Text>
@@ -110,9 +110,9 @@ function UserAbout({ onBack }: UserAboutProps) {
               value => (
                 <View
                   key={value}
-                  className="rounded-full border border-[#f2d58a]/40 bg-white/10 px-3 py-2"
+                  className="rounded-full border border-[#d9c9a5] bg-[#fffaf0] px-3 py-2"
                 >
-                  <Text className="text-xs font-semibold text-[#f2d58a]">
+                  <Text className="text-xs font-semibold text-[#7b5719]">
                     {value}
                   </Text>
                 </View>
@@ -133,7 +133,7 @@ function UserAbout({ onBack }: UserAboutProps) {
             {VALUES.map(value => (
               <View
                 key={value.number}
-                className="rounded-2xl border border-[#eadcc0] bg-white p-4"
+                className="rounded-2xl border border-[#e7e0d5] bg-white p-4"
               >
                 <View className="flex-row items-center">
                   <View className="mr-3 h-9 w-9 items-center justify-center rounded-lg bg-[#fff4d9]">
@@ -153,7 +153,7 @@ function UserAbout({ onBack }: UserAboutProps) {
           </View>
         </View>
 
-        <View className="mx-4 mt-6 rounded-2xl bg-[#fff2d3] p-4">
+        <View className="mx-4 mt-6 rounded-2xl border border-[#e7e0d5] bg-white p-4">
           <Text className="text-[11px] font-bold uppercase tracking-[2px] text-[#ae7617]">
             The Sri Golds Journey
           </Text>

@@ -36,12 +36,12 @@ const MORE_ITEMS: {
 function MoreMenu({ onSelect }: MoreMenuProps) {
   return (
     <ScrollView
-      className="flex-1 bg-[#fffaf0]"
+      className="flex-1 bg-white"
       contentContainerClassName="gap-4 px-4 py-6"
       showsVerticalScrollIndicator={false}
     >
       <View className="mb-1">
-        <Text className="text-2xl font-bold text-primary-dark">More</Text>
+        <Text className="text-2xl font-bold text-[#003b2d]">More</Text>
         <Text className="mt-1 text-sm leading-5 text-slate-600">
           Get to know Sri Golds or reach our team.
         </Text>
@@ -49,16 +49,16 @@ function MoreMenu({ onSelect }: MoreMenuProps) {
       {MORE_ITEMS.map(item => (
         <Pressable
           key={item.id}
-          className="min-h-24 flex-row items-center rounded-2xl border border-[#eadcc0] bg-white p-4 active:bg-amber-50"
+          className="min-h-24 flex-row items-center rounded-2xl border border-[#e7e0d5] bg-white p-4 active:bg-[#f2f7f4]"
           onPress={() => onSelect(item.id)}
           accessibilityRole="button"
           accessibilityLabel={item.title}
         >
-          <View className="mr-4 h-12 w-12 items-center justify-center rounded-xl bg-[#fff4d9]">
+          <View className="mr-4 h-12 w-12 items-center justify-center rounded-xl bg-[#edf5f1]">
             <Svg width={23} height={23} viewBox="0 0 24 24" fill="none">
               <Path
                 d={item.icon}
-                stroke="#a87418"
+                stroke="#08796a"
                 strokeWidth={1.8}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -73,7 +73,7 @@ function MoreMenu({ onSelect }: MoreMenuProps) {
               {item.description}
             </Text>
           </View>
-          <Text className="ml-3 text-xl font-semibold text-[#a87418]">›</Text>
+          <Text className="ml-3 text-xl font-semibold text-[#08796a]">›</Text>
         </Pressable>
       ))}
     </ScrollView>

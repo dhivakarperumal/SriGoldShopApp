@@ -102,7 +102,7 @@ function UserContact({ onBack }: UserContactProps) {
   )}`;
 
   return (
-    <View className="flex-1 bg-[#fffaf0]">
+    <View className="flex-1 bg-white">
       <View className="flex-row items-center bg-[#003B2D] px-4 py-3">
         <Pressable
           className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-white/15"
@@ -217,14 +217,14 @@ function UserContact({ onBack }: UserContactProps) {
               multiline
             />
             <Pressable
-              className="min-h-12 flex-row items-center justify-center rounded-full bg-[#d9a441] px-4 py-3 active:opacity-80"
+              className="min-h-12 flex-row items-center justify-center rounded-full bg-[#08796a] px-4 py-3 active:opacity-80"
               onPress={sendMessage}
               accessibilityRole="button"
             >
-              <Text className="text-sm font-bold text-[#23382c]">
+              <Text className="text-sm font-bold text-white">
                 Continue to WhatsApp
               </Text>
-              <Text className="ml-2 text-base font-bold text-[#23382c]">›</Text>
+              <Text className="ml-2 text-base font-bold text-white">›</Text>
             </Pressable>
           </View>
         </View>
@@ -267,7 +267,7 @@ type ContactActionProps = {
 function ContactAction({ title, detail, icon, onPress }: ContactActionProps) {
   return (
     <Pressable
-      className="min-h-20 flex-row items-center px-4 py-3 active:bg-[#fffaf0]"
+      className="min-h-20 flex-row items-center px-4 py-3 active:bg-[#f2f7f4]"
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${title}: ${detail}`}

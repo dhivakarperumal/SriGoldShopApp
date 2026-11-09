@@ -439,7 +439,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
         />
       ) : null}
       <SafeAreaView
-        className="flex-1 bg-[#fffaf0]"
+        className={`flex-1 ${activeTab === 'more' ? 'bg-white' : 'bg-[#fffaf0]'}`}
         edges={contentSafeAreaEdges}
       >
         <View className="flex-1">
