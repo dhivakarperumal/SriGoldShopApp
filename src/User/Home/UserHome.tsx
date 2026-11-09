@@ -216,7 +216,12 @@ function UserHome({
           error={errors.categories}
           onSelectCategory={onExploreCategory}
         />
-        {HOME_PRODUCT_METALS.map((metal, index) => (
+        <HomeGoldRatesSection
+          rates={data.rates}
+          isLoading={isLoading}
+          error={errors.rates}
+        />
+        {HOME_PRODUCT_METALS.map(metal => (
           <View key={metal}>
             <HomeMetalsShowcase
               metalName={metal}
@@ -236,13 +241,6 @@ function UserHome({
               isFavorite={isFavorite}
               onToggleFavorite={onToggleFavorite}
             />
-            {index === 0 ? (
-              <HomeGoldRatesSection
-                rates={data.rates}
-                isLoading={isLoading}
-                error={errors.rates}
-              />
-            ) : null}
           </View>
         ))}
         <HomeBannerSections />
