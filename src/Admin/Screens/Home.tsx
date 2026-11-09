@@ -735,38 +735,38 @@ function DashboardCardArtwork({
         <Path d="M0 78 C58 60 93 92 157 76 C213 62 258 39 300 36 V96 H0Z" fill={color} opacity={0.18} />
         <Path d="M0 90 C72 76 106 98 174 86 C224 76 265 55 300 52 V96 H0Z" fill={color} opacity={0.34} />
         <G transform="translate(-22 0)">
-        {icon === 'rupee' ? (
-          <>
-            <Rect x="210" y="66" width="12" height="22" rx="2" fill={color} opacity={0.72} />
-            <Rect x="230" y="54" width="12" height="34" rx="2" fill={color} opacity={0.82} />
-            <Rect x="250" y="41" width="12" height="47" rx="2" fill={color} opacity={0.9} />
-            <Path d="M201 62 C222 57 231 43 245 37 C256 32 265 32 278 20" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
-            <Path d="M268 20 H279 V31" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-          </>
-        ) : icon === 'users' ? (
-          <>
-            <Circle cx="220" cy="50" r="8" fill={color} opacity={0.76} />
-            <Circle cx="251" cy="43" r="10" fill={color} opacity={0.9} />
-            <Circle cx="282" cy="50" r="8" fill={color} opacity={0.76} />
-            <Path d="M204 84 C204 69 211 61 221 61 C231 61 237 69 237 84Z" fill={color} opacity={0.76} />
-            <Path d="M229 90 C229 69 237 58 251 58 C265 58 273 69 273 90Z" fill={color} opacity={0.92} />
-            <Path d="M265 84 C265 69 271 61 281 61 C291 61 297 69 297 84Z" fill={color} opacity={0.76} />
-          </>
-        ) : icon === 'gold' ? (
-          <>
-            <Path d="M242 43 C240 34 247 29 254 24 C261 30 269 34 267 44 C265 53 244 53 242 43Z" fill="#FBBF24" />
-            <Path d="M246 42 C248 37 260 37 264 42 V81 C260 87 249 87 245 81Z" fill="#F59E0B" opacity={0.92} />
-            <Path d="M244 44 H266 M249 79 H262" stroke="#92400E" strokeWidth="3" strokeLinecap="round" />
-            <Circle cx="224" cy="76" r="11" fill="#FDE68A" stroke="#F59E0B" strokeWidth="3" />
-            <Circle cx="224" cy="58" r="11" fill="#FDE68A" stroke="#F59E0B" strokeWidth="3" />
-            <Path d="M213 58 H235 M213 76 H235" stroke="#D97706" strokeWidth="2" />
-          </>
-        ) : (
-          <>
-            <Circle cx="260" cy="58" r="20" fill="none" stroke={color} strokeWidth="4" opacity={0.75} />
-            <Path d="M250 58 L258 66 L272 48" fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-          </>
-        )}
+          {icon === 'rupee' ? (
+            <>
+              <Rect x="210" y="66" width="12" height="22" rx="2" fill={color} opacity={0.72} />
+              <Rect x="230" y="54" width="12" height="34" rx="2" fill={color} opacity={0.82} />
+              <Rect x="250" y="41" width="12" height="47" rx="2" fill={color} opacity={0.9} />
+              <Path d="M201 62 C222 57 231 43 245 37 C256 32 265 32 278 20" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
+              <Path d="M268 20 H279 V31" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            </>
+          ) : icon === 'users' ? (
+            <>
+              <Circle cx="220" cy="50" r="8" fill={color} opacity={0.76} />
+              <Circle cx="251" cy="43" r="10" fill={color} opacity={0.9} />
+              <Circle cx="282" cy="50" r="8" fill={color} opacity={0.76} />
+              <Path d="M204 84 C204 69 211 61 221 61 C231 61 237 69 237 84Z" fill={color} opacity={0.76} />
+              <Path d="M229 90 C229 69 237 58 251 58 C265 58 273 69 273 90Z" fill={color} opacity={0.92} />
+              <Path d="M265 84 C265 69 271 61 281 61 C291 61 297 69 297 84Z" fill={color} opacity={0.76} />
+            </>
+          ) : icon === 'gold' ? (
+            <>
+              <Path d="M242 43 C240 34 247 29 254 24 C261 30 269 34 267 44 C265 53 244 53 242 43Z" fill="#FBBF24" />
+              <Path d="M246 42 C248 37 260 37 264 42 V81 C260 87 249 87 245 81Z" fill="#F59E0B" opacity={0.92} />
+              <Path d="M244 44 H266 M249 79 H262" stroke="#92400E" strokeWidth="3" strokeLinecap="round" />
+              <Circle cx="224" cy="76" r="11" fill="#FDE68A" stroke="#F59E0B" strokeWidth="3" />
+              <Circle cx="224" cy="58" r="11" fill="#FDE68A" stroke="#F59E0B" strokeWidth="3" />
+              <Path d="M213 58 H235 M213 76 H235" stroke="#D97706" strokeWidth="2" />
+            </>
+          ) : (
+            <>
+              <Circle cx="260" cy="58" r="20" fill="none" stroke={color} strokeWidth="4" opacity={0.75} />
+              <Path d="M250 58 L258 66 L272 48" fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+            </>
+          )}
         </G>
       </Svg>
     </View>
