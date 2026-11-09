@@ -287,11 +287,6 @@ function UserExplore({
     [products],
   );
 
-  const popularProducts = useMemo(
-    () => products.filter(product => product.name).slice(0, 8),
-    [products],
-  );
-
   const filteredProducts = useMemo(() => {
     const query = search.trim().toLowerCase();
     const filtered = products.filter(product => {
@@ -440,41 +435,6 @@ function UserExplore({
             </Pressable>
           ) : null}
         </View>
-
-        {popularProducts.length > 0 ? (
-          <View className="mb-4">
-            <Text className="mb-2 text-sm font-bold text-[#29231c]">
-              Popular searches
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {popularProducts.map((product, index) => (
-                <Pressable
-                  key={String(product.id ?? product.product_code ?? index)}
-                  onPress={() =>
-                    setSearch(current =>
-                      current === product.name ? '' : product.name || '',
-                    )
-                  }
-                  className={`mr-2 rounded-full border px-3 py-2 ${
-                    search === product.name
-                      ? 'border-primary bg-[#edf5ef]'
-                      : 'border-[#eee5d6] bg-white'
-                  }`}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Search ${product.name}`}
-                  accessibilityState={{ selected: search === product.name }}
-                >
-                  <Text
-                    className="max-w-36 text-xs font-medium text-[#514638]"
-                    numberOfLines={1}
-                  >
-                    {product.name}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
-        ) : null}
 
         <View className="mb-3 flex-row items-center justify-between">
           <View>
