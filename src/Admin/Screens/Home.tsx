@@ -6,6 +6,7 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -139,15 +140,25 @@ type HomeProps = {
 };
 
 const STAT_CARDS = [
-  { id: 'today_collection', fallbackLabel: "Today's Collection", icon: 'rupee', color: '#F97316', backgroundColor: '#FFF7ED' },
-  { id: 'total_customers', fallbackLabel: 'Total Customers', icon: 'users', color: '#1685E8', backgroundColor: '#EFF6FF' },
-  { id: 'active_gold_loans', fallbackLabel: 'Active Gold Loans', icon: 'gold', color: '#8B27C8', backgroundColor: '#FAF5FF' },
-  { id: 'gold_stock_value', fallbackLabel: 'Gold Stock Value', icon: 'gem', color: '#9A3412', backgroundColor: '#FEF2F2' },
-  { id: 'total_products', fallbackLabel: 'Total Products', icon: 'box', color: '#0F766E', backgroundColor: '#F0FDFA' },
-  { id: 'total_categories', fallbackLabel: 'Total Categories', icon: 'layers', color: '#6D28D9', backgroundColor: '#F5F3FF' },
-  { id: 'completed_loans', fallbackLabel: 'Completed Loans', icon: 'check', color: '#0F766E', backgroundColor: '#ECFDF5' },
-  { id: 'low_stock_products', fallbackLabel: 'Low Stock Products', icon: 'alert', color: '#BE123C', backgroundColor: '#FFF1F2' },
+  { id: 'today_collection', fallbackLabel: "Today's Collection", icon: 'rupee', color: '#E6BF5A', backgroundColor: '#063D32' },
+  { id: 'total_customers', fallbackLabel: 'Total Customers', icon: 'users', color: '#E6BF5A', backgroundColor: '#0A3768' },
+  { id: 'active_gold_loans', fallbackLabel: 'Active Gold Loans', icon: 'gold', color: '#E6BF5A', backgroundColor: '#4B164E' },
+  { id: 'gold_stock_value', fallbackLabel: 'Gold Stock Value', icon: 'gem', color: '#E6BF5A', backgroundColor: '#571E38' },
+  { id: 'total_products', fallbackLabel: 'Total Products', icon: 'box', color: '#E6BF5A', backgroundColor: '#123E57' },
+  { id: 'total_categories', fallbackLabel: 'Total Categories', icon: 'layers', color: '#E6BF5A', backgroundColor: '#3E2865' },
+  { id: 'completed_loans', fallbackLabel: 'Completed Loans', icon: 'check', color: '#E6BF5A', backgroundColor: '#1C4E45' },
+  { id: 'low_stock_products', fallbackLabel: 'Low Stock Products', icon: 'alert', color: '#E6BF5A', backgroundColor: '#5A2A22' },
 ] as const;
+
+const styles = StyleSheet.create({
+  statIconBadge: {
+    borderWidth: 1.5,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 7,
+    elevation: 5,
+  },
+});
 
 const FILTERS = [
   { label: 'All time', value: 'all' },
@@ -417,37 +428,67 @@ function Home({ user, onNavigate }: HomeProps) {
           return (
             <View
               key={card.id}
-              className="mb-3 min-h-[108px] w-[48.5%] overflow-hidden rounded-xl border px-3 py-2 shadow-sm"
+              className="mb-3 min-h-[108px] w-[48.5%] overflow-hidden rounded-[18px] border-2 px-2.5 pb-2 pt-2 shadow-lg"
               style={{
                 backgroundColor: card.backgroundColor,
-                borderColor: `${card.color}35`,
+                borderColor: card.color,
               }}
               accessibilityLabel={`${stat?.label || card.fallbackLabel}: ${value}${stat?.trend ? `. ${stat.trend}` : ''}`}
               accessible
             >
               <DashboardCardArtwork color={card.color} />
-              <View className="z-10 flex-row items-center">
+              <View className="z-10 min-h-10 flex-row items-center">
                 <View
-                  className="mr-2.5 h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-sm"
+                  className="mr-1.5 h-6 w-1 shrink-0 rounded-full"
                   style={{ backgroundColor: card.color }}
-                >
-                  <DashboardIcon
-                    name={card.icon}
-                    color="#FFFFFF"
-                    size={card.icon === 'check' ? 16 : 20}
-                  />
-                </View>
-                <View className="min-w-0 flex-1">
+                />
+                <View className="min-w-0 flex-1 pr-1">
                   <Text
-                    className="text-[13px] font-bold leading-[17px] text-slate-900"
+                    className="text-[11px] font-bold leading-[14px] text-white"
                     numberOfLines={2}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.75}
                   >
                     {stat?.label || card.fallbackLabel}
                   </Text>
                 </View>
+                <View
+                  className="h-10 w-10 shrink-0 items-center justify-center"
+                  pointerEvents="none"
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                >
+                  <View
+                    className="h-7 w-7 items-center justify-center rounded-lg border"
+                    style={[
+                      styles.statIconBadge,
+                      {
+                        borderColor: card.color,
+                        backgroundColor: `${card.color}35`,
+                        transform: [{ rotate: '45deg' }],
+                        shadowColor: card.color,
+                      },
+                    ]}
+                  >
+                    <View style={{ transform: [{ rotate: '-45deg' }] }}>
+                      <DashboardIcon name={card.icon} color={card.color} size={18} />
+                    </View>
+                  </View>
+                  <Svg
+                    width={10}
+                    height={10}
+                    viewBox="0 0 24 24"
+                    className="absolute right-1 top-0"
+                  >
+                    <Path
+                      d="M12 1.5 14.2 9.8 22.5 12l-8.3 2.2-2.2 8.3-2.2-8.3L1.5 12l8.3-2.2L12 1.5Z"
+                      fill="#FFF4C2"
+                    />
+                  </Svg>
+                </View>
               </View>
               <Text
-                className="z-10 mt-1 text-[24px] font-extrabold tracking-tight text-slate-950"
+                className="z-10 mt-1 text-[24px] font-extrabold tracking-tight text-white"
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.65}
