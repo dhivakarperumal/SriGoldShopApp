@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   AppState,
   ActivityIndicator,
+  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -11,6 +12,7 @@ import {
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import api from '../../api';
 import ProductCard from '../../Components/ProductCard';
+import { getProductImageUrl } from '../../utils/productImage';
 import type { AuthenticatedUser } from '../Auth/Login';
 import type { AdminRoute } from '../Navigations/TopHeader';
 
@@ -631,7 +633,10 @@ function Home({ user, onNavigate }: HomeProps) {
               return (
                 <ProductCard
                   key={`${name}-${index}`}
-                  product={product}
+                  product={{
+                    ...product,
+                    image_url: imageUrl ?? product.image_url,
+                  }}
                   layout="compact"
                   title={name}
                   subtitle={
@@ -659,30 +664,6 @@ function Home({ user, onNavigate }: HomeProps) {
         )}
       </View>
     </ScrollView>
-  );
-}
-
-function ProductThumbnail({ imageUrl }: { imageUrl?: string }) {
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    setHasError(false);
-  }, [imageUrl]);
-
-  return (
-    <View className="mr-3 h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-amber-50">
-      {imageUrl && !hasError ? (
-        <Image
-          source={{ uri: imageUrl }}
-          className="h-full w-full"
-          resizeMode="cover"
-          onError={() => setHasError(true)}
-          accessibilityLabel="Product image"
-        />
-      ) : (
-        <DashboardIcon name="gem" color="#B7791F" size={20} />
-      )}
-    </View>
   );
 }
 
