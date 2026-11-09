@@ -284,7 +284,11 @@ function ActionButton({
   );
 }
 
-export default function Billing() {
+export default function Billing({
+  onFormVisibilityChange,
+}: {
+  onFormVisibilityChange?: (isOpen: boolean) => void;
+}) {
   const [bills, setBills] = useState<Bill[]>([]);
   const [catalog, setCatalog] = useState<Product[]>([]);
   const [exchangeCategories, setExchangeCategories] = useState<ProductCategory[]>([]);
@@ -323,6 +327,10 @@ export default function Billing() {
   const [payment, setPayment] = useState<PaymentForm | null>(null);
   const [isPaymentSaving, setIsPaymentSaving] = useState(false);
   const [paymentMethodIndex, setPaymentMethodIndex] = useState(0);
+
+  useEffect(() => {
+    onFormVisibilityChange?.(showForm);
+  }, [onFormVisibilityChange, showForm]);
 
   const loadBills = useCallback(async (refresh = false) => {
     if (refresh) setIsRefreshing(true);

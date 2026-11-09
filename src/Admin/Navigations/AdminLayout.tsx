@@ -9,6 +9,7 @@ type AdminLayoutProps = {
   user: AuthenticatedUser;
   currentRoute?: AdminRoute;
   route?: AdminRoute;
+  isBillingFormOpen?: boolean;
   children: ReactNode;
   onNavigate: (route: AdminRoute) => void;
   onLogout: () => void;
@@ -18,15 +19,20 @@ function AdminLayout({
   user,
   currentRoute,
   route,
+  isBillingFormOpen = false,
   children,
   onNavigate,
   onLogout,
 }: AdminLayoutProps) {
   const activeRoute = route || currentRoute;
-  const showBottomNav = activeRoute ? isMainTab(activeRoute) : false;
+  const bottomNavRoute =
+    activeRoute && isMainTab(activeRoute) ? activeRoute : undefined;
+  const showBottomNav =
+    bottomNavRoute !== undefined &&
+    (bottomNavRoute !== 'billing' || !isBillingFormOpen);
   const showAppHeader =
     activeRoute !== 'profile' &&
-    activeRoute !== 'billing' &&
+    (activeRoute !== 'billing' || !isBillingFormOpen) &&
     activeRoute !== 'categories' &&
     activeRoute !== 'addCategory' &&
     activeRoute !== 'editCategory' &&
@@ -57,9 +63,9 @@ function AdminLayout({
       >
         <View className="flex-1">
           {children}
-          {showBottomNav && activeRoute && isMainTab(activeRoute) ? (
+          {showBottomNav && bottomNavRoute ? (
             <BottomNavigation
-              activeRoute={activeRoute}
+              activeRoute={bottomNavRoute}
               onSelect={tabRoute => onNavigate(tabRoute)}
             />
           ) : null}
@@ -73,6 +79,7 @@ function isMainTab(route: AdminRoute): route is MainTabRoute {
   return (
     route === 'home' ||
     route === 'loans' ||
+    route === 'billing' ||
     route === 'products' ||
     route === 'more'
   );

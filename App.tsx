@@ -42,6 +42,7 @@ function App() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingGoldRateSet, setEditingGoldRateSet] = useState<CurrentRateSet | null>(null);
   const [billingSession, setBillingSession] = useState(0);
+  const [isBillingFormOpen, setIsBillingFormOpen] = useState(false);
   const isLoggingOut = useRef(false);
 
   useEffect(() => {
@@ -156,7 +157,7 @@ function App() {
       : adminRoute === 'loans'
         ? <Loans />
         : adminRoute === 'billing'
-          ? <Billing key={billingSession} />
+          ? <Billing key={billingSession} onFormVisibilityChange={setIsBillingFormOpen} />
           : adminRoute === 'products'
             ? <Products onNavigate={navigateAdmin} />
             : adminRoute === 'categories'
@@ -258,6 +259,7 @@ function App() {
           <AdminLayout
             user={user}
             route={adminRoute}
+            isBillingFormOpen={isBillingFormOpen}
             onNavigate={navigateAdmin}
             onLogout={confirmLogout}
           >
