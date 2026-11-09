@@ -127,15 +127,6 @@ test('filters loans by overdue, unrenewed, gold release, and completed status', 
 
   const selectFilter = async (filter: string) => {
     await act(async () => {
-      renderer.root
-        .findAll(
-          node =>
-            typeof node.props.accessibilityLabel === 'string' &&
-            node.props.accessibilityLabel.startsWith('Filter loans, current filter '),
-        )[0]
-        .props.onPress();
-    });
-    await act(async () => {
       renderer.root.findByProps({ accessibilityLabel: `Loan list filter ${filter}` }).props.onPress();
     });
   };
@@ -164,15 +155,6 @@ test('opens the dedicated overdue loans screen from the loan filter', async () =
   });
 
   await act(async () => {
-    renderer.root
-      .findAll(
-        node =>
-          typeof node.props.accessibilityLabel === 'string' &&
-          node.props.accessibilityLabel.startsWith('Filter loans, current filter '),
-      )[0]
-      .props.onPress();
-  });
-  await act(async () => {
     renderer.root.findByProps({ accessibilityLabel: 'Loan list filter Overdue Loans' }).props.onPress();
   });
 
@@ -188,17 +170,8 @@ test('opens gold release and completion screens from their loan filters', async 
     renderer = ReactTestRenderer.create(
       <Loans onOpenGoldRelease={onOpenGoldRelease} onOpenCompleteLoan={onOpenCompleteLoan} />,
     );
-  });
+  }  );
   const openFilter = async (filter: string) => {
-    await act(async () => {
-      renderer.root
-        .findAll(
-          node =>
-            typeof node.props.accessibilityLabel === 'string' &&
-            node.props.accessibilityLabel.startsWith('Filter loans, current filter '),
-        )[0]
-        .props.onPress();
-    });
     await act(async () => {
       renderer.root.findByProps({ accessibilityLabel: `Loan list filter ${filter}` }).props.onPress();
     });

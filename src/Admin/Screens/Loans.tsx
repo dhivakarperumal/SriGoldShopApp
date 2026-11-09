@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -11,7 +10,6 @@ import {
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../api';
 import PulseFab from '../Componets/PulseFab';
 import CreateLoan from '../Loanmanegements/CreateLoan';
@@ -187,11 +185,9 @@ function Loans({
   onOpenCompleteLoan?: () => void;
   onOpenLoanDetails?: (loanId: string | number) => void;
 }) {
-  const insets = useSafeAreaInsets();
   const [loans, setLoans] = useState<Loan[]>([]);
   const [search, setSearch] = useState('');
   const [loanListFilter, setLoanListFilter] = useState<LoanListFilter>('All Loans');
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -395,20 +391,83 @@ function Loans({
             autoCapitalize="none"
             accessibilityLabel="Search loans"
           />
-          <Pressable
-            onPress={() => setIsFilterModalOpen(true)}
-            className="flex-row items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
-            accessibilityRole="button"
-            accessibilityLabel={`Filter loans, current filter ${loanListFilter}`}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerClassName="flex-row gap-2"
+            nestedScrollEnabled
+            accessibilityLabel="Loan filters"
           >
-            <View>
-              <Text className="text-[10px] font-semibold text-slate-500">Loan list</Text>
-              <Text className="mt-1 text-sm font-bold text-slate-800">
-                {loanListFilter}
-              </Text>
-            </View>
-            <Text className="text-base font-bold text-slate-500">⌄</Text>
-          </Pressable>
+            {LOAN_LIST_FILTERS.map(filter => {
+              const selected = loanListFilter === filter;
+              const count = loans.filter(loan => {
+                switch (filter) {
+                  case 'All Loans':
+                    return true;
+                  case 'Overdue Loans':
+                    return isOverdueActiveLoan(loan, today);
+                  case 'Loan Renewal':
+                    return isRenewalEligible(loan, loans);
+                  case 'Gold Release':
+                    return isAwaitingGoldRelease(loan);
+                  case 'Complete Loan':
+                    return String(loan.loan_status || '').toLowerCase() === 'completed';
+                  default:
+                    return getDisplayStatus(loan).toLowerCase() === filter.toLowerCase();
+                }
+              }).length;
+              return (
+                <Pressable
+                  key={filter}
+                  onPress={() => {
+                    if (filter === 'Overdue Loans' && onOpenOverdueLoans) {
+                      onOpenOverdueLoans();
+                      return;
+                    }
+                    if (filter === 'Loan Renewal' && onOpenLoanRenewal) {
+                      onOpenLoanRenewal();
+                      return;
+                    }
+                    if (filter === 'Gold Release' && onOpenGoldRelease) {
+                      onOpenGoldRelease();
+                      return;
+                    }
+                    if (filter === 'Complete Loan' && onOpenCompleteLoan) {
+                      onOpenCompleteLoan();
+                      return;
+                    }
+                    setLoanListFilter(filter);
+                    setCurrentPage(1);
+                    setExpandedLoanId(null);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Loan list filter ${filter}`}
+                  accessibilityHint={`${count} loans`}
+                  accessibilityState={{ selected }}
+                  className={`shrink-0 flex-row items-center rounded-full border px-3 py-2 ${
+                    selected
+                      ? 'border-primary bg-primary'
+                      : 'border-slate-200 bg-slate-50'
+                  }`}
+                >
+                  <Text
+                    className={`text-xs font-bold ${
+                      selected ? 'text-white' : 'text-slate-700'
+                    }`}
+                  >
+                    {filter}
+                  </Text>
+                  <Text
+                    className={`ml-1.5 text-[10px] font-extrabold ${
+                      selected ? 'text-white/80' : 'text-slate-500'
+                    }`}
+                  >
+                    {count}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         </View>
 
         {error ? (
@@ -619,131 +678,7 @@ function Loans({
           onPress={() => setIsFabOpen(open => !open)}
         />
       </View>
-      <Modal
-        visible={isFilterModalOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setIsFilterModalOpen(false)}
-      >
-        <View className="flex-1 justify-end bg-black/50">
-          <View
-            className="max-h-[85%] rounded-t-3xl border-t border-slate-200 bg-white px-4 pb-5 pt-5"
-            style={{ paddingBottom: Math.max(insets.bottom, 24) }}
-          >
-            <View className="mb-3 flex-row items-center justify-between">
-              <Text className="text-base font-extrabold text-slate-900">Loan filters</Text>
-              <Pressable
-                onPress={() => setIsFilterModalOpen(false)}
-                accessibilityRole="button"
-                accessibilityLabel="Close loan filters"
-                className="rounded-full bg-slate-100 px-3 py-1.5"
-              >
-                <Text className="text-xs font-bold text-slate-700">Close</Text>
-              </Pressable>
-            </View>
-            {LOAN_LIST_FILTERS.map(filter => {
-              const selected = loanListFilter === filter;
-              const count = loans.filter(loan => {
-                switch (filter) {
-                  case 'All Loans':
-                    return true;
-                  case 'Overdue Loans':
-                    return isOverdueActiveLoan(loan, today);
-                  case 'Loan Renewal':
-                    return isRenewalEligible(loan, loans);
-                  case 'Gold Release':
-                    return isAwaitingGoldRelease(loan);
-                  case 'Complete Loan':
-                    return String(loan.loan_status || '').toLowerCase() === 'completed';
-                  default:
-                    return getDisplayStatus(loan).toLowerCase() === filter.toLowerCase();
-                }
-              }).length;
-              return (
-                <Pressable
-                  key={filter}
-                  onPress={() => {
-                    if (filter === 'Overdue Loans' && onOpenOverdueLoans) {
-                      setIsFilterModalOpen(false);
-                      onOpenOverdueLoans();
-                      return;
-                    }
-                    if (filter === 'Loan Renewal' && onOpenLoanRenewal) {
-                      setIsFilterModalOpen(false);
-                      onOpenLoanRenewal();
-                      return;
-                    }
-                    if (filter === 'Gold Release' && onOpenGoldRelease) {
-                      setIsFilterModalOpen(false);
-                      onOpenGoldRelease();
-                      return;
-                    }
-                    if (filter === 'Complete Loan' && onOpenCompleteLoan) {
-                      setIsFilterModalOpen(false);
-                      onOpenCompleteLoan();
-                      return;
-                    }
-                    setLoanListFilter(filter);
-                    setCurrentPage(1);
-                    setExpandedLoanId(null);
-                    setIsFilterModalOpen(false);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Loan list filter ${filter}`}
-                  accessibilityState={{ selected }}
-                  className={`mb-2 flex-row items-center rounded-xl border px-3 py-2.5 ${
-                    selected
-                      ? 'border-emerald-200 bg-emerald-50'
-                      : 'border-transparent bg-white'
-                  }`}
-                >
-                  <LoanFilterIcon filter={filter} active={selected} />
-                  <Text className={`ml-3 flex-1 text-sm font-bold ${selected ? 'text-primary' : 'text-slate-700'}`}>
-                    {filter}
-                  </Text>
-                  {selected ? (
-                    <View className="mr-1 h-2 w-2 rounded-full bg-accent" />
-                  ) : null}
-                  <Text className="ml-2 min-w-7 text-right text-xs font-semibold text-slate-500">
-                    {count}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-      </Modal>
     </View>
-  );
-}
-
-function LoanFilterIcon({ filter, active }: { filter: LoanListFilter; active: boolean }) {
-  const color =
-    filter === 'Complete Loan' ? '#D4A017' : active ? '#D4A017' : '#8DBDB4';
-  const paths: Record<LoanListFilter, string[]> = {
-    'All Loans': ['M7 3H5a2 2 0 0 0-2 2v12', 'M11 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z', 'M12 8h5', 'M12 12h5'],
-    'Overdue Loans': ['M12 8v4l3 2', 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
-    'Loan Renewal': ['M20 7v5h-5', 'M4 17v-5h5', 'M5.6 9a7 7 0 0 1 11.6-2L20 12', 'M4 12l2.8 5a7 7 0 0 0 11.6-2'],
-    'Gold Release': ['M12 3 3.5 8v8L12 21l8.5-5V8L12 3Z', 'M3.5 8 12 13l8.5-5', 'M12 13v8'],
-    'Complete Loan': ['M20 11.1V12a8 8 0 1 1-4.7-7.3', 'm8 11 3 3L21 4'],
-    Active: ['M5 12h14', 'M12 5v14'],
-    Suspended: ['M8 5v14', 'M16 5v14'],
-    Inactive: ['M5 12h14'],
-    Pending: ['M12 8v4l3 2', 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
-  };
-  return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-      {paths[filter].map(path => (
-        <Path
-          key={path}
-          d={path}
-          stroke={color}
-          strokeWidth={1.8}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      ))}
-    </Svg>
   );
 }
 

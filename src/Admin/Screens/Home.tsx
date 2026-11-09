@@ -428,7 +428,11 @@ function Home({ user, onNavigate }: HomeProps) {
                   className="mr-3 h-10 w-10 items-center justify-center rounded-2xl shadow-sm"
                   style={{ backgroundColor: card.color }}
                 >
-                  <DashboardIcon name={card.icon} color="#FFFFFF" size={22} />
+                  <DashboardIcon
+                    name={card.icon}
+                    color="#FFFFFF"
+                    size={card.icon === 'check' ? 18 : 22}
+                  />
                 </View>
                 <View className="min-w-0 flex-1">
                   <Text
