@@ -761,7 +761,7 @@ function SummaryCard({
 
   return (
     <View
-      className={`mb-3 min-h-[112px] ${widthClass} overflow-hidden rounded-xl border px-2.5 py-2 shadow-sm`}
+      className={`mb-3 min-h-[96px] ${widthClass} overflow-hidden rounded-xl border px-2.5 py-1.5 shadow-sm`}
       style={{ backgroundColor, borderColor: `${color}45` }}
       accessibilityLabel={`${label}: ${value}`}
       accessible
@@ -799,7 +799,7 @@ function SummaryCard({
         </Text>
       </View>
       <Text
-        className="z-10 mt-1.5 text-[22px] font-extrabold tracking-tight text-slate-950"
+        className="z-10 mt-1 text-[22px] font-extrabold tracking-tight text-slate-950"
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.7}
