@@ -650,7 +650,7 @@ function UserExplore({
             edges={['top', 'bottom']}
           >
             <View className="border-b border-[#eee7dc] bg-white px-4 pb-4 pt-3">
-              <View className="flex-row items-center justify-between">
+              <View className="flex-row items-start justify-between">
                 <View className="flex-row items-center">
                   <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-[#edf5f1]">
                     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
@@ -671,6 +671,23 @@ function UserExplore({
                     </Text>
                   </View>
                 </View>
+                <Pressable
+                  onPress={() => setFiltersVisible(false)}
+                  className="h-9 w-9 items-center justify-center rounded-full border border-[#eee7dc] bg-[#fffdf8]"
+                  accessibilityRole="button"
+                  accessibilityLabel="Close filters"
+                >
+                  <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                    <Path
+                      d="M18 6 6 18M6 6l12 12"
+                      stroke="#514638"
+                      strokeWidth={1.8}
+                      strokeLinecap="round"
+                    />
+                  </Svg>
+                </Pressable>
+              </View>
+              <View className="mt-3 flex-row justify-end">
                 <Pressable
                   onPress={clearFilters}
                   className="rounded-full border border-[#e7d6b2] bg-[#fffaf0] px-3 py-2"
