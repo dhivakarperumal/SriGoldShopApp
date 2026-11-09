@@ -445,7 +445,6 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
                 onRefresh={refreshFavorites}
                 onRetry={refreshFavorites}
                 onSelectProduct={selectProduct}
-                onEnquireProduct={openEnquiry}
                 onRemoveFavorite={toggleFavorite}
                 onContinueShopping={() => selectTab('explore')}
               />
