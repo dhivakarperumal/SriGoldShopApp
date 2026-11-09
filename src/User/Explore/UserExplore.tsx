@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Modal,
+  NativeModules,
   Pressable,
+  Platform,
   RefreshControl,
   ScrollView,
+  StatusBar,
   Text,
   TextInput,
   View,
@@ -63,6 +66,13 @@ const PRICE_RANGES = [
 const OFFER_FILTERS = [10, 20, 30, 40];
 const RATING_FILTERS = [4, 3, 2, 1];
 
+type SystemNavigationBarModule = {
+  setAppearance: (color: string, lightIcons: boolean) => Promise<void>;
+};
+
+const systemNavigationBar = NativeModules
+  .SystemNavigationBar as SystemNavigationBarModule | undefined;
+
 const getPrice = (product: ExploreProduct) =>
   Number(
     product.offer_price ?? product.final_selling_price ?? product.mrp ?? 0,
@@ -110,6 +120,25 @@ function UserExplore({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [refreshVersion, setRefreshVersion] = useState(0);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !systemNavigationBar) return;
+
+    const color = filtersVisible ? '#FFFFFF' : '#003B2D';
+    systemNavigationBar
+      .setAppearance(color, filtersVisible)
+      .catch(error => {
+      console.error('Failed to update system navigation bar:', error);
+      });
+
+    return () => {
+      systemNavigationBar
+        .setAppearance('#003B2D', false)
+        .catch(error => {
+          console.error('Failed to restore system navigation bar:', error);
+        });
+    };
+  }, [filtersVisible]);
 
   useEffect(() => {
     if (!metalSelection) return;
@@ -380,6 +409,9 @@ function UserExplore({
 
   return (
     <View className="flex-1 bg-[#fffdf8]">
+      {filtersVisible ? (
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      ) : null}
       <ScrollView
         className="flex-1"
         contentContainerClassName="grow px-4 pb-6 pt-4"
