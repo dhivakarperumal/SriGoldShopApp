@@ -3,6 +3,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
   type ImageSourcePropType,
 } from 'react-native';
@@ -50,8 +51,58 @@ const METAL_TEXT_COLORS: Record<
     overlay: 'bg-[#00382c]/20',
   },
 };
+
+// Card height — tall enough to let the image breathe
+const CARD_HEIGHT = 170;
+// Horizontal padding from HomeUserHome px-4 = 16 each side
+const HOME_PADDING = 32;
+
 const styles = StyleSheet.create({
-  background: StyleSheet.absoluteFill,
+  card: {
+    marginBottom: 12,
+    height: CARD_HEIGHT,
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#d8b66c',
+    backgroundColor: '#f7e8c8',
+  },
+  bgImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  content: {
+    width: '60%',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  exploreBtn: {
+    marginTop: 12,
+    minHeight: 36,
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    backgroundColor: '#e7b848',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  exploreBtnText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#382a10',
+  },
+  exploreBtnArrow: {
+    marginLeft: 6,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#382a10',
+  },
 });
 
 function getMetalKey(name: string): MetalKey | undefined {
@@ -65,30 +116,43 @@ function HomeMetalsShowcase({
   isLoading,
   onExploreMetal,
 }: HomeMetalsShowcaseProps) {
+  const { width } = useWindowDimensions();
+  // Card width = screen width minus the px-4 padding on both sides
+  const cardWidth = width - HOME_PADDING;
+
   const displayName = metal?.name || metalName;
   const key = getMetalKey(displayName);
   const colors = key ? METAL_TEXT_COLORS[key] : undefined;
   const background = key ? METAL_BACKGROUNDS[key] : undefined;
+
   return (
     <View
-      className="mb-3 min-h-[170px] justify-center overflow-hidden rounded-xl border border-[#d8b66c] bg-[#f7e8c8] px-5 py-5"
+      style={[styles.card, { width: cardWidth }]}
       accessibilityLabel={`${displayName} collection`}
     >
+      {/* Full-width background image — stretch so the whole image is always visible */}
       {background ? (
         <Image
           source={background}
-          resizeMode="cover"
-          style={styles.background}
+          style={[styles.bgImage, { width: cardWidth, height: CARD_HEIGHT }]}
+          resizeMode="stretch"
           accessible={false}
         />
       ) : null}
+
+      {/* Subtle tint overlay */}
       {colors ? (
         <View
           pointerEvents="none"
-          className={`absolute inset-0 ${colors.overlay}`}
+          style={[
+            styles.overlay,
+            { backgroundColor: colors.overlay.replace('bg-[', '').replace(']', '') },
+          ]}
         />
       ) : null}
-      <View className="w-[68%]">
+
+      {/* Text content — left 60% so the image subject on the right stays visible */}
+      <View style={styles.content}>
         {isLoading ? (
           <>
             <HomeSkeleton className="h-7 w-4/5 bg-white/30" />
@@ -126,15 +190,13 @@ function HomeMetalsShowcase({
               </Text>
             ) : null}
             <Pressable
-              className="mt-3 min-h-9 flex-row items-center self-start rounded-full bg-[#e7b848] px-3.5 py-2"
+              style={styles.exploreBtn}
               onPress={() => onExploreMetal(displayName)}
               accessibilityRole="button"
               accessibilityLabel={`Explore ${displayName}`}
             >
-              <Text className="text-[10px] font-bold text-[#382a10]">
-                Explore {displayName}
-              </Text>
-              <Text className="ml-1.5 text-xs font-bold text-[#382a10]">›</Text>
+              <Text style={styles.exploreBtnText}>Explore {displayName}</Text>
+              <Text style={styles.exploreBtnArrow}>›</Text>
             </Pressable>
           </>
         )}
