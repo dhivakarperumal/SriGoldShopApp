@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
+import PulseFab from '../Componets/PulseFab';
 
 type Customer = {
   id: string | number;
@@ -38,6 +39,8 @@ type CustomerForm = {
 
 type Props = {
   onBack: () => void;
+  openCreateOnMount?: boolean;
+  onCreateOpened?: () => void;
 };
 
 type StatusFilter = 'All' | 'Active' | 'Inactive';
@@ -117,7 +120,7 @@ const formatDate = (value?: string, long = false) => {
   });
 };
 
-function Customer({ onBack }: Props) {
+function Customer({ onBack, openCreateOnMount = false, onCreateOpened }: Props) {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
@@ -192,11 +195,17 @@ function Customer({ onBack }: Props) {
   const selectedCustomer =
     customers.find(customer => String(customer.id) === String(selectedCustomerId)) ?? null;
 
-  const openAddForm = () => {
+  const openAddForm = useCallback(() => {
     setEditingCustomer(null);
     setForm({ ...EMPTY_FORM });
     setIsFormOpen(true);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!openCreateOnMount) return;
+    openAddForm();
+    onCreateOpened?.();
+  }, [onCreateOpened, openAddForm, openCreateOnMount]);
 
   const openEditForm = (customer: Customer) => {
     setEditingCustomer(customer);
@@ -412,20 +421,12 @@ function Customer({ onBack }: Props) {
           <Text className="text-base font-extrabold tracking-wide text-white">Customers</Text>
           <Text className="text-[10px] font-medium text-emerald-200">Sri Golds Jewellery</Text>
         </View>
-        <Pressable
-          className="h-10 w-10 items-center justify-center rounded-xl border border-accent/40 bg-accent/20"
-          onPress={openAddForm}
-          accessibilityRole="button"
-          accessibilityLabel="Add customer"
-        >
-          <Text className="text-2xl font-bold text-accent">+</Text>
-        </Pressable>
       </View>
 
       <SafeAreaView className="flex-1 bg-background" edges={['bottom', 'left', 'right']}>
         <ScrollView
           className="flex-1"
-          contentContainerClassName="gap-4 px-4 pb-6 pt-4"
+          contentContainerClassName="gap-4 px-4 pb-24 pt-4"
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
@@ -569,7 +570,9 @@ function Customer({ onBack }: Props) {
           ) : null}
         </ScrollView>
       </SafeAreaView>
-
+      <View className="absolute bottom-4 right-5 z-20">
+        <PulseFab accessibilityLabel="Create new customer" onPress={openAddForm} />
+      </View>
     </View>
   );
 }

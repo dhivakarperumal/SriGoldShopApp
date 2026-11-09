@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../api';
 import { getProductImageUrl } from '../../utils/productImage';
 
@@ -36,6 +37,8 @@ type BillProduct = RecordValue & {
   category?: string;
   purity?: string;
   images?: unknown;
+  image_url?: string;
+  quantity?: number;
 };
 type ExchangeItem = {
   product_name: string;
@@ -69,6 +72,8 @@ type GoldRate = {
   rate_per_gram?: number | string;
   rate_unit?: string;
 };
+type ProductCategory = { name: string; status?: string };
+type BillingMetal = { name: string; purity?: string | string[]; status?: string };
 type FundAccount = { id: string | number; name: string; is_active?: boolean };
 type PaymentForm = {
   bill: Bill;
@@ -95,6 +100,85 @@ const EMPTY_EXCHANGE: ExchangeItem = {
 const PAYMENT_METHODS = ['Cash', 'UPI', 'Card', 'Bank Transfer', 'Cheque', 'Other'];
 const inputClass =
   'mt-1 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-800';
+
+const GOLD_PURITY_LABELS: Record<string, string> = {
+  '999': '24K',
+  '916': '22K',
+  '833': '20K',
+  '750': '18K',
+  '585': '14K',
+};
+const GOLD_PURITY_CODES: Record<string, string> = {
+  '24k': '999',
+  '22k': '916',
+  '20k': '833',
+  '18k': '750',
+  '14k': '585',
+};
+const FALLBACK_METAL_PURITIES: Record<string, string[]> = {
+  gold: ['24K', '22K', '20K', '18K', '14K'],
+  silver: ['999'],
+  platinum: ['950', '900'],
+  diamond: ['D-F / VVS', 'G-H / VS', 'I-J / SI'],
+};
+
+const normalizePurity = (purity: string): string => {
+  const normalized = purity.trim().toLowerCase().replace(/[\s/._-]/g, '');
+  const karat = Object.entries(GOLD_PURITY_CODES).find(
+    ([label, code]) => normalized === label || normalized === `${label}${code}`,
+  );
+  return karat?.[1] || normalized;
+};
+
+const getMetalPurities = (
+  metal: BillingMetal | undefined,
+  rates: GoldRate[],
+): string[] => {
+  if (!metal) return [];
+  const isGold = metal.name.toLowerCase() === 'gold';
+  const ratePurities = rates
+    .filter(rate => rate.metal_type.toLowerCase() === metal.name.toLowerCase())
+    .map(rate => {
+      const purityCode = normalizePurity(rate.purity);
+      return isGold ? GOLD_PURITY_LABELS[purityCode] || rate.purity.trim() : rate.purity.trim();
+    });
+  if (ratePurities.length) return Array.from(new Set(ratePurities));
+
+  const configured = metal.purity
+    ? (Array.isArray(metal.purity) ? metal.purity : metal.purity.split(','))
+        .map(purity => purity.trim())
+        .filter(Boolean)
+    : [];
+  const purityOptions = configured.length
+    ? configured.map(purity => {
+        const code = normalizePurity(purity);
+        return isGold ? GOLD_PURITY_LABELS[code] || purity : purity;
+      })
+    : FALLBACK_METAL_PURITIES[metal.name.toLowerCase()] || [];
+  return Array.from(new Set(purityOptions));
+};
+
+const getRateForExchange = (
+  rates: GoldRate[],
+  metalType: string,
+  purity: string,
+): GoldRate | undefined =>
+  rates.find(
+    rate =>
+      rate.metal_type.toLowerCase() === metalType.toLowerCase() &&
+      normalizePurity(rate.purity) === normalizePurity(purity),
+  );
+
+const getExchangeRateValue = (
+  exchange: ExchangeItem,
+  rates: GoldRate[],
+): number => {
+  if (exchange.rate_per_unit.trim()) {
+    return getNumber(exchange.rate_per_unit);
+  }
+  const rate = getRateForExchange(rates, exchange.metal_type, exchange.purity);
+  return getNumber(rate?.rate_per_unit ?? rate?.rate_per_gram);
+};
 
 const getErrorMessage = (error: unknown, fallback: string): string => {
   if (typeof error === 'object' && error !== null && 'message' in error) {
@@ -200,9 +284,17 @@ function ActionButton({
   );
 }
 
-export default function Billing() {
+export default function Billing({
+  onFormVisibilityChange,
+}: {
+  onFormVisibilityChange?: (isOpen: boolean) => void;
+}) {
   const [bills, setBills] = useState<Bill[]>([]);
   const [catalog, setCatalog] = useState<Product[]>([]);
+  const [exchangeCategories, setExchangeCategories] = useState<ProductCategory[]>([]);
+  const [exchangeCategoryError, setExchangeCategoryError] = useState('');
+  const [exchangeMetals, setExchangeMetals] = useState<BillingMetal[]>([]);
+  const [exchangeMetalError, setExchangeMetalError] = useState('');
   const [rates, setRates] = useState<GoldRate[]>([]);
   const [accounts, setAccounts] = useState<FundAccount[]>([]);
   const [loadError, setLoadError] = useState('');
@@ -214,12 +306,20 @@ export default function Billing() {
   const [isSaving, setIsSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'FULL_PAYMENT' | 'EXCHANGE_GOLD'>('ALL');
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(true);
+  const [billStep, setBillStep] = useState<1 | 2 | 3>(1);
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
   const [customer, setCustomer] = useState<Customer>(EMPTY_CUSTOMER);
   const [products, setProducts] = useState<BillProduct[]>([]);
   const [productSearch, setProductSearch] = useState('');
-  const [showProductPicker, setShowProductPicker] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('All categories');
+  const [metalTypeFilter, setMetalTypeFilter] = useState('All metals');
+  const [showProductPicker, setShowProductPicker] = useState(true);
+  const [showProductPreview, setShowProductPreview] = useState(false);
+  const [exchangePicker, setExchangePicker] = useState<{
+    index: number;
+    field: 'category' | 'metal_type' | 'purity';
+  } | null>(null);
   const [paymentType, setPaymentType] = useState<'FULL_PAYMENT' | 'EXCHANGE_GOLD'>('FULL_PAYMENT');
   const [exchanges, setExchanges] = useState<ExchangeItem[]>([]);
   const [gstRate, setGstRate] = useState('0');
@@ -227,6 +327,10 @@ export default function Billing() {
   const [payment, setPayment] = useState<PaymentForm | null>(null);
   const [isPaymentSaving, setIsPaymentSaving] = useState(false);
   const [paymentMethodIndex, setPaymentMethodIndex] = useState(0);
+
+  useEffect(() => {
+    onFormVisibilityChange?.(showForm);
+  }, [onFormVisibilityChange, showForm]);
 
   const loadBills = useCallback(async (refresh = false) => {
     if (refresh) setIsRefreshing(true);
@@ -299,6 +403,48 @@ export default function Billing() {
     }
   }, []);
 
+  const loadExchangeCategories = useCallback(async () => {
+    setExchangeCategoryError('');
+    try {
+      const { data } = await api.get('/categories');
+      if (!Array.isArray(data)) {
+        throw new Error('The server returned an invalid category list.');
+      }
+      setExchangeCategories(
+        data.filter(
+          (category: ProductCategory) =>
+            typeof category.name === 'string' &&
+            category.name.trim() &&
+            (!category.status || category.status === 'Active'),
+        ),
+      );
+    } catch (error) {
+      console.error('Failed to load exchange categories:', error);
+      setExchangeCategoryError(getErrorMessage(error, 'Could not load categories.'));
+    }
+  }, []);
+
+  const loadExchangeMetals = useCallback(async () => {
+    setExchangeMetalError('');
+    try {
+      const { data } = await api.get('/metals');
+      if (!Array.isArray(data)) {
+        throw new Error('The server returned an invalid metal list.');
+      }
+      setExchangeMetals(
+        data.filter(
+          (metal: BillingMetal) =>
+            typeof metal.name === 'string' &&
+            metal.name.trim() &&
+            (!metal.status || metal.status === 'Active'),
+        ),
+      );
+    } catch (error) {
+      console.error('Failed to load exchange metals:', error);
+      setExchangeMetalError(getErrorMessage(error, 'Could not load metal types.'));
+    }
+  }, []);
+
   const loadSupportingData = useCallback(async () => {
     try {
       const { data } = await api.get('/gold-rates/current');
@@ -325,8 +471,10 @@ export default function Billing() {
   useEffect(() => {
     loadBills();
     loadCatalog();
+    loadExchangeCategories();
+    loadExchangeMetals();
     loadSupportingData();
-  }, [loadBills, loadCatalog, loadSupportingData]);
+  }, [loadBills, loadCatalog, loadExchangeCategories, loadExchangeMetals, loadSupportingData]);
 
   const filteredBills = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -352,11 +500,14 @@ export default function Billing() {
     return sum + getNumber(bill.total_amount);
   }, 0);
 
-  const subtotal = products.reduce((sum, product) => sum + getNumber(product.price), 0);
+  const subtotal = products.reduce(
+    (sum, product) => sum + getNumber(product.price) * (product.quantity || 1),
+    0,
+  );
   const exchangeCredit = exchanges.reduce((sum, exchange) => {
     const weight = getNumber(exchange.weight);
     const wastage = getNumber(exchange.wastage_weight);
-    const rate = getNumber(exchange.rate_per_unit);
+    const rate = getExchangeRateValue(exchange, rates);
     return sum + Math.max(0, weight - wastage) * rate;
   }, 0);
   const discountAmount = discount.trim() ? Number(discount) : 0;
@@ -378,10 +529,94 @@ export default function Billing() {
       `${product.name} ${product.category ?? ''} ${product.purity ?? ''} ${product.product_code ?? ''}`
         .toLowerCase()
         .includes(query);
-    return matchesSearch && String(product.status ?? 'Active').toLowerCase() === 'active';
+    const matchesCategory =
+      categoryFilter === 'All categories' ||
+      String(product.category ?? '').toLowerCase() === categoryFilter.toLowerCase();
+    const matchesMetalType =
+      metalTypeFilter === 'All metals' ||
+      String(product.metal_type ?? 'Gold').toLowerCase() === metalTypeFilter.toLowerCase();
+    return (
+      matchesSearch &&
+      matchesCategory &&
+      matchesMetalType &&
+      String(product.status ?? 'Active').toLowerCase() === 'active'
+    );
   });
 
+  const categoryOptions = useMemo(
+    () => [
+      'All categories',
+      ...Array.from(new Set(catalog.map(product => String(product.category || '').trim()).filter(Boolean))),
+    ],
+    [catalog],
+  );
+  const metalTypeOptions = useMemo(
+    () => [
+      'All metals',
+      ...Array.from(new Set(catalog.map(product => String(product.metal_type || 'Gold').trim()).filter(Boolean))),
+    ],
+    [catalog],
+  );
+  const exchangePickerOptions = useMemo(() => {
+    if (!exchangePicker) return [];
+    if (exchangePicker.field === 'category') {
+      return exchangeCategories.map(category => category.name);
+    }
+    if (exchangePicker.field === 'metal_type') {
+      return exchangeMetals.map(metal => metal.name);
+    }
+    const exchange = exchanges[exchangePicker.index];
+    const selectedMetal = exchangeMetals.find(
+      metal => metal.name.toLowerCase() === exchange?.metal_type.toLowerCase(),
+    );
+    return getMetalPurities(selectedMetal, rates);
+  }, [exchangeCategories, exchangeMetals, exchangePicker, exchanges, rates]);
+
+  const selectExchangeOption = (value: string) => {
+    if (!exchangePicker) return;
+    const { index, field } = exchangePicker;
+    if (field === 'category') {
+      updateExchange(index, 'category', value);
+    } else if (field === 'metal_type') {
+      const metal = exchangeMetals.find(item => item.name === value);
+      const purity = getMetalPurities(metal, rates)[0] || '';
+      const rate = getRateForExchange(rates, value, purity);
+      setExchanges(current =>
+        current.map((exchange, itemIndex) =>
+          itemIndex === index
+            ? {
+                ...exchange,
+                metal_type: value,
+                purity,
+                rate_per_unit: String(rate?.rate_per_unit ?? rate?.rate_per_gram ?? ''),
+                rate_unit: rate?.rate_unit ?? exchange.rate_unit,
+              }
+            : exchange,
+        ),
+      );
+    } else {
+      const exchange = exchanges[index];
+      const rate = exchange
+        ? getRateForExchange(rates, exchange.metal_type, value)
+        : undefined;
+      setExchanges(current =>
+        current.map((item, itemIndex) =>
+          itemIndex === index
+            ? {
+                ...item,
+                purity: value,
+                rate_per_unit: String(rate?.rate_per_unit ?? rate?.rate_per_gram ?? ''),
+                rate_unit: rate?.rate_unit ?? item.rate_unit,
+              }
+            : item,
+        ),
+      );
+    }
+    setExchangePicker(null);
+  };
+
   const resetForm = () => {
+    setBillStep(1);
     setEditingBill(null);
     setCustomer(EMPTY_CUSTOMER);
     setProducts([]);
@@ -390,12 +625,15 @@ export default function Billing() {
     setGstRate('0');
     setDiscount('');
     setProductSearch('');
-    setShowProductPicker(false);
+    setCategoryFilter('All categories');
+    setMetalTypeFilter('All metals');
+    setShowProductPicker(true);
   };
 
   const openNewBill = () => {
     resetForm();
     setShowForm(true);
+    setShowProductPicker(true);
   };
 
   const openEditBill = (bill: Bill) => {
@@ -404,7 +642,20 @@ export default function Billing() {
       return;
     }
     const savedCustomers = decodeArray<Customer>(bill.customers);
-    const savedProducts = decodeArray<BillProduct>(bill.products);
+    const savedProducts = decodeArray<BillProduct>(bill.products).reduce<BillProduct[]>(
+      (items, product) => {
+        const productId = String(product.product_id ?? '');
+        const quantity = Math.max(1, Math.floor(getNumber(product.quantity) || 1));
+        const existing = items.find(item => String(item.product_id) === productId);
+        if (existing) {
+          existing.quantity = (existing.quantity || 1) + quantity;
+        } else {
+          items.push({ ...product, product_id: productId, quantity });
+        }
+        return items;
+      },
+      [],
+    );
     const savedExchanges = decodeArray<RecordValue>(bill.exchanges);
     setEditingBill(bill);
     setCustomer(savedCustomers[0] ?? EMPTY_CUSTOMER);
@@ -414,16 +665,18 @@ export default function Billing() {
         product_id: String(product.product_id ?? ''),
       })),
     );
-    setPaymentType(bill.payment_type === 'EXCHANGE_GOLD' ? 'EXCHANGE_GOLD' : 'FULL_PAYMENT');
-    setExchanges(
+    const savedPaymentType =
+      bill.payment_type === 'EXCHANGE_GOLD' ? 'EXCHANGE_GOLD' : 'FULL_PAYMENT';
+    setPaymentType(savedPaymentType);
+    setExchanges(savedPaymentType === 'EXCHANGE_GOLD' ? (
       savedExchanges.map(item => ({
         ...EMPTY_EXCHANGE,
         ...item,
         weight: String(item.weight ?? ''),
         wastage_weight: String(item.wastage_weight ?? ''),
         rate_per_unit: String(item.rate_per_unit ?? ''),
-      })) as ExchangeItem[],
-    );
+      })) as ExchangeItem[]
+    ) : []);
     const subtotalAmount = getNumber(bill.sub_total);
     const taxable = Math.max(
       0,
@@ -434,6 +687,7 @@ export default function Billing() {
       taxable > 0 ? String(Math.round((getNumber(bill.gst_amount) / taxable) * 10000) / 100) : '0',
     );
     setDiscount(getNumber(bill.discount_amount) ? String(bill.discount_amount) : '');
+    setBillStep(3);
     setShowForm(true);
   };
 
@@ -443,32 +697,57 @@ export default function Billing() {
       Alert.alert('Price unavailable', `${product.name} has no valid selling price.`);
       return;
     }
-    setProducts(current => [
-      ...current,
-      {
+    setProducts(current => {
+      const existing = current.find(item => String(item.product_id) === String(product.id));
+      if (existing) {
+        return current.map(item =>
+          String(item.product_id) === String(product.id)
+            ? { ...item, quantity: (item.quantity || 1) + 1 }
+            : item,
+        );
+      }
+      return [...current, {
         product_id: String(product.id),
         product_name: product.name,
         category: product.category,
         purity: product.purity,
         metal_type: product.metal_type || 'Gold',
+        image_url: getProductImageUrl(product),
         images: product.images,
         rate_per_gram: product.gold_rate_per_gram,
         rate_unit: product.rate_unit || 'gram',
+        quantity: 1,
         price,
-      },
-    ]);
+      }];
+    });
+  };
+
+  const decreaseProductQuantity = (productId: string | number) => {
+    setProducts(current =>
+      current.flatMap(item => {
+        if (String(item.product_id) !== String(productId)) return [item];
+        const quantity = item.quantity || 1;
+        return quantity <= 1 ? [] : [{ ...item, quantity: quantity - 1 }];
+      }),
+    );
   };
 
   const addExchange = () => {
-    const firstRate = rates.find(rate => rate.metal_type.toLowerCase() === 'gold') ?? rates[0];
+    const defaultMetal =
+      exchangeMetals.find(metal => metal.name.toLowerCase() === 'gold') ?? exchangeMetals[0];
+    const metalType = defaultMetal?.name ?? 'Gold';
+    const purity =
+      getMetalPurities(defaultMetal ?? { name: metalType }, rates)[0] ??
+      (metalType.toLowerCase() === 'gold' ? '22K' : '');
+    const defaultRate = getRateForExchange(rates, metalType, purity);
     setExchanges(current => [
       ...current,
       {
         ...EMPTY_EXCHANGE,
-        metal_type: firstRate?.metal_type ?? 'Gold',
-        purity: firstRate?.purity ?? '916',
-        rate_unit: firstRate?.rate_unit ?? 'gram',
-        rate_per_unit: String(firstRate?.rate_per_unit ?? firstRate?.rate_per_gram ?? ''),
+        metal_type: metalType,
+        purity,
+        rate_unit: defaultRate?.rate_unit ?? 'gram',
+        rate_per_unit: String(defaultRate?.rate_per_unit ?? defaultRate?.rate_per_gram ?? ''),
       },
     ]);
   };
@@ -479,6 +758,15 @@ export default function Billing() {
         itemIndex === index ? { ...exchange, [field]: value } : exchange,
       ),
     );
+  };
+
+  const selectPaymentType = (type: 'FULL_PAYMENT' | 'EXCHANGE_GOLD') => {
+    setPaymentType(type);
+    if (type === 'FULL_PAYMENT') {
+      setExchanges([]);
+      return;
+    }
+    if (!exchanges.length) addExchange();
   };
 
   const saveBill = async () => {
@@ -495,6 +783,7 @@ export default function Billing() {
       return;
     }
     if (
+      paymentType === 'EXCHANGE_GOLD' &&
       exchanges.some(item =>
         !item.category.trim() ||
         !item.metal_type.trim() ||
@@ -504,8 +793,8 @@ export default function Billing() {
         !Number.isFinite(Number(item.wastage_weight || 0)) ||
         Number(item.wastage_weight || 0) < 0 ||
         Number(item.wastage_weight || 0) > Number(item.weight) ||
-        !Number.isFinite(Number(item.rate_per_unit)) ||
-        Number(item.rate_per_unit) <= 0,
+        !Number.isFinite(getExchangeRateValue(item, rates)) ||
+        getExchangeRateValue(item, rates) <= 0,
       )
     ) {
       Alert.alert('Invalid exchange details', 'Check each exchange item’s weight, wastage, and rate.');
@@ -524,7 +813,12 @@ export default function Billing() {
     try {
       const payload = {
         customers: [customer],
-        products: products.map(product => ({ product_id: Number(product.product_id) })),
+        products: products.flatMap(product =>
+          Array.from(
+            { length: product.quantity || 1 },
+            () => ({ product_id: Number(product.product_id) }),
+          ),
+        ),
         exchanges:
           paymentType === 'EXCHANGE_GOLD'
             ? exchanges.map(item => ({
@@ -536,7 +830,7 @@ export default function Billing() {
                 purity: item.purity,
                 weight: Number(item.weight),
                 wastage_weight: Number(item.wastage_weight || 0),
-                rate_per_unit: Number(item.rate_per_unit),
+                rate_per_unit: getExchangeRateValue(item, rates),
               }))
             : [],
         payment_type: paymentType,
@@ -745,10 +1039,10 @@ export default function Billing() {
       <View className="flex-1 bg-background">
         <ScrollView
           className="flex-1"
-          contentContainerClassName="gap-4 px-4 pb-8 pt-4"
+          contentContainerClassName={`gap-4 px-4 pt-4 ${billStep === 1 ? 'pb-4' : 'pb-8'}`}
           keyboardShouldPersistTaps="handled"
         >
-          <View className="flex-row items-center gap-3">
+          <View className="-mx-4 -mt-4 flex-row items-center gap-3 border-b border-[#00382E] bg-primary px-4 py-3">
             <Pressable
               onPress={() => {
                 if (!isSaving) {
@@ -756,185 +1050,239 @@ export default function Billing() {
                   resetForm();
                 }
               }}
-              className="h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white"
+              className="h-10 w-10 items-center justify-center rounded-xl border border-emerald-700/60 bg-emerald-900/40 active:bg-emerald-900/70"
               accessibilityRole="button"
               accessibilityLabel="Back to bills"
             >
-              <Text className="text-xl text-slate-700">‹</Text>
+              <Text className="text-xl text-white">‹</Text>
             </Pressable>
             <View className="flex-1">
-              <Text className="text-xs font-semibold text-slate-500">Billing / {editingBill ? 'Edit' : 'New'}</Text>
-              <Text className="text-xl font-extrabold text-slate-900">
+              <Text className="text-xl font-extrabold text-white">
                 {editingBill ? 'Edit Bill' : 'New Bill'}
               </Text>
-            </View>
-          </View>
-
-          <View className="gap-3 rounded-2xl border border-slate-100 bg-white p-4">
-            <Text className="text-base font-extrabold text-slate-900">Customer details</Text>
-            <Field label="Customer name *" value={customer.name} onChangeText={value => updateCustomer('name', value)} placeholder="Enter customer name" />
-            <Field label="Phone number *" value={customer.phone} onChangeText={value => updateCustomer('phone', value)} keyboardType="phone-pad" placeholder="Enter phone number" />
-            <Field label="Email" value={customer.email} onChangeText={value => updateCustomer('email', value)} keyboardType="email-address" placeholder="Enter email" />
-            <Field label="Address" value={customer.address} onChangeText={value => updateCustomer('address', value)} placeholder="Enter address" multiline />
-          </View>
-
-          <View className="gap-3 rounded-2xl border border-slate-100 bg-white p-4">
-            <View className="flex-row items-center justify-between">
-              <View>
-                <Text className="text-base font-extrabold text-slate-900">Products in bill</Text>
-                <Text className="mt-1 text-xs text-slate-500">
-                  {products.length} item{products.length === 1 ? '' : 's'} added
-                </Text>
-              </View>
-              <Pressable
-                onPress={() => setShowProductPicker(current => !current)}
-                className="flex-row items-center rounded-xl bg-primary px-3 py-2.5"
-                accessibilityRole="button"
-                accessibilityLabel="Add product"
-              >
-                <Text className="mr-1 text-lg font-bold text-white">+</Text>
-                <Text className="text-xs font-bold text-white">
-                  {showProductPicker ? 'Close products' : 'Add product'}
-                </Text>
-              </Pressable>
-            </View>
-
-            {products.length ? (
-              <View className="gap-2">
-                {products.map((product, index) => {
-                  const image = getProductImageUrl(product);
-                  return (
-                    <View
-                      key={`${product.product_id}-${index}`}
-                      className="flex-row items-center rounded-xl border border-slate-100 p-3"
-                    >
-                      {image ? (
-                        <Image
-                          source={{ uri: image }}
-                          className="mr-3 h-12 w-12 rounded-lg bg-slate-100"
-                          resizeMode="cover"
-                          accessibilityLabel={`${product.product_name || 'Product'} image`}
-                        />
-                      ) : null}
-                      <View className="min-w-0 flex-1">
-                        <Text className="text-sm font-bold text-slate-800" numberOfLines={1}>
-                          {product.product_name || 'Product'}
-                        </Text>
-                        <Text className="mt-1 text-xs text-slate-500" numberOfLines={1}>
-                          {[product.category, product.purity].filter(Boolean).join(' · ') || '—'}
-                        </Text>
-                        <Text className="mt-1 text-sm font-bold text-primary-dark">
-                          {currency(product.price)}
-                        </Text>
-                      </View>
-                      <Pressable
-                        onPress={() => setProducts(current => current.filter((_, i) => i !== index))}
-                        className="ml-2 rounded-lg bg-rose-50 px-3 py-2"
-                        accessibilityRole="button"
-                        accessibilityLabel={`Remove ${product.product_name || 'product'}`}
-                      >
-                        <Text className="font-bold text-rose-700">×</Text>
-                      </Pressable>
-                    </View>
-                  );
-                })}
-              </View>
-            ) : (
-              <Text className="rounded-xl border border-dashed border-slate-300 px-4 py-5 text-center text-sm text-slate-500">
-                No products added yet. Tap “Add product” to choose from the catalog.
+              <Text className="text-[10px] font-medium text-emerald-200">
+                Sri Golds Jewellery
               </Text>
-            )}
+            </View>
+          </View>
 
-            {showProductPicker ? (
-              <View className="gap-2 border-t border-slate-100 pt-3">
-                <Text className="text-sm font-bold text-slate-800">Product catalog</Text>
-                <TextInput
-                  className={inputClass}
-                  value={productSearch}
-                  onChangeText={setProductSearch}
-                  placeholder="Search name, category, purity, or SKU"
-                  placeholderTextColor="#94A3B8"
-                  autoCapitalize="none"
-                />
-                {catalogError ? (
-                  <View className="gap-2 rounded-xl bg-rose-50 p-3">
-                    <Text className="text-xs text-rose-700">{catalogError}</Text>
-                    <ActionButton label="Retry loading products" onPress={() => { loadCatalog(); }} secondary />
-                  </View>
-                ) : null}
-                {catalog.length === 0 && !catalogError ? (
-                  <View className="items-center py-5">
-                    <ActivityIndicator color="#004D40" />
-                    <Text className="mt-2 text-xs text-slate-500">Loading products…</Text>
-                  </View>
-                ) : visibleProducts.length ? (
-                  <ScrollView className="max-h-96" nestedScrollEnabled keyboardShouldPersistTaps="handled">
-                    {visibleProducts.map(product => {
-                      const alreadyAdded = products.some(
-                        item => String(item.product_id) === String(product.id),
-                      );
-                      const image = getProductImageUrl(product);
-                      return (
-                        <View
-                          key={product.id}
-                          className="mb-2 flex-row items-center rounded-xl border border-slate-100 p-3"
-                        >
-                          {image ? (
-                            <Image
-                              source={{ uri: image }}
-                              className="mr-3 h-11 w-11 rounded-lg bg-slate-100"
-                              resizeMode="cover"
-                              accessibilityLabel={`${product.name} image`}
-                            />
-                          ) : null}
-                          <View className="min-w-0 flex-1">
-                            <Text className="text-sm font-bold text-slate-800" numberOfLines={1}>
-                              {product.name}
-                            </Text>
-                            <Text className="mt-1 text-xs text-slate-500" numberOfLines={1}>
-                              {[product.category, product.purity, product.product_code]
-                                .filter(Boolean)
-                                .join(' · ') || 'Uncategorized'}
-                            </Text>
-                            <Text className="mt-1 text-sm font-bold text-primary-dark">
-                              {currency(getProductPrice(product))}
-                            </Text>
-                          </View>
-                          <Pressable
-                            onPress={() => addProduct(product)}
-                            className={`ml-2 rounded-lg px-3 py-2 ${
-                              alreadyAdded ? 'bg-emerald-50' : 'bg-primary'
-                            }`}
-                            accessibilityRole="button"
-                            accessibilityLabel={`Add ${product.name} to bill`}
-                          >
-                            <Text className={`text-xs font-bold ${alreadyAdded ? 'text-emerald-700' : 'text-white'}`}>
-                              {alreadyAdded ? 'Add again' : '+ Add'}
-                            </Text>
-                          </Pressable>
-                        </View>
-                      );
-                    })}
-                  </ScrollView>
-                ) : (
-                  <Text className="py-4 text-center text-sm text-slate-500">
-                    No active products match this search.
+          <View className="flex-row items-center rounded-xl bg-white px-2 py-3">
+            {[1, 2, 3].map(step => (
+              <View key={step} className="flex-1 items-center">
+                <View className={`h-7 w-7 items-center justify-center rounded-full ${
+                  billStep >= step ? 'bg-primary' : 'bg-slate-200'
+                }`}>
+                  <Text className={`text-xs font-bold ${billStep >= step ? 'text-white' : 'text-slate-500'}`}>
+                    {step}
                   </Text>
-                )}
+                </View>
+                <Text className="mt-1 text-[10px] font-semibold text-slate-600">
+                  {step === 1 ? 'Products' : step === 2 ? 'Address' : 'Summary'}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          {billStep === 1 ? (
+          <View className="gap-3">
+            {showProductPicker ? (
+              <View className="gap-3 border-t border-slate-100 pt-3">
+                <Text className="text-sm font-extrabold text-slate-900">Product catalog</Text>
+                  <TextInput
+                    className={inputClass}
+                    value={productSearch}
+                    onChangeText={setProductSearch}
+                    placeholder="Search name, category, purity, or SKU"
+                    placeholderTextColor="#94A3B8"
+                    autoCapitalize="none"
+                  />
+                  <View className="flex-row gap-2">
+                    <Pressable
+                      onPress={() => Alert.alert(
+                        'Category',
+                        'Select a category',
+                        [
+                          ...categoryOptions.map(option => ({
+                            text: option,
+                            onPress: () => setCategoryFilter(option),
+                          })),
+                          { text: 'Cancel', style: 'cancel' },
+                        ],
+                      )}
+                      className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3"
+                      accessibilityRole="button"
+                    >
+                      <Text className="text-[10px] font-semibold text-slate-500">Category</Text>
+                      <Text className="mt-1 text-xs font-bold text-slate-800" numberOfLines={1}>
+                        {categoryFilter}
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => Alert.alert(
+                        'Metal type',
+                        'Select a metal type',
+                        [
+                          ...metalTypeOptions.map(option => ({
+                            text: option,
+                            onPress: () => setMetalTypeFilter(option),
+                          })),
+                          { text: 'Cancel', style: 'cancel' },
+                        ],
+                      )}
+                      className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3"
+                      accessibilityRole="button"
+                    >
+                      <Text className="text-[10px] font-semibold text-slate-500">Metal type</Text>
+                      <Text className="mt-1 text-xs font-bold text-slate-800" numberOfLines={1}>
+                        {metalTypeFilter}
+                      </Text>
+                    </Pressable>
+                  </View>
+                  <ScrollView className="mt-3" nestedScrollEnabled keyboardShouldPersistTaps="handled">
+                    {catalogError ? (
+                      <View className="gap-2 rounded-xl bg-rose-50 p-3">
+                        <Text className="text-xs text-rose-700">{catalogError}</Text>
+                        <ActionButton label="Retry loading products" onPress={() => { loadCatalog(); }} secondary />
+                      </View>
+                    ) : null}
+                    {catalog.length === 0 && !catalogError ? (
+                      <View className="items-center py-5">
+                        <ActivityIndicator color="#004D40" />
+                        <Text className="mt-2 text-xs text-slate-500">Loading products…</Text>
+                      </View>
+                    ) : visibleProducts.length ? (
+                      <View className="flex-row flex-wrap">
+                        {visibleProducts.map(product => {
+                          const selectedProduct = products.find(
+                            item => String(item.product_id) === String(product.id),
+                          );
+                          const quantity = selectedProduct?.quantity || 0;
+                          const image = getProductImageUrl(product);
+                          return (
+                            <View key={product.id} className="w-1/2 px-1 pb-2">
+                              <View className="min-h-52 rounded-xl border border-slate-100 bg-white p-2">
+                                {image ? (
+                                  <Image
+                                    source={{ uri: image }}
+                                    className="mb-2 h-24 w-full rounded-lg bg-slate-100"
+                                    resizeMode="cover"
+                                    accessibilityLabel={`${product.name} image`}
+                                  />
+                                ) : (
+                                  <View className="mb-2 h-24 w-full items-center justify-center rounded-lg bg-slate-100">
+                                    <Text className="text-2xl font-bold text-slate-300">◆</Text>
+                                  </View>
+                                )}
+                                <Text className="text-sm font-bold text-slate-800" numberOfLines={2}>
+                                  {product.name}
+                                </Text>
+                                <Text className="mt-1 text-xs text-slate-500" numberOfLines={1}>
+                                  {[product.category, product.purity].filter(Boolean).join(' · ') || 'Uncategorized'}
+                                </Text>
+                                <Text className="mt-1 text-sm font-bold text-primary-dark" numberOfLines={1}>
+                                  {currency(getProductPrice(product))}
+                                </Text>
+                                {quantity === 0 ? (
+                                  <Pressable
+                                    onPress={() => addProduct(product)}
+                                    className="mt-2 items-center rounded-lg bg-primary py-2"
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Increase ${product.name} quantity`}
+                                  >
+                                    <Text className="text-lg font-bold text-white">+</Text>
+                                  </Pressable>
+                                ) : (
+                                  <View className="mt-2 flex-row items-center justify-between rounded-lg bg-emerald-50 px-2 py-1">
+                                    <Pressable
+                                      onPress={() => decreaseProductQuantity(product.id)}
+                                      className="h-8 w-9 items-center justify-center rounded-md"
+                                      accessibilityRole="button"
+                                      accessibilityLabel={`Decrease ${product.name} quantity`}
+                                    >
+                                      <Text className="text-lg font-bold text-emerald-800">−</Text>
+                                    </Pressable>
+                                    <Text className="text-sm font-bold text-emerald-800">{quantity}</Text>
+                                    <Pressable
+                                      onPress={() => addProduct(product)}
+                                      className="h-8 w-9 items-center justify-center rounded-md"
+                                      accessibilityRole="button"
+                                      accessibilityLabel={`Increase ${product.name} quantity`}
+                                    >
+                                      <Text className="text-lg font-bold text-emerald-800">+</Text>
+                                    </Pressable>
+                                  </View>
+                                )}
+                              </View>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    ) : (
+                      <Text className="py-4 text-center text-sm text-slate-500">
+                        No active products match this search.
+                      </Text>
+                    )}
+                  </ScrollView>
               </View>
             ) : null}
-          </View>
 
+          </View>
+          ) : null}
+
+          {billStep === 2 ? (
+            <View className="gap-4 rounded-2xl border border-slate-100 bg-white p-4">
+              <View className="gap-1">
+                <Text className="text-base font-extrabold text-slate-900">Customer address</Text>
+                <Text className="text-xs text-slate-500">
+                  Enter the customer details for this bill. Name and phone are required.
+                </Text>
+              </View>
+              <Field label="Customer name *" value={customer.name} onChangeText={value => updateCustomer('name', value)} placeholder="Enter customer name" />
+              <Field label="Phone number *" value={customer.phone} onChangeText={value => updateCustomer('phone', value)} keyboardType="phone-pad" placeholder="Enter phone number" />
+              <Field label="Email" value={customer.email} onChangeText={value => updateCustomer('email', value)} keyboardType="email-address" placeholder="Enter email" />
+              <Field label="Address" value={customer.address} onChangeText={value => updateCustomer('address', value)} placeholder="Enter address" multiline />
+              <View className="flex-row gap-3 pt-1">
+                <View className="flex-1">
+                  <ActionButton
+                    label="Back"
+                    onPress={() => {
+                      setShowProductPicker(true);
+                      setBillStep(1);
+                    }}
+                    secondary
+                  />
+                </View>
+                <View className="flex-1">
+                  <ActionButton
+                    label="Continue"
+                    onPress={() => {
+                      if (!customer.name.trim() || !customer.phone.trim()) {
+                        Alert.alert('Customer details required', 'Enter the customer name and phone number.');
+                        return;
+                      }
+                      setBillStep(3);
+                    }}
+                    secondary={!customer.name.trim() || !customer.phone.trim()}
+                  />
+                </View>
+              </View>
+            </View>
+          ) : null}
+
+          {billStep === 3 ? (
+          <>
           <View className="gap-3 rounded-2xl border border-slate-100 bg-white p-4">
             <Text className="text-base font-extrabold text-slate-900">Payment method</Text>
-            <View className="flex-row flex-wrap gap-2">
+            <View className="flex-row gap-2">
               {(['FULL_PAYMENT', 'EXCHANGE_GOLD'] as const).map(type => (
                 <Pressable
                   key={type}
-                  onPress={() => setPaymentType(type)}
-                  className={`rounded-full border px-4 py-2.5 ${
+                  onPress={() => selectPaymentType(type)}
+                  className={`flex-1 items-center rounded-xl border px-3 py-3 ${
                     paymentType === type ? 'border-primary bg-primary' : 'border-slate-200 bg-white'
                   }`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: paymentType === type }}
                 >
                   <Text className={`text-xs font-bold ${paymentType === type ? 'text-white' : 'text-slate-700'}`}>
                     {type === 'FULL_PAYMENT' ? 'Full payment' : 'Exchange gold'}
@@ -956,7 +1304,7 @@ export default function Billing() {
                   const selectedRate = rates.find(
                     rate =>
                       rate.metal_type.toLowerCase() === exchange.metal_type.toLowerCase() &&
-                      rate.purity.toLowerCase() === exchange.purity.toLowerCase(),
+                      normalizePurity(rate.purity) === normalizePurity(exchange.purity),
                   );
                   const netWeight = Math.max(
                     0,
@@ -970,9 +1318,71 @@ export default function Billing() {
                           <Text className="font-bold text-rose-600">Remove</Text>
                         </Pressable>
                       </View>
-                      <Field label="Category *" value={exchange.category} onChangeText={value => updateExchange(index, 'category', value)} placeholder="Enter category" />
-                      <Field label="Metal type" value={exchange.metal_type} onChangeText={value => updateExchange(index, 'metal_type', value)} placeholder="Gold" />
-                      <Field label="Purity" value={exchange.purity} onChangeText={value => updateExchange(index, 'purity', value)} placeholder="916" />
+                      <View className="flex-1">
+                        <Text className="text-xs font-bold text-slate-600">Category *</Text>
+                        <Pressable
+                          onPress={() => setExchangePicker({ index, field: 'category' })}
+                          className="mt-1 flex-row items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-3"
+                          accessibilityRole="button"
+                          accessibilityLabel={`Select category for exchange item ${index + 1}`}
+                        >
+                          <Text className={`text-sm ${exchange.category ? 'text-slate-800' : 'text-slate-400'}`}>
+                            {exchange.category || 'Select category'}
+                          </Text>
+                          <Text className="text-slate-500">⌄</Text>
+                        </Pressable>
+                        {exchangeCategoryError ? (
+                          <View className="mt-2 flex-row items-center justify-between gap-2">
+                            <Text className="flex-1 text-xs text-rose-700">
+                              {exchangeCategoryError}
+                            </Text>
+                            <Pressable
+                              onPress={() => { loadExchangeCategories(); }}
+                              accessibilityRole="button"
+                            >
+                              <Text className="text-xs font-bold text-primary">Retry</Text>
+                            </Pressable>
+                          </View>
+                        ) : null}
+                      </View>
+                      <View className="flex-row gap-3">
+                        <View className="flex-1">
+                          <Text className="text-xs font-bold text-slate-600">Metal type *</Text>
+                          <Pressable
+                            onPress={() => setExchangePicker({ index, field: 'metal_type' })}
+                            className="mt-1 flex-row items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-3"
+                            accessibilityRole="button"
+                            accessibilityLabel={`Select metal type for exchange item ${index + 1}`}
+                          >
+                            <Text className={`text-sm ${exchange.metal_type ? 'text-slate-800' : 'text-slate-400'}`}>
+                              {exchange.metal_type || 'Select metal'}
+                            </Text>
+                            <Text className="text-slate-500">⌄</Text>
+                          </Pressable>
+                        </View>
+                        <View className="flex-1">
+                          <Text className="text-xs font-bold text-slate-600">Purity *</Text>
+                          <Pressable
+                            onPress={() => setExchangePicker({ index, field: 'purity' })}
+                            className="mt-1 flex-row items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-3"
+                            accessibilityRole="button"
+                            accessibilityLabel={`Select purity for exchange item ${index + 1}`}
+                          >
+                            <Text className={`text-sm ${exchange.purity ? 'text-slate-800' : 'text-slate-400'}`}>
+                              {exchange.purity || 'Select purity'}
+                            </Text>
+                            <Text className="text-slate-500">⌄</Text>
+                          </Pressable>
+                        </View>
+                      </View>
+                      {exchangeMetalError ? (
+                        <View className="flex-row items-center justify-between gap-2">
+                          <Text className="flex-1 text-xs text-rose-700">{exchangeMetalError}</Text>
+                          <Pressable onPress={() => { loadExchangeMetals(); }} accessibilityRole="button">
+                            <Text className="text-xs font-bold text-primary">Retry</Text>
+                          </Pressable>
+                        </View>
+                      ) : null}
                       <View className="flex-row gap-3">
                         <Field label="Weight (g)" value={exchange.weight} onChangeText={value => updateExchange(index, 'weight', value)} keyboardType="decimal-pad" />
                         <Field label="Wastage (g)" value={exchange.wastage_weight} onChangeText={value => updateExchange(index, 'wastage_weight', value)} keyboardType="decimal-pad" />
@@ -984,7 +1394,7 @@ export default function Billing() {
                         keyboardType="decimal-pad"
                       />
                       <Text className="text-xs font-bold text-amber-800">
-                        Net weight {netWeight.toFixed(3)} g · Credit {currency(netWeight * getNumber(exchange.rate_per_unit || selectedRate?.rate_per_unit || selectedRate?.rate_per_gram))}
+                        Net weight {netWeight.toFixed(3)} {exchange.rate_unit || 'g'} · Credit {currency(netWeight * getExchangeRateValue(exchange, rates))}
                       </Text>
                     </View>
                   );
@@ -1013,13 +1423,213 @@ export default function Billing() {
             <View className="border-t border-slate-100 pt-3">
               <SummaryRow label="Total bill" value={validDiscount && validGst ? currency(total) : '—'} bold />
             </View>
-            <ActionButton
-              label={isSaving ? 'Saving bill…' : editingBill ? 'Update bill' : 'Save bill'}
-              onPress={saveBill}
-              disabled={isSaving || !validDiscount || !validGst}
-            />
+            <View className="flex-row gap-3 pt-1">
+              <View className="flex-1">
+                <ActionButton
+                  label="Back"
+                  onPress={() => setBillStep(2)}
+                  secondary
+                />
+              </View>
+              <View className="flex-1">
+                <ActionButton
+                  label={isSaving ? 'Saving…' : editingBill ? 'Update bill' : 'Save bill'}
+                  onPress={saveBill}
+                  disabled={isSaving || !validDiscount || !validGst}
+                />
+              </View>
+            </View>
           </View>
+          </>
+          ) : null}
         </ScrollView>
+
+        {showProductPreview ? (
+          <View className="absolute inset-0 z-50 flex-1 justify-end bg-black/50">
+            <Pressable
+              className="absolute inset-0"
+              onPress={() => setShowProductPreview(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Close product preview"
+            />
+            <SafeAreaView
+              edges={['bottom', 'left', 'right']}
+              className="h-[85%] max-h-[90%] rounded-t-3xl bg-white px-4 pt-3"
+            >
+              <View className="mx-auto mb-3 h-1 w-12 rounded-full bg-slate-300" />
+              <View className="mb-3 flex-row items-center justify-between">
+                <View>
+                  <Text className="text-base font-extrabold text-slate-900">Products preview</Text>
+                  <Text className="mt-1 text-xs text-slate-500">
+                    {products.length} item{products.length === 1 ? '' : 's'} selected
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => setShowProductPreview(false)}
+                  className="h-9 w-9 items-center justify-center rounded-full bg-slate-100"
+                  accessibilityRole="button"
+                  accessibilityLabel="Close product preview"
+                >
+                  <Text className="text-lg font-bold text-slate-600">×</Text>
+                </Pressable>
+              </View>
+              <ScrollView className="flex-1" nestedScrollEnabled>
+                {products.length ? products.map((product, index) => {
+                  const image = getProductImageUrl(product);
+                  return (
+                    <View key={`${product.product_id}-${index}`} className="mb-2 flex-row items-center rounded-xl border border-slate-100 p-3">
+                      {image ? (
+                        <Image
+                          source={{ uri: image }}
+                          className="mr-3 h-20 w-20 rounded-lg bg-slate-100"
+                          resizeMode="cover"
+                          accessibilityLabel={`${product.product_name || 'Product'} image`}
+                        />
+                      ) : (
+                        <View className="mr-3 h-20 w-20 items-center justify-center rounded-lg bg-slate-100">
+                          <Text className="text-2xl font-bold text-slate-300">◆</Text>
+                        </View>
+                      )}
+                      <View className="flex-1">
+                        <Text className="text-sm font-bold text-slate-800">
+                          {product.product_name || 'Product'}
+                        </Text>
+                        <Text className="mt-1 text-xs text-slate-500">
+                          {[product.category, product.purity].filter(Boolean).join(' · ') || '—'}
+                        </Text>
+                        <Text className="mt-2 text-sm font-extrabold text-primary-dark">
+                          {currency(getNumber(product.price) * (product.quantity || 1))}
+                        </Text>
+                        {(product.quantity || 1) > 1 ? (
+                          <Text className="mt-1 text-xs text-slate-500">
+                            Qty: {product.quantity}
+                          </Text>
+                        ) : null}
+                      </View>
+                    </View>
+                  );
+                }) : (
+                  <Text className="py-8 text-center text-sm text-slate-500">
+                    Add a product to preview your bill.
+                  </Text>
+                )}
+              </ScrollView>
+              <Pressable
+                onPress={() => {
+                  if (!products.length) {
+                    Alert.alert('Products required', 'Add at least one product to continue.');
+                    return;
+                  }
+                  setShowProductPreview(false);
+                  setShowProductPicker(false);
+                  setBillStep(2);
+                }}
+                className="mt-3 items-center rounded-xl bg-primary py-3.5"
+                accessibilityRole="button"
+              >
+                <Text className="text-sm font-bold text-white">Next</Text>
+              </Pressable>
+            </SafeAreaView>
+          </View>
+        ) : null}
+
+        {exchangePicker !== null ? (
+          <View className="absolute inset-0 z-50 justify-center bg-black/50 px-6">
+            <Pressable
+              className="absolute inset-0"
+              onPress={() => setExchangePicker(null)}
+              accessibilityRole="button"
+              accessibilityLabel="Close exchange item picker"
+            />
+            <View className="max-h-[70%] rounded-2xl bg-white p-4">
+              <View className="mb-3 flex-row items-center justify-between">
+                <Text className="text-base font-extrabold text-slate-900">
+                  Select {exchangePicker.field === 'category' ? 'category' : exchangePicker.field === 'metal_type' ? 'metal type' : 'purity'}
+                </Text>
+                <Pressable
+                  onPress={() => setExchangePicker(null)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Close exchange item picker"
+                >
+                  <Text className="text-xl font-bold text-slate-500">×</Text>
+                </Pressable>
+              </View>
+              {exchangePicker.field === 'category' && exchangeCategoryError ? (
+                <View className="gap-3 py-4">
+                  <Text className="text-sm text-rose-700">{exchangeCategoryError}</Text>
+                  <ActionButton
+                    label="Retry loading categories"
+                    onPress={() => { loadExchangeCategories(); }}
+                    secondary
+                  />
+                </View>
+              ) : exchangePicker.field !== 'category' && exchangeMetalError ? (
+                <View className="gap-3 py-4">
+                  <Text className="text-sm text-rose-700">{exchangeMetalError}</Text>
+                  <ActionButton
+                    label="Retry loading metals"
+                    onPress={() => { loadExchangeMetals(); }}
+                    secondary
+                  />
+                </View>
+              ) : exchangePickerOptions.length ? (
+                <ScrollView nestedScrollEnabled>
+                  {exchangePickerOptions.map(option => (
+                    <Pressable
+                      key={option}
+                      onPress={() => selectExchangeOption(option)}
+                      className="border-b border-slate-100 py-3"
+                      accessibilityRole="button"
+                    >
+                      <Text className="text-sm font-semibold text-slate-800">{option}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              ) : (
+                <Text className="py-6 text-center text-sm text-slate-500">
+                  {exchangePicker.field === 'purity'
+                    ? 'No purity options are configured for this metal.'
+                    : `No ${exchangePicker.field === 'category' ? 'categories' : 'metal types'} are available.`}
+                </Text>
+              )}
+            </View>
+          </View>
+        ) : null}
+
+        {billStep === 1 && !showProductPreview ? (
+          <View className="border-t border-slate-200 bg-white px-4 py-3">
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => setShowProductPreview(true)}
+                className="flex-1 items-center rounded-xl border border-primary bg-white py-3"
+                accessibilityRole="button"
+                accessibilityLabel="Preview selected products"
+              >
+                <Text className="text-sm font-bold text-primary">
+                  Preview
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  if (!products.length) {
+                    Alert.alert('Products required', 'Add at least one product to continue.');
+                    return;
+                  }
+                  setShowProductPicker(false);
+                  setBillStep(2);
+                }}
+                disabled={!products.length}
+                className={`flex-1 items-center rounded-xl py-3 ${
+                  products.length ? 'bg-primary' : 'bg-slate-300'
+                }`}
+                accessibilityRole="button"
+              >
+                <Text className="text-sm font-bold text-white">Next</Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
+
       </View>
     );
   }

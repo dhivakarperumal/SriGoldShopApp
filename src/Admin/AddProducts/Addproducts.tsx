@@ -725,7 +725,17 @@ function AddProducts({ onCancel, onSaved }: Props) {
           </Pressable>
           <View className="flex-1">
             <Text className="text-base font-extrabold tracking-wide text-white">Add Product</Text>
-            <Text className="text-[10px] font-medium text-emerald-200">Sri Golds Jewellery</Text>
+            <View className="mt-0.5 flex-row items-center">
+              <Text className="text-[10px] font-medium text-emerald-200">
+                Sri Golds Jewellery
+              </Text>
+              <Text className="mx-1.5 text-[8px] text-emerald-400">◆</Text>
+              <View className="rounded bg-emerald-950/60 px-1.5 py-0.5">
+                <Text className="text-[9px] font-bold tracking-wider text-accent-light">
+                  NEW PRODUCT
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
         <SafeAreaView className="flex-1 items-center justify-center bg-background" edges={['bottom', 'left', 'right']}>
@@ -758,9 +768,17 @@ function AddProducts({ onCancel, onSaved }: Props) {
             <Text className="text-base font-extrabold tracking-wide text-white" numberOfLines={1}>
               Add Product
             </Text>
-            <Text className="text-[10px] font-medium text-emerald-200" numberOfLines={1}>
-              Sri Golds Jewellery
-            </Text>
+            <View className="mt-0.5 flex-row items-center">
+              <Text className="text-[10px] font-medium text-emerald-200" numberOfLines={1}>
+                Sri Golds Jewellery
+              </Text>
+              <Text className="mx-1.5 text-[8px] text-emerald-400">◆</Text>
+              <View className="rounded bg-emerald-950/60 px-1.5 py-0.5">
+                <Text className="text-[9px] font-bold tracking-wider text-accent-light">
+                  {form.product_code || 'NEW PRODUCT'}
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
 

@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import api from '../../api';
 import ProductCard from '../../Components/ProductCard';
 import type { AuthenticatedUser } from '../Auth/Login';
@@ -137,14 +137,14 @@ type HomeProps = {
 };
 
 const STAT_CARDS = [
-  { id: 'total_customers', fallbackLabel: 'Total Customers', icon: 'users', color: '#0F766E' },
-  { id: 'active_gold_loans', fallbackLabel: 'Active Gold Loans', icon: 'gold', color: '#B7791F' },
-  { id: 'today_collection', fallbackLabel: "Today's Collection", icon: 'rupee', color: '#0369A1' },
-  { id: 'gold_stock_value', fallbackLabel: 'Gold Stock Value', icon: 'gem', color: '#9A3412' },
-  { id: 'total_products', fallbackLabel: 'Total Products', icon: 'box', color: '#0F766E' },
-  { id: 'total_categories', fallbackLabel: 'Total Categories', icon: 'layers', color: '#6D28D9' },
-  { id: 'completed_loans', fallbackLabel: 'Completed Loans', icon: 'check', color: '#0F766E' },
-  { id: 'low_stock_products', fallbackLabel: 'Low Stock Products', icon: 'alert', color: '#BE123C' },
+  { id: 'today_collection', fallbackLabel: "Today's Collection", icon: 'rupee', color: '#F97316', backgroundColor: '#FFF7ED' },
+  { id: 'total_customers', fallbackLabel: 'Total Customers', icon: 'users', color: '#1685E8', backgroundColor: '#EFF6FF' },
+  { id: 'active_gold_loans', fallbackLabel: 'Active Gold Loans', icon: 'gold', color: '#8B27C8', backgroundColor: '#FAF5FF' },
+  { id: 'gold_stock_value', fallbackLabel: 'Gold Stock Value', icon: 'gem', color: '#9A3412', backgroundColor: '#FEF2F2' },
+  { id: 'total_products', fallbackLabel: 'Total Products', icon: 'box', color: '#0F766E', backgroundColor: '#F0FDFA' },
+  { id: 'total_categories', fallbackLabel: 'Total Categories', icon: 'layers', color: '#6D28D9', backgroundColor: '#F5F3FF' },
+  { id: 'completed_loans', fallbackLabel: 'Completed Loans', icon: 'check', color: '#0F766E', backgroundColor: '#ECFDF5' },
+  { id: 'low_stock_products', fallbackLabel: 'Low Stock Products', icon: 'alert', color: '#BE123C', backgroundColor: '#FFF1F2' },
 ] as const;
 
 const FILTERS = [
@@ -415,27 +415,57 @@ function Home({ user, onNavigate }: HomeProps) {
           return (
             <View
               key={card.id}
-              className="mb-3 min-h-[112px] w-[48%] rounded-2xl border border-slate-100 bg-surface p-3.5 shadow-sm"
+              className="mb-3 min-h-[144px] w-[48%] overflow-hidden rounded-[5px] border px-2 py-3 shadow-sm"
+              style={{
+                backgroundColor: card.backgroundColor,
+                borderColor: `${card.color}35`,
+              }}
             >
-              <View className="mb-3 flex-row items-center justify-between">
+              <DashboardCardArtwork icon={card.icon} color={card.color} />
+              <View className="z-10 mb-2 flex-row items-center">
                 <View
-                  className="h-9 w-9 items-center justify-center rounded-xl"
-                  style={{ backgroundColor: `${card.color}18` }}
+                  className="mr-3 h-10 w-10 items-center justify-center rounded-2xl shadow-sm"
+                  style={{ backgroundColor: card.color }}
                 >
-                  <DashboardIcon name={card.icon} color={card.color} size={19} />
+                  <DashboardIcon
+                    name={card.icon}
+                    color="#FFFFFF"
+                    size={card.icon === 'check' ? 18 : 22}
+                  />
                 </View>
-                <View className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: card.color }} />
+                <View className="min-w-0 flex-1">
+                  <Text
+                    className="text-[13px] font-extrabold leading-[17px] text-slate-900"
+                    numberOfLines={2}
+                  >
+                    {stat?.label || card.fallbackLabel}
+                  </Text>
+                </View>
               </View>
-              <Text className="text-[11px] font-medium text-slate-500" numberOfLines={1}>
-                {stat?.label || card.fallbackLabel}
-              </Text>
-              <Text className="mt-1 text-lg font-extrabold text-slate-900" numberOfLines={1}>
+              <Text
+                className="z-10 text-[25px] font-extrabold tracking-tight text-slate-950"
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+              >
                 {value}
               </Text>
               {stat?.trend ? (
-                <Text className="mt-1 text-[10px] text-slate-400" numberOfLines={1}>
-                  {stat.trend}
-                </Text>
+                <View
+                  className="z-10 mt-1 self-start rounded-full border px-2.5 py-1"
+                  style={{
+                    backgroundColor: `${card.color}12`,
+                    borderColor: `${card.color}22`,
+                  }}
+                >
+                  <Text
+                    className="text-[10px] font-extrabold"
+                    style={{ color: card.color }}
+                    numberOfLines={1}
+                  >
+                    {stat.trend}
+                  </Text>
+                </View>
               ) : null}
             </View>
           );
@@ -703,6 +733,56 @@ function EmptyState({ message }: { message: string }) {
   return (
     <View className="items-center py-5">
       <Text className="text-xs text-slate-500">{message}</Text>
+    </View>
+  );
+}
+
+function DashboardCardArtwork({
+  icon,
+  color,
+}: {
+  icon: (typeof STAT_CARDS)[number]['icon'];
+  color: string;
+}) {
+  return (
+    <View className="absolute bottom-0 right-0 h-24 w-full" pointerEvents="none">
+      <Svg width="100%" height="100%" viewBox="0 0 300 96" preserveAspectRatio="none">
+        <Path d="M0 64 C52 48 85 80 143 66 C210 49 245 22 300 18 V96 H0Z" fill={color} opacity={0.1} />
+        <Path d="M0 78 C58 60 93 92 157 76 C213 62 258 39 300 36 V96 H0Z" fill={color} opacity={0.18} />
+        <Path d="M0 90 C72 76 106 98 174 86 C224 76 265 55 300 52 V96 H0Z" fill={color} opacity={0.34} />
+        {icon === 'rupee' ? (
+          <>
+            <Rect x="210" y="66" width="12" height="22" rx="2" fill={color} opacity={0.72} />
+            <Rect x="230" y="54" width="12" height="34" rx="2" fill={color} opacity={0.82} />
+            <Rect x="250" y="41" width="12" height="47" rx="2" fill={color} opacity={0.9} />
+            <Path d="M201 62 C222 57 231 43 245 37 C256 32 265 32 278 20" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
+            <Path d="M268 20 H279 V31" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          </>
+        ) : icon === 'users' ? (
+          <>
+            <Circle cx="220" cy="50" r="8" fill={color} opacity={0.76} />
+            <Circle cx="251" cy="43" r="10" fill={color} opacity={0.9} />
+            <Circle cx="282" cy="50" r="8" fill={color} opacity={0.76} />
+            <Path d="M204 84 C204 69 211 61 221 61 C231 61 237 69 237 84Z" fill={color} opacity={0.76} />
+            <Path d="M229 90 C229 69 237 58 251 58 C265 58 273 69 273 90Z" fill={color} opacity={0.92} />
+            <Path d="M265 84 C265 69 271 61 281 61 C291 61 297 69 297 84Z" fill={color} opacity={0.76} />
+          </>
+        ) : icon === 'gold' ? (
+          <>
+            <Path d="M242 43 C240 34 247 29 254 24 C261 30 269 34 267 44 C265 53 244 53 242 43Z" fill="#FBBF24" />
+            <Path d="M246 42 C248 37 260 37 264 42 V81 C260 87 249 87 245 81Z" fill="#F59E0B" opacity={0.92} />
+            <Path d="M244 44 H266 M249 79 H262" stroke="#92400E" strokeWidth="3" strokeLinecap="round" />
+            <Circle cx="224" cy="76" r="11" fill="#FDE68A" stroke="#F59E0B" strokeWidth="3" />
+            <Circle cx="224" cy="58" r="11" fill="#FDE68A" stroke="#F59E0B" strokeWidth="3" />
+            <Path d="M213 58 H235 M213 76 H235" stroke="#D97706" strokeWidth="2" />
+          </>
+        ) : (
+          <>
+            <Circle cx="260" cy="58" r="20" fill="none" stroke={color} strokeWidth="4" opacity={0.75} />
+            <Path d="M250 58 L258 66 L272 48" fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+          </>
+        )}
+      </Svg>
     </View>
   );
 }

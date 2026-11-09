@@ -9,6 +9,8 @@ type AdminLayoutProps = {
   user: AuthenticatedUser;
   currentRoute?: AdminRoute;
   route?: AdminRoute;
+  isBillingFormOpen?: boolean;
+  isLoanFormOpen?: boolean;
   children: ReactNode;
   onNavigate: (route: AdminRoute) => void;
   onLogout: () => void;
@@ -18,21 +20,42 @@ function AdminLayout({
   user,
   currentRoute,
   route,
+  isBillingFormOpen = false,
+  isLoanFormOpen = false,
   children,
   onNavigate,
   onLogout,
 }: AdminLayoutProps) {
   const activeRoute = route || currentRoute;
-  const showBottomNav = activeRoute ? isMainTab(activeRoute) : false;
+  const bottomNavRoute =
+    activeRoute && isMainTab(activeRoute) ? activeRoute : undefined;
+  const showBottomNav =
+    bottomNavRoute !== undefined &&
+    (bottomNavRoute !== 'billing' || !isBillingFormOpen) &&
+    (bottomNavRoute !== 'loans' || !isLoanFormOpen);
   const showAppHeader =
     activeRoute !== 'profile' &&
+    (activeRoute !== 'billing' || !isBillingFormOpen) &&
+    (activeRoute !== 'loans' || !isLoanFormOpen) &&
     activeRoute !== 'categories' &&
     activeRoute !== 'addCategory' &&
     activeRoute !== 'editCategory' &&
     activeRoute !== 'metalTypes' &&
     activeRoute !== 'dailyGoldRates' &&
     activeRoute !== 'addGoldrate' &&
-    activeRoute !== 'customers';
+    activeRoute !== 'customers' &&
+    activeRoute !== 'loanCustomers' &&
+    activeRoute !== 'overdueLoans' &&
+    activeRoute !== 'loanRenewal' &&
+    activeRoute !== 'goldRelease' &&
+    activeRoute !== 'completeLoan' &&
+    activeRoute !== 'loanDetails' &&
+    activeRoute !== 'stockDetails' &&
+    activeRoute !== 'enquiries' &&
+    activeRoute !== 'fundManagement' &&
+    activeRoute !== 'reviews' &&
+    activeRoute !== 'reports' &&
+    activeRoute !== 'homeSections';
 
   return (
     <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
@@ -51,9 +74,9 @@ function AdminLayout({
       >
         <View className="flex-1">
           {children}
-          {showBottomNav && activeRoute && isMainTab(activeRoute) ? (
+          {showBottomNav && bottomNavRoute ? (
             <BottomNavigation
-              activeRoute={activeRoute}
+              activeRoute={bottomNavRoute}
               onSelect={tabRoute => onNavigate(tabRoute)}
             />
           ) : null}

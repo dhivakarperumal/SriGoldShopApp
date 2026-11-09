@@ -33,7 +33,19 @@ export type AdminRoute =
   | 'dailyGoldRates'
   | 'addGoldrate'
   | 'customers'
+  | 'loanCustomers'
+  | 'overdueLoans'
+  | 'loanRenewal'
+  | 'goldRelease'
+  | 'completeLoan'
+  | 'loanDetails'
+  | 'stockDetails'
+  | 'enquiries'
+  | 'fundManagement'
   | 'receipt'
+  | 'reports'
+  | 'homeSections'
+  | 'reviews'
   | 'more';
 
 type AppHeaderProps = {
