@@ -21,7 +21,7 @@ export const MAIN_TABS: {
 }[] = [
   { route: 'home', label: 'Home', icon: 'home' },
   { route: 'loans', label: 'Loans', icon: 'loans' },
-  { route: 'billing', label: '', icon: 'add' },
+  { route: 'billing', label: 'Pulse', icon: 'add' },
   { route: 'products', label: 'Products', icon: 'products' },
   { route: 'more', label: 'More', icon: 'more' },
 ];
@@ -126,9 +126,14 @@ function TabButton({ label, icon, isActive, onPress }: TabButtonProps) {
         style={styles.addButtonContainer}
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel="Add / Pulse"
+        accessibilityLabel="Pulse"
+        accessibilityState={{ selected: isActive }}
       >
+        <View style={styles.activeIndicatorSlot}>
+          {isActive ? <View style={styles.activeIndicator} /> : null}
+        </View>
         <AddBotton />
+        <Text style={[styles.tabLabel, styles.tabLabelActive]}>Pulse</Text>
       </Pressable>
     );
   }
@@ -141,6 +146,9 @@ function TabButton({ label, icon, isActive, onPress }: TabButtonProps) {
       accessibilityLabel={label}
       accessibilityState={{ selected: isActive }}
     >
+      <View style={styles.activeIndicatorSlot}>
+        {isActive ? <View style={styles.activeIndicator} /> : null}
+      </View>
       <Animated.View style={{ transform: [{ scale }] }}>
         <TabIcon name={icon} active={isActive} />
       </Animated.View>
@@ -219,6 +227,19 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  activeIndicatorSlot: {
+    height: 8,
+    width: 24,
+    marginBottom: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeIndicator: {
+    height: 4,
+    width: 20,
+    borderRadius: 2,
+    backgroundColor: '#EDB628',
   },
   addButtonContainer: {
     flex: 1,
