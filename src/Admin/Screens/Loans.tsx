@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -10,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../api';
 import PulseFab from '../Componets/PulseFab';
 import CreateLoan from '../Loanmanegements/CreateLoan';
@@ -31,23 +33,27 @@ type Loan = Record<string, unknown> & {
   created_at?: string;
 };
 
-type StatusFilter =
-  | 'All'
+type LoanListFilter =
+  | 'All Loans'
+  | 'Overdue Loans'
+  | 'Loan Renewal'
+  | 'Gold Release'
+  | 'Complete Loan'
   | 'Active'
   | 'Suspended'
-  | 'Awaiting Gold Release'
   | 'Inactive'
-  | 'Completed'
   | 'Pending';
 
 const PAGE_SIZE = 10;
-const STATUS_FILTERS: StatusFilter[] = [
-  'All',
+const LOAN_LIST_FILTERS: LoanListFilter[] = [
+  'All Loans',
+  'Overdue Loans',
+  'Loan Renewal',
+  'Gold Release',
+  'Complete Loan',
   'Active',
   'Suspended',
-  'Awaiting Gold Release',
   'Inactive',
-  'Completed',
   'Pending',
 ];
 
@@ -81,6 +87,56 @@ const getDisplayStatus = (loan: Loan): string => {
   return loan.loan_status || 'Unknown';
 };
 
+const getLoanReferenceId = (value: unknown): string | null => {
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+  if (typeof value === 'object' && value !== null && 'id' in value) {
+    const id = (value as { id?: unknown }).id;
+    if (typeof id === 'string' || typeof id === 'number') return String(id);
+  }
+  return null;
+};
+
+const isRenewalLoan = (loan: Loan) => {
+  if (loan.is_renewal === true) return true;
+  const type = String(loan.loan_type ?? loan.renewal_type ?? '').toLowerCase();
+  return type.includes('renewal');
+};
+
+const isLinkedToPreviousLoan = (loan: Loan) =>
+  [
+    loan.renewed_from_loan_id,
+    loan.renewal_of_loan_id,
+    loan.original_loan_id,
+    loan.parent_loan_id,
+    loan.previous_loan_id,
+    loan.renewed_from,
+    loan.renewal_of,
+  ].some(value => getLoanReferenceId(value) !== null);
+
+const hasRenewal = (loan: Loan, allLoans: Loan[]) => {
+  if (isRenewalLoan(loan)) return true;
+  const status = String(loan.renewal_status ?? '').toLowerCase();
+  if (['renewed', 'created', 'completed'].includes(status)) return true;
+  if (loan.renewal_id || loan.renewed_loan_id) return true;
+  return allLoans.some(candidate => {
+    if (
+      String(candidate.id) === String(loan.id) ||
+      (!isRenewalLoan(candidate) && !isLinkedToPreviousLoan(candidate))
+    ) {
+      return false;
+    }
+    return [
+      candidate.renewed_from_loan_id,
+      candidate.renewal_of_loan_id,
+      candidate.original_loan_id,
+      candidate.parent_loan_id,
+      candidate.previous_loan_id,
+      candidate.renewed_from,
+      candidate.renewal_of,
+    ].some(value => getLoanReferenceId(value) === String(loan.id));
+  });
+};
+
 const getOverdueDays = (loan: Loan, today: Date): number => {
   const datePart = String(loan.maturity_date || '').slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return 0;
@@ -92,9 +148,19 @@ const getOverdueDays = (loan: Loan, today: Date): number => {
 
 const isOverdueActiveLoan = (loan: Loan, today: Date): boolean =>
   ['active', 'suspended'].includes(String(loan.loan_status || '').toLowerCase()) &&
-  loan.release_status !== 'Released' &&
+  String(loan.release_status || '').toLowerCase() !== 'released' &&
   getNumber(loan.outstanding_principal ?? loan.principal_amount) > 0 &&
   getOverdueDays(loan, today) > 0;
+
+const isAwaitingGoldRelease = (loan: Loan) =>
+  String(loan.release_status || '').toLowerCase() === 'pending release' &&
+  getNumber(loan.outstanding_principal ?? loan.principal_amount) <= 0;
+
+const isRenewalEligible = (loan: Loan, allLoans: Loan[]) =>
+  ['active', 'suspended'].includes(String(loan.loan_status || '').toLowerCase()) &&
+  loan.release_status !== 'Released' &&
+  getNumber(loan.outstanding_principal ?? loan.principal_amount) > 0 &&
+  !hasRenewal(loan, allLoans);
 
 const getErrorMessage = (error: unknown): string => {
   if (typeof error === 'object' && error !== null && 'message' in error) {
@@ -111,9 +177,11 @@ function Loans({
   onFormVisibilityChange?: (visible: boolean) => void;
   onCreateCustomer?: () => void;
 }) {
+  const insets = useSafeAreaInsets();
   const [loans, setLoans] = useState<Loan[]>([]);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
+  const [loanListFilter, setLoanListFilter] = useState<LoanListFilter>('All Loans');
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -160,12 +228,10 @@ function Loans({
     const counts = { active: 0, inactive: 0, completed: 0, overdue: 0 };
     loans.forEach(loan => {
       const status = String(loan.loan_status || '').trim().toLowerCase();
-      const awaitingRelease =
-        loan.release_status === 'Pending Release' &&
-        getNumber(loan.outstanding_principal ?? loan.principal_amount) === 0;
+      const awaitingRelease = isAwaitingGoldRelease(loan);
       if (status === 'active' && !awaitingRelease) counts.active += 1;
       if (status === 'inactive') counts.inactive += 1;
-      if (status === 'completed' || loan.release_status === 'Released') counts.completed += 1;
+      if (status === 'completed') counts.completed += 1;
       if (isOverdueActiveLoan(loan, today)) counts.overdue += 1;
     });
     return counts;
@@ -182,12 +248,25 @@ function Loans({
           loan.customer_code,
           loan.customer_mobile,
         ].some(value => String(value ?? '').toLowerCase().includes(query));
-      const matchesStatus =
-        statusFilter === 'All' ||
-        getDisplayStatus(loan).toLowerCase() === statusFilter.toLowerCase();
-      return matchesSearch && matchesStatus;
+      const matchesFilter = (() => {
+        switch (loanListFilter) {
+          case 'All Loans':
+            return true;
+          case 'Overdue Loans':
+            return isOverdueActiveLoan(loan, today);
+          case 'Loan Renewal':
+            return isRenewalEligible(loan, loans);
+          case 'Gold Release':
+            return isAwaitingGoldRelease(loan);
+          case 'Complete Loan':
+            return String(loan.loan_status || '').toLowerCase() === 'completed';
+          default:
+            return getDisplayStatus(loan).toLowerCase() === loanListFilter.toLowerCase();
+        }
+      })();
+      return matchesSearch && matchesFilter;
     });
-  }, [loans, search, statusFilter]);
+  }, [loans, loanListFilter, search, today]);
 
   const totalPages = Math.max(1, Math.ceil(filteredLoans.length / PAGE_SIZE));
   const activePage = Math.min(currentPage, totalPages);
@@ -199,19 +278,6 @@ function Loans({
   const changeSearch = (value: string) => {
     setSearch(value);
     setCurrentPage(1);
-  };
-
-  const selectStatusFilter = () => {
-    Alert.alert('Filter loans', 'Select a loan status', [
-      ...STATUS_FILTERS.map(status => ({
-        text: status === 'All' ? 'All statuses' : status,
-        onPress: () => {
-          setStatusFilter(status);
-          setCurrentPage(1);
-        },
-      })),
-      { text: 'Cancel', style: 'cancel' },
-    ]);
   };
 
   const deleteLoan = (loan: Loan) => {
@@ -251,8 +317,10 @@ function Loans({
       case 'suspended':
         return 'bg-rose-100 text-rose-800';
       case 'awaiting gold release':
+      case 'gold release':
         return 'bg-amber-100 text-amber-900';
       case 'completed':
+      case 'complete loan':
         return 'bg-slate-100 text-slate-700';
       case 'pending':
         return 'bg-sky-100 text-sky-800';
@@ -318,15 +386,15 @@ function Loans({
             accessibilityLabel="Search loans"
           />
           <Pressable
-            onPress={selectStatusFilter}
+            onPress={() => setIsFilterModalOpen(true)}
             className="flex-row items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
             accessibilityRole="button"
-            accessibilityLabel={`Filter by status, current filter ${statusFilter}`}
+            accessibilityLabel={`Filter loans, current filter ${loanListFilter}`}
           >
             <View>
-              <Text className="text-[10px] font-semibold text-slate-500">Status</Text>
+              <Text className="text-[10px] font-semibold text-slate-500">Loan list</Text>
               <Text className="mt-1 text-sm font-bold text-slate-800">
-                {statusFilter === 'All' ? 'All statuses' : statusFilter}
+                {loanListFilter}
               </Text>
             </View>
             <Text className="text-base font-bold text-slate-500">⌄</Text>
@@ -356,6 +424,7 @@ function Loans({
             {paginatedLoans.map(loan => {
               const status = String(getDisplayStatus(loan));
               const overdue = isOverdueActiveLoan(loan, today);
+              const eligibleForRenewal = isRenewalEligible(loan, loans);
               const expanded = expandedLoanId === loan.id;
               const outstanding = loan.outstanding_principal ?? loan.principal_amount;
               return (
@@ -431,6 +500,14 @@ function Loans({
                       <LoanDetail label="Principal amount" value={formatCurrency(loan.principal_amount)} />
                       <LoanDetail label="Loan status" value={loan.loan_status} />
                       <LoanDetail label="Release status" value={loan.release_status} />
+                      {loan.renewal_status ? (
+                        <LoanDetail label="Renewal status" value={loan.renewal_status} />
+                      ) : null}
+                      {eligibleForRenewal ? (
+                        <Text className="mt-1 self-start rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-bold text-sky-700">
+                          Eligible for renewal
+                        </Text>
+                      ) : null}
                     </View>
                   ) : null}
 
@@ -521,7 +598,111 @@ function Loans({
           onPress={() => setIsFabOpen(open => !open)}
         />
       </View>
+      <Modal
+        visible={isFilterModalOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setIsFilterModalOpen(false)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View
+            className="max-h-[85%] rounded-t-3xl border-t border-slate-200 bg-white px-4 pb-5 pt-5"
+            style={{ paddingBottom: Math.max(insets.bottom, 24) }}
+          >
+            <View className="mb-3 flex-row items-center justify-between">
+              <Text className="text-base font-extrabold text-slate-900">Loan filters</Text>
+              <Pressable
+                onPress={() => setIsFilterModalOpen(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Close loan filters"
+                className="rounded-full bg-slate-100 px-3 py-1.5"
+              >
+                <Text className="text-xs font-bold text-slate-700">Close</Text>
+              </Pressable>
+            </View>
+            {LOAN_LIST_FILTERS.map(filter => {
+              const selected = loanListFilter === filter;
+              const count = loans.filter(loan => {
+                switch (filter) {
+                  case 'All Loans':
+                    return true;
+                  case 'Overdue Loans':
+                    return isOverdueActiveLoan(loan, today);
+                  case 'Loan Renewal':
+                    return isRenewalEligible(loan, loans);
+                  case 'Gold Release':
+                    return isAwaitingGoldRelease(loan);
+                  case 'Complete Loan':
+                    return String(loan.loan_status || '').toLowerCase() === 'completed';
+                  default:
+                    return getDisplayStatus(loan).toLowerCase() === filter.toLowerCase();
+                }
+              }).length;
+              return (
+                <Pressable
+                  key={filter}
+                  onPress={() => {
+                    setLoanListFilter(filter);
+                    setCurrentPage(1);
+                    setExpandedLoanId(null);
+                    setIsFilterModalOpen(false);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Loan list filter ${filter}`}
+                  accessibilityState={{ selected }}
+                  className={`mb-2 flex-row items-center rounded-xl border px-3 py-2.5 ${
+                    selected
+                      ? 'border-emerald-200 bg-emerald-50'
+                      : 'border-transparent bg-white'
+                  }`}
+                >
+                  <LoanFilterIcon filter={filter} active={selected} />
+                  <Text className={`ml-3 flex-1 text-sm font-bold ${selected ? 'text-primary' : 'text-slate-700'}`}>
+                    {filter}
+                  </Text>
+                  {selected ? (
+                    <View className="mr-1 h-2 w-2 rounded-full bg-accent" />
+                  ) : null}
+                  <Text className="ml-2 min-w-7 text-right text-xs font-semibold text-slate-500">
+                    {count}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      </Modal>
     </View>
+  );
+}
+
+function LoanFilterIcon({ filter, active }: { filter: LoanListFilter; active: boolean }) {
+  const color =
+    filter === 'Complete Loan' ? '#D4A017' : active ? '#D4A017' : '#8DBDB4';
+  const paths: Record<LoanListFilter, string[]> = {
+    'All Loans': ['M7 3H5a2 2 0 0 0-2 2v12', 'M11 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z', 'M12 8h5', 'M12 12h5'],
+    'Overdue Loans': ['M12 8v4l3 2', 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
+    'Loan Renewal': ['M20 7v5h-5', 'M4 17v-5h5', 'M5.6 9a7 7 0 0 1 11.6-2L20 12', 'M4 12l2.8 5a7 7 0 0 0 11.6-2'],
+    'Gold Release': ['M12 3 3.5 8v8L12 21l8.5-5V8L12 3Z', 'M3.5 8 12 13l8.5-5', 'M12 13v8'],
+    'Complete Loan': ['M20 11.1V12a8 8 0 1 1-4.7-7.3', 'm8 11 3 3L21 4'],
+    Active: ['M5 12h14', 'M12 5v14'],
+    Suspended: ['M8 5v14', 'M16 5v14'],
+    Inactive: ['M5 12h14'],
+    Pending: ['M12 8v4l3 2', 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
+  };
+  return (
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+      {paths[filter].map(path => (
+        <Path
+          key={path}
+          d={path}
+          stroke={color}
+          strokeWidth={1.8}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ))}
+    </Svg>
   );
 }
 

@@ -22,6 +22,11 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   default: { getItem: jest.fn().mockResolvedValue('test-token') },
 }));
 
+jest.mock('react-native-safe-area-context', () => ({
+  ...jest.requireActual('react-native-safe-area-context'),
+  useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
+}));
+
 jest.mock('@react-native-documents/picker', () => ({
   errorCodes: { OPERATION_CANCELED: 'OPERATION_CANCELED' },
   isErrorWithCode: jest.fn(() => false),
@@ -74,6 +79,74 @@ test('loads loan summaries and searchable loan cards', async () => {
   });
   expect(renderer.root.findAll(node => node.props.children === 'LN-001')).toHaveLength(0);
   expect(renderer.root.findAll(node => node.props.children === 'LN-002').length).toBeGreaterThan(0);
+  act(() => renderer.unmount());
+}, 30000);
+
+test('filters loans by overdue, unrenewed, gold release, and completed status', async () => {
+  const statusLoans = [
+    { ...loans[0], id: 21, loan_number: 'LN-ACTIVE', loan_status: 'Active', maturity_date: '2099-01-01' },
+    { ...loans[0], id: 26, loan_number: 'LN-ELIGIBLE', loan_status: 'Active', maturity_date: '2099-01-01' },
+    { ...loans[0], id: 22, loan_number: 'LN-OVERDUE', loan_status: 'Active', maturity_date: '2000-01-01' },
+    {
+      ...loans[0],
+      id: 23,
+      loan_number: 'LN-RENEWED',
+      loan_status: 'Active',
+      maturity_date: '2099-01-01',
+      loan_type: 'Renewal',
+      renewed_from_loan_id: 21,
+    },
+    {
+      ...loans[0],
+      id: 24,
+      loan_number: 'LN-RELEASE',
+      loan_status: 'Active',
+      outstanding_principal: 0,
+      release_status: 'Pending Release',
+    },
+    {
+      ...loans[0],
+      id: 25,
+      loan_number: 'LN-COMPLETE',
+      loan_status: 'Completed',
+      release_status: 'Released',
+      outstanding_principal: 0,
+    },
+  ];
+  (api.get as jest.Mock).mockResolvedValue({ data: statusLoans });
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<Loans />);
+  });
+
+  const selectFilter = async (filter: string) => {
+    await act(async () => {
+      renderer.root
+        .findAll(
+          node =>
+            typeof node.props.accessibilityLabel === 'string' &&
+            node.props.accessibilityLabel.startsWith('Filter loans, current filter '),
+        )[0]
+        .props.onPress();
+    });
+    await act(async () => {
+      renderer.root.findByProps({ accessibilityLabel: `Loan list filter ${filter}` }).props.onPress();
+    });
+  };
+  const visibleLoanNumbers = () =>
+    statusLoans
+      .map(loan => loan.loan_number!)
+      .filter(loanNumber => renderer.root.findAll(node => node.props.children === loanNumber).length > 0);
+
+  expect(visibleLoanNumbers()).toEqual(statusLoans.map(loan => loan.loan_number));
+  await selectFilter('Overdue Loans');
+  expect(visibleLoanNumbers()).toEqual(['LN-OVERDUE']);
+  await selectFilter('Loan Renewal');
+  expect(visibleLoanNumbers()).toEqual(['LN-ELIGIBLE', 'LN-OVERDUE']);
+  await selectFilter('Gold Release');
+  expect(visibleLoanNumbers()).toEqual(['LN-RELEASE']);
+  await selectFilter('Complete Loan');
+  expect(visibleLoanNumbers()).toEqual(['LN-COMPLETE']);
   act(() => renderer.unmount());
 }, 30000);
 
