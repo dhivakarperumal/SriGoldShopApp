@@ -417,16 +417,18 @@ function Home({ user, onNavigate }: HomeProps) {
           return (
             <View
               key={card.id}
-              className="mb-3 min-h-[144px] w-[48%] overflow-hidden rounded-[5px] border px-2 py-3 shadow-sm"
+              className="mb-3 min-h-[148px] w-[48.5%] overflow-hidden rounded-2xl border px-3 py-3.5 shadow-sm"
               style={{
                 backgroundColor: card.backgroundColor,
                 borderColor: `${card.color}35`,
               }}
+              accessibilityLabel={`${stat?.label || card.fallbackLabel}: ${value}${stat?.trend ? `. ${stat.trend}` : ''}`}
+              accessible
             >
               <DashboardCardArtwork icon={card.icon} color={card.color} />
-              <View className="z-10 mb-2 flex-row items-center">
+              <View className="z-10 flex-row items-center">
                 <View
-                  className="mr-3 h-10 w-10 items-center justify-center rounded-2xl shadow-sm"
+                  className="mr-2.5 h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm"
                   style={{ backgroundColor: card.color }}
                 >
                   <DashboardIcon
@@ -437,7 +439,7 @@ function Home({ user, onNavigate }: HomeProps) {
                 </View>
                 <View className="min-w-0 flex-1">
                   <Text
-                    className="text-[13px] font-extrabold leading-[17px] text-slate-900"
+                    className="text-[13px] font-bold leading-[17px] text-slate-900"
                     numberOfLines={2}
                   >
                     {stat?.label || card.fallbackLabel}
@@ -445,25 +447,26 @@ function Home({ user, onNavigate }: HomeProps) {
                 </View>
               </View>
               <Text
-                className="z-10 text-[25px] font-extrabold tracking-tight text-slate-950"
+                className="z-10 mt-2 text-[25px] font-extrabold tracking-tight text-slate-950"
                 numberOfLines={1}
                 adjustsFontSizeToFit
-                minimumFontScale={0.75}
+                minimumFontScale={0.65}
               >
                 {value}
               </Text>
               {stat?.trend ? (
                 <View
-                  className="z-10 mt-1 self-start rounded-full border px-2.5 py-1"
+                  className="z-10 mt-1.5 max-w-full self-start rounded-full border px-2.5 py-1"
                   style={{
                     backgroundColor: `${card.color}12`,
                     borderColor: `${card.color}22`,
                   }}
                 >
                   <Text
-                    className="text-[10px] font-extrabold"
+                    className="text-[10px] font-bold"
                     style={{ color: card.color }}
                     numberOfLines={1}
+                    ellipsizeMode="tail"
                   >
                     {stat.trend}
                   </Text>
