@@ -251,7 +251,7 @@ function UserProductDetails({
 
   const shareProduct = async () => {
     try {
-      const productUrl = `${API_BASE_URL.replace(/\/api\/?$/, '')}/product/${encodeURIComponent(
+      const productUrl = `${API_BASE_URL.replace(/\/api\/?$/, '')}/#/product/${encodeURIComponent(
         String(product?.id ?? productId),
       )}`;
       await Share.share({
