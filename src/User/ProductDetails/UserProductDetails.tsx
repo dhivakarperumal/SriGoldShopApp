@@ -1,6 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import {
   Image,
   Pressable,
   RefreshControl,
@@ -9,6 +12,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { Alert } from '../../Components/AppAlert';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import api, { API_BASE_URL } from '../../api';
 import type { ProductCardData } from '../../Components/ProductCard';

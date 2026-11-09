@@ -1,7 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   Pressable,
   RefreshControl,
@@ -10,6 +14,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Alert } from '../../Components/AppAlert';
 import api from '../../api';
 
 type Loan = Record<string, unknown> & {

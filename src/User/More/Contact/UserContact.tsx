@@ -1,6 +1,7 @@
-import { useState } from 'react';
 import {
-  Alert,
+  useState,
+} from 'react';
+import {
   Linking,
   Pressable,
   ScrollView,
@@ -8,6 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Alert } from '../../../Components/AppAlert';
 import Svg, { Path } from 'react-native-svg';
 import UserPageHeader from '../../components/UserPageHeader';
 

@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -12,6 +15,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Alert } from '../../Components/AppAlert';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../api';
 

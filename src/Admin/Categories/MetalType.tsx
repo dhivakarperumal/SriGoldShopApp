@@ -1,8 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
   Animated,
-  Alert,
   Image,
   Pressable,
   RefreshControl,
@@ -11,6 +16,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Alert } from '../../Components/AppAlert';
 import { launchImageLibrary } from 'react-native-image-picker';
 import api from '../../api';
 import { getProductImageUrl } from '../../utils/productImage';

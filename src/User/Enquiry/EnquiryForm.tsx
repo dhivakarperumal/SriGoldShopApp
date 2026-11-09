@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import {
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -10,6 +11,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Alert } from '../../Components/AppAlert';
 import api from '../../api';
 import type { AuthenticatedUser } from '../../Admin/Auth/Login';
 import type { ProductCardData } from '../../Components/ProductCard';

@@ -1,5 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Alert, BackHandler, StatusBar, View } from 'react-native';
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
+import {
+  BackHandler,
+  StatusBar,
+  View,
+} from 'react-native';
+import { Alert } from '../Components/AppAlert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../api';
 import type { ProductCardData } from '../Components/ProductCard';

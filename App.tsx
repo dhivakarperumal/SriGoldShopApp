@@ -6,15 +6,19 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useRef, useState } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
-  Alert,
   BackHandler,
   StatusBar,
   Text,
   View,
 } from 'react-native';
+import AppAlertHost, { Alert } from './src/Components/AppAlert';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Login, { type AuthenticatedUser } from './src/Admin/Auth/Login';
 import AdminHome from './src/Admin/Screens/Home';
@@ -397,6 +401,7 @@ function App() {
 
   return (
     <SafeAreaProvider>
+      <AppAlertHost />
       <StatusBar barStyle="dark-content" />
       {isRestoringSession ? (
         <View className="flex-1 items-center justify-center bg-background">
