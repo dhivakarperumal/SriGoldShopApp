@@ -37,15 +37,15 @@ function MoreMenu({ onSelect }: MoreMenuProps) {
   return (
     <ScrollView
       className="flex-1 bg-white"
-      contentContainerClassName="gap-4 px-4 py-6"
+      contentContainerClassName="gap-4 mt-4 px-4 py-6"
       showsVerticalScrollIndicator={false}
     >
-      <View className="mb-1">
+      {/* <View className="mb-1">
         <Text className="text-2xl font-bold text-[#003b2d]">More</Text>
         <Text className="mt-1 text-sm leading-5 text-slate-600">
           Get to know Sri Golds or reach our team.
         </Text>
-      </View>
+      </View> */}
       {MORE_ITEMS.map(item => (
         <Pressable
           key={item.id}
