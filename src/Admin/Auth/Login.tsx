@@ -94,15 +94,15 @@ function Login({ onLoginSuccess }: LoginProps) {
       <SafeAreaView className="flex-1 bg-transparent">
         <KeyboardAvoidingView
           className="flex-1"
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
             className="flex-1"
-            contentContainerClassName="grow px-6 py-6"
+            contentContainerClassName="grow justify-center px-6 py-8"
             keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
+            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
           >
-            <View className="z-10 my-auto w-full self-center">
+            <View className="z-10 w-full self-center">
               <View className="mb-6 items-center">
                 <Image
                   source={require('../../Images/logo.png')}
