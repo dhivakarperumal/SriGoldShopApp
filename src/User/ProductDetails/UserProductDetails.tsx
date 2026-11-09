@@ -265,30 +265,30 @@ function UserProductDetails({
 
   return (
     <View className="flex-1 bg-[#fffaf0]">
-      <View className="flex-row items-center border-b border-[#eadcc0] bg-white px-4 py-3">
+      <View className="flex-row items-center bg-[#003B2D] px-4 py-3">
         <Pressable
-          className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-[#fff4d9]"
+          className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-white/15"
           onPress={onBack}
           accessibilityRole="button"
           accessibilityLabel="Back to products"
         >
-          <Text className="text-2xl leading-7 text-primary-dark">‹</Text>
+          <Text className="text-2xl leading-7 text-white">‹</Text>
         </Pressable>
         <View className="min-w-0 flex-1">
           <Text
-            className="text-base font-bold text-primary-dark"
+            className="text-base font-bold text-white"
             numberOfLines={1}
           >
             {isLoading ? 'Product Details' : productName}
           </Text>
-          <Text className="text-[10px] text-slate-500" numberOfLines={1}>
+          <Text className="text-[10px] text-white/65" numberOfLines={1}>
             {productCode || `Product #${productId}`}
           </Text>
         </View>
         {product ? (
           <View className="ml-2 flex-row gap-2">
             <Pressable
-              className="h-10 w-10 items-center justify-center rounded-full bg-[#fff4d9]"
+              className="h-10 w-10 items-center justify-center rounded-full bg-white/15"
               onPress={() => onToggleFavorite(product)}
               accessibilityRole="button"
               accessibilityLabel={
@@ -304,19 +304,19 @@ function UserProductDetails({
                 className={`text-xl ${
                   isFavorite(String(product.id ?? productId))
                     ? 'text-rose-600'
-                    : 'text-slate-600'
+                    : 'text-white'
                 }`}
               >
                 {isFavorite(String(product.id ?? productId)) ? '♥' : '♡'}
               </Text>
             </Pressable>
             <Pressable
-              className="h-10 w-10 items-center justify-center rounded-full bg-[#fff4d9]"
+              className="h-10 w-10 items-center justify-center rounded-full bg-white/15"
               onPress={shareProduct}
               accessibilityRole="button"
               accessibilityLabel="Share product"
             >
-              <Text className="text-base text-[#9a6817]">↗</Text>
+              <Text className="text-base text-white">↗</Text>
             </Pressable>
           </View>
         ) : null}

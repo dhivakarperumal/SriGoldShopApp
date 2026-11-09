@@ -103,16 +103,16 @@ function UserContact({ onBack }: UserContactProps) {
 
   return (
     <View className="flex-1 bg-[#fffaf0]">
-      <View className="flex-row items-center border-b border-[#eadcc0] bg-white px-4 py-3">
+      <View className="flex-row items-center bg-[#003B2D] px-4 py-3">
         <Pressable
-          className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-[#fff4d9]"
+          className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-white/15"
           onPress={onBack}
           accessibilityRole="button"
           accessibilityLabel="Back to More"
         >
-          <Text className="text-2xl leading-7 text-primary-dark">‹</Text>
+          <Text className="text-2xl leading-7 text-white">‹</Text>
         </Pressable>
-        <Text className="text-lg font-bold text-primary-dark">Contact Us</Text>
+        <Text className="text-lg font-bold text-white">Contact Us</Text>
       </View>
 
       <ScrollView
