@@ -766,7 +766,7 @@ function SummaryCard({
 
   return (
     <View
-      className={`relative mb-3 min-h-[108px] ${widthClass} overflow-hidden rounded-[24px] border-2 px-2.5 pb-1.5 pt-2 shadow-lg`}
+      className={`relative mb-3 min-h-[108px] ${widthClass} overflow-hidden rounded-[18px] border-2 px-2.5 pb-1.5 pt-2 shadow-lg`}
       style={{ backgroundColor, borderColor: color }}
       accessibilityLabel={`${label}: ${value}`}
       accessible
