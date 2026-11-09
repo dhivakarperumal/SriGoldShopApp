@@ -782,10 +782,11 @@ function SummaryCard({
       accessibilityLabel={`${label}: ${value}`}
       accessible
     >
-      <View className="absolute inset-x-0 bottom-0 h-10" pointerEvents="none">
-        <Svg width="100%" height="100%" viewBox="0 0 300 56" preserveAspectRatio="none">
-          <Path d="M0 33 C55 16 92 48 151 34 C212 19 251 8 300 14 V56 H0Z" fill={color} opacity={0.12} />
-          <Path d="M0 34 C55 17 92 49 151 35 C212 20 251 9 300 15" fill="none" stroke={color} strokeWidth={3} />
+      <View className="absolute -left-3 -right-3 bottom-0 h-24" pointerEvents="none">
+        <Svg width="100%" height="100%" viewBox="0 0 300 96" preserveAspectRatio="none">
+          <Path d="M0 64 C52 48 85 80 143 66 C210 49 245 22 300 18 V96 H0Z" fill={color} opacity={0.1} />
+          <Path d="M0 78 C58 60 93 92 157 76 C213 62 258 39 300 36 V96 H0Z" fill={color} opacity={0.18} />
+          <Path d="M0 90 C72 76 106 98 174 86 C224 76 265 55 300 52 V96 H0Z" fill={color} opacity={0.34} />
         </Svg>
       </View>
       <View className="z-10 min-h-10 flex-row items-center">
@@ -818,13 +819,6 @@ function SummaryCard({
           >
             <View style={{ transform: [{ rotate: '-45deg' }] }}>
               <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M19 2l.7 1.8 1.8.7-1.8.7L19 7l-.7-1.8-1.8-.7 1.8-.7L19 2Z"
-                  fill="#FFF4C2"
-                  stroke="#FFF4C2"
-                  strokeWidth={0.5}
-                  opacity={0.95}
-                />
                 {(iconPaths[label] || []).map(path => (
                   <Path
                     key={path}
@@ -838,6 +832,12 @@ function SummaryCard({
               </Svg>
             </View>
           </View>
+          <Svg width={10} height={10} viewBox="0 0 24 24" className="absolute right-1 top-0">
+            <Path
+              d="M12 1.5 14.2 9.8 22.5 12l-8.3 2.2-2.2 8.3-2.2-8.3L1.5 12l8.3-2.2L12 1.5Z"
+              fill="#FFF4C2"
+            />
+          </Svg>
         </View>
       </View>
       <Text
