@@ -429,6 +429,44 @@ function More({ onNavigate }: MoreProps) {
           </View>
         </Pressable>
 
+        <Pressable
+          className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"
+          onPress={() => onNavigate('reports')}
+          accessibilityRole="button"
+          accessibilityLabel="View reports"
+        >
+          <View className="flex-row items-center flex-1 pr-3">
+            <View className="mr-3.5 h-12 w-12 items-center justify-center rounded-2xl border border-emerald-100 bg-emerald-50">
+              <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M4 19V5m0 14h16M8 15l4-4 3 2 5-7"
+                  stroke="#047857"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-bold text-slate-900">Reports</Text>
+              <Text className="mt-1 text-xs leading-4 text-slate-500">
+                Review sales trends, customer totals, inventory and loan activity.
+              </Text>
+            </View>
+          </View>
+          <View className="h-8 w-8 items-center justify-center rounded-full bg-slate-100/70">
+            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="m9 18 6-6-6-6"
+                stroke="#64748B"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </View>
+        </Pressable>
+
         {/* Card: Receipt Settings */}
         <Pressable
           className="mb-3.5 flex-row items-center justify-between rounded-2xl border border-slate-200/90 bg-surface p-4 shadow-xs active:bg-slate-50 active:scale-[0.99]"

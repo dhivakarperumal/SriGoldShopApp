@@ -117,6 +117,23 @@ test('clicking Fund Management card opens fund management', () => {
   expect(onNavigateMock).toHaveBeenCalledWith('fundManagement');
 });
 
+test('clicking Reports card opens reports', () => {
+  const onNavigateMock = jest.fn();
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  act(() => {
+    renderer = ReactTestRenderer.create(<More onNavigate={onNavigateMock} />);
+  });
+
+  const reportsCard = renderer.root.findByProps({
+    accessibilityLabel: 'View reports',
+  });
+  act(() => {
+    reportsCard.props.onPress();
+  });
+
+  expect(onNavigateMock).toHaveBeenCalledWith('reports');
+});
+
 test('clicking Loan Customers card opens borrower and KYC management', () => {
   const onNavigateMock = jest.fn();
   let renderer!: ReactTestRenderer.ReactTestRenderer;

@@ -54,6 +54,7 @@ function AdminLayout({
     activeRoute !== 'enquiries' &&
     activeRoute !== 'fundManagement' &&
     activeRoute !== 'reviews' &&
+    activeRoute !== 'reports' &&
     activeRoute !== 'homeSections';
 
   return (
