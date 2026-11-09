@@ -9,6 +9,7 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   View,
@@ -48,6 +49,16 @@ type LoanListFilter =
   | 'Pending';
 
 const PAGE_SIZE = 10;
+const styles = StyleSheet.create({
+  iconBadge: {
+    borderWidth: 1.5,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 7,
+    elevation: 5,
+  },
+});
+
 const LOAN_LIST_FILTERS: LoanListFilter[] = [
   'All Loans',
   'Overdue Loans',
@@ -795,14 +806,25 @@ function SummaryCard({
         >
           <View
             className="h-7 w-7 items-center justify-center rounded-lg border"
-            style={{
-              borderColor: color,
-              backgroundColor: `${color}22`,
-              transform: [{ rotate: '45deg' }],
-            }}
+            style={[
+              styles.iconBadge,
+              {
+                borderColor: color,
+                backgroundColor: `${color}35`,
+                transform: [{ rotate: '45deg' }],
+                shadowColor: color,
+              },
+            ]}
           >
             <View style={{ transform: [{ rotate: '-45deg' }] }}>
               <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M19 2l.7 1.8 1.8.7-1.8.7L19 7l-.7-1.8-1.8-.7 1.8-.7L19 2Z"
+                  fill="#FFF4C2"
+                  stroke="#FFF4C2"
+                  strokeWidth={0.5}
+                  opacity={0.95}
+                />
                 {(iconPaths[label] || []).map(path => (
                   <Path
                     key={path}
