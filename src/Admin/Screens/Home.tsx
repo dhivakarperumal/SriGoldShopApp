@@ -729,7 +729,7 @@ function DashboardCardArtwork({
   color: string;
 }) {
   return (
-    <View className="absolute bottom-0 right-0 h-24 w-full" pointerEvents="none">
+    <View className="absolute -left-3 -right-3 bottom-0 h-24" pointerEvents="none">
       <Svg width="100%" height="100%" viewBox="0 0 300 96" preserveAspectRatio="none">
         <Path d="M0 64 C52 48 85 80 143 66 C210 49 245 22 300 18 V96 H0Z" fill={color} opacity={0.1} />
         <Path d="M0 78 C58 60 93 92 157 76 C213 62 258 39 300 36 V96 H0Z" fill={color} opacity={0.18} />
