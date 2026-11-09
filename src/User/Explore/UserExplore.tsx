@@ -613,20 +613,35 @@ function UserExplore({
             className="h-full w-[88%] bg-[#fffdf8] shadow-2xl"
             edges={['top', 'bottom']}
           >
-            <View className="border-b border-[#eee7dc] bg-white px-4 py-3">
+            <View className="border-b border-[#eee7dc] bg-white px-4 pb-4 pt-3">
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center">
-                  <Text className="mr-1.5 text-sm text-primary">☷</Text>
-                  <Text className="text-base font-bold text-[#29231c]">
-                    Filters
-                  </Text>
+                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-[#edf5f1]">
+                    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                      <Path
+                        d="M4 6h16M7 12h10m-7 6h4"
+                        stroke="#08796a"
+                        strokeWidth={1.8}
+                        strokeLinecap="round"
+                      />
+                    </Svg>
+                  </View>
+                  <View>
+                    <Text className="text-lg font-bold text-[#173c31]">
+                      Filters
+                    </Text>
+                    <Text className="mt-0.5 text-[10px] text-[#81786b]">
+                      Refine your product selection
+                    </Text>
+                  </View>
                 </View>
                 <Pressable
                   onPress={clearFilters}
+                  className="rounded-full border border-[#e7d6b2] bg-[#fffaf0] px-3 py-2"
                   accessibilityRole="button"
                   accessibilityLabel="Clear all filters"
                 >
-                  <Text className="text-[10px] font-medium text-[#a77525]">
+                  <Text className="text-xs font-semibold text-[#9a6817]">
                     Clear All
                   </Text>
                 </Pressable>
@@ -757,13 +772,14 @@ function UserExplore({
                 />
               </FilterSection>
             </ScrollView>
-            <View className="border-t border-[#eee7dc] bg-white px-4 py-3">
+            <View className="border-t border-[#eee7dc] bg-white px-4 pb-3 pt-4">
               <Pressable
                 onPress={() => setFiltersVisible(false)}
-                className="items-center justify-center rounded-lg bg-primary py-3"
+                className="min-h-14 items-center justify-center rounded-2xl bg-primary px-4 py-3 active:opacity-90"
                 accessibilityRole="button"
+                accessibilityLabel={`Show ${filteredProducts.length} filtered products`}
               >
-                <Text className="text-sm font-semibold text-white">
+                <Text className="text-base font-bold text-white">
                   Show {filteredProducts.length} products
                 </Text>
               </Pressable>
