@@ -38,6 +38,7 @@ type BillProduct = RecordValue & {
   category?: string;
   purity?: string;
   images?: unknown;
+  image_url?: string;
 };
 type ExchangeItem = {
   product_name: string;
@@ -490,6 +491,7 @@ export default function Billing() {
         category: product.category,
         purity: product.purity,
         metal_type: product.metal_type || 'Gold',
+        image_url: getProductImageUrl(product),
         images: product.images,
         rate_per_gram: product.gold_rate_per_gram,
         rate_unit: product.rate_unit || 'gram',
@@ -993,22 +995,51 @@ export default function Billing() {
                     </Pressable>
                   </View>
                   <ScrollView nestedScrollEnabled>
-                    {products.map((product, index) => (
-                      <View key={`${product.product_id}-${index}`} className="mb-2 rounded-xl border border-slate-100 p-3">
-                        <Text className="text-sm font-bold text-slate-800">{product.product_name || 'Product'}</Text>
-                        <Text className="mt-1 text-xs text-slate-500">
-                          {[product.category, product.purity].filter(Boolean).join(' · ') || '—'}
-                        </Text>
-                        <Text className="mt-2 text-sm font-extrabold text-primary-dark">{currency(product.price)}</Text>
-                      </View>
-                    ))}
+                    {products.map((product, index) => {
+                      const image = getProductImageUrl(product);
+                      return (
+                        <View key={`${product.product_id}-${index}`} className="mb-2 flex-row items-center rounded-xl border border-slate-100 p-3">
+                          {image ? (
+                            <Image
+                              source={{ uri: image }}
+                              className="mr-3 h-20 w-20 rounded-lg bg-slate-100"
+                              resizeMode="cover"
+                              accessibilityLabel={`${product.product_name || 'Product'} image`}
+                            />
+                          ) : (
+                            <View className="mr-3 h-20 w-20 items-center justify-center rounded-lg bg-slate-100">
+                              <Text className="text-2xl font-bold text-slate-300">◆</Text>
+                            </View>
+                          )}
+                          <View className="flex-1">
+                            <Text className="text-sm font-bold text-slate-800">
+                              {product.product_name || 'Product'}
+                            </Text>
+                            <Text className="mt-1 text-xs text-slate-500">
+                              {[product.category, product.purity].filter(Boolean).join(' · ') || '—'}
+                            </Text>
+                            <Text className="mt-2 text-sm font-extrabold text-primary-dark">
+                              {currency(product.price)}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })}
                   </ScrollView>
                   <Pressable
-                    onPress={() => setShowProductPreview(false)}
+                    onPress={() => {
+                      if (!products.length) {
+                        Alert.alert('Products required', 'Add at least one product to continue.');
+                        return;
+                      }
+                      setShowProductPreview(false);
+                      setShowProductPicker(false);
+                      setBillStep(2);
+                    }}
                     className="mt-3 items-center rounded-xl bg-primary py-3.5"
                     accessibilityRole="button"
                   >
-                    <Text className="text-sm font-bold text-white">Close preview</Text>
+                    <Text className="text-sm font-bold text-white">Next</Text>
                   </Pressable>
                 </SafeAreaView>
               </View>
@@ -1034,7 +1065,14 @@ export default function Billing() {
               }}
               secondary={!customer.name.trim() || !customer.phone.trim()}
             />
-            <ActionButton label="Back to products" onPress={() => setBillStep(1)} secondary />
+            <ActionButton
+              label="Back to products"
+              onPress={() => {
+                setShowProductPicker(true);
+                setBillStep(1);
+              }}
+              secondary
+            />
           </View>
           ) : null}
 
