@@ -187,7 +187,6 @@ const styles = StyleSheet.create({
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
     marginTop: 4,
     gap: 4,
   },
@@ -200,6 +199,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#999',
     textDecorationLine: 'line-through',
+    flexShrink: 1,
   },
   discountBadge: {
     backgroundColor: '#E8F5E9',
@@ -445,7 +445,7 @@ function CatalogCard({
           </Text>
           {mrpAmount && discountPct ? (
             <>
-              <Text style={styles.mrpText}>
+              <Text style={styles.mrpText} numberOfLines={1}>
                 ₹{mrpAmount.toLocaleString('en-IN')}
               </Text>
               <View style={styles.discountBadge}>
