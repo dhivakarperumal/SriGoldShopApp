@@ -175,11 +175,17 @@ function Loans({
   onCreateCustomer,
   onOpenOverdueLoans,
   onOpenLoanRenewal,
+  onOpenGoldRelease,
+  onOpenCompleteLoan,
+  onOpenLoanDetails,
 }: {
   onFormVisibilityChange?: (visible: boolean) => void;
   onCreateCustomer?: () => void;
   onOpenOverdueLoans?: () => void;
   onOpenLoanRenewal?: () => void;
+  onOpenGoldRelease?: () => void;
+  onOpenCompleteLoan?: () => void;
+  onOpenLoanDetails?: (loanId: string | number) => void;
 }) {
   const insets = useSafeAreaInsets();
   const [loans, setLoans] = useState<Loan[]>([]);
@@ -515,6 +521,17 @@ function Loans({
                     </View>
                   ) : null}
 
+                  {onOpenLoanDetails ? (
+                    <Pressable
+                      onPress={() => onOpenLoanDetails(loan.id)}
+                      className="items-center rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5"
+                      accessibilityRole="button"
+                      accessibilityLabel={`Open full details for ${loan.loan_number || loan.id}`}
+                    >
+                      <Text className="text-sm font-bold text-emerald-800">Full loan details</Text>
+                    </Pressable>
+                  ) : null}
+
                   <Pressable
                     onPress={() => deleteLoan(loan)}
                     disabled={deletingLoanId === loan.id}
@@ -654,6 +671,16 @@ function Loans({
                     if (filter === 'Loan Renewal' && onOpenLoanRenewal) {
                       setIsFilterModalOpen(false);
                       onOpenLoanRenewal();
+                      return;
+                    }
+                    if (filter === 'Gold Release' && onOpenGoldRelease) {
+                      setIsFilterModalOpen(false);
+                      onOpenGoldRelease();
+                      return;
+                    }
+                    if (filter === 'Complete Loan' && onOpenCompleteLoan) {
+                      setIsFilterModalOpen(false);
+                      onOpenCompleteLoan();
                       return;
                     }
                     setLoanListFilter(filter);

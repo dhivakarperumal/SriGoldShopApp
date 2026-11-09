@@ -26,6 +26,8 @@ import Customers from './src/Admin/MorePages/Customer';
 import LoanCustomerManagement from './src/Admin/Loanmanegements/LoanCustomerManagement';
 import OverdueLoans from './src/Admin/Loanmanegements/OverdueLoans';
 import LoanRenewal from './src/Admin/Loanmanegements/LoanRenewal';
+import GoldRelease from './src/Admin/Loanmanegements/GoldRelease';
+import LoanDetails from './src/Admin/Loanmanegements/LoanDetails';
 import StockDetails from './src/Admin/MorePages/StockDetails';
 import AllEnquries from './src/Admin/Enquries/AllEnquries';
 import FundManagement from './src/Admin/FundManagement/Fundmanegement';
@@ -48,6 +50,7 @@ function App() {
   const [isBillingFormOpen, setIsBillingFormOpen] = useState(false);
   const [isLoanFormOpen, setIsLoanFormOpen] = useState(false);
   const [isLoanCustomerCreateRequested, setIsLoanCustomerCreateRequested] = useState(false);
+  const [selectedLoanDetailsId, setSelectedLoanDetailsId] = useState<string | number | null>(null);
   const isLoggingOut = useRef(false);
 
   useEffect(() => {
@@ -165,6 +168,12 @@ function App() {
             onFormVisibilityChange={setIsLoanFormOpen}
             onOpenOverdueLoans={() => navigateAdmin('overdueLoans')}
             onOpenLoanRenewal={() => navigateAdmin('loanRenewal')}
+            onOpenGoldRelease={() => navigateAdmin('goldRelease')}
+            onOpenCompleteLoan={() => navigateAdmin('completeLoan')}
+            onOpenLoanDetails={loanId => {
+              setSelectedLoanDetailsId(loanId);
+              navigateAdmin('loanDetails');
+            }}
             onCreateCustomer={() => {
               setIsLoanCustomerCreateRequested(true);
               navigateAdmin('loanCustomers');
@@ -175,6 +184,19 @@ function App() {
           ? <OverdueLoans onBack={() => navigateAdmin('loans')} />
         : adminRoute === 'loanRenewal'
           ? <LoanRenewal onBack={() => navigateAdmin('loans')} />
+        : adminRoute === 'goldRelease'
+          ? <GoldRelease onBack={() => navigateAdmin('loans')} />
+        : adminRoute === 'completeLoan'
+          ? <GoldRelease completionPage onBack={() => navigateAdmin('loans')} />
+        : adminRoute === 'loanDetails' && selectedLoanDetailsId !== null
+          ? (
+            <LoanDetails
+              loanId={selectedLoanDetailsId}
+              onBack={() => navigateAdmin('loans')}
+              onOpenRenewal={() => navigateAdmin('loanRenewal')}
+              onOpenGoldRelease={() => navigateAdmin('goldRelease')}
+            />
+          )
         : adminRoute === 'billing'
           ? <Billing key={billingSession} onFormVisibilityChange={setIsBillingFormOpen} />
           : adminRoute === 'products'

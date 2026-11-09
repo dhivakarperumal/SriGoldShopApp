@@ -1,9 +1,12 @@
 import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
+import { pick } from '@react-native-documents/picker';
 import api from '../src/api';
 import Loans from '../src/Admin/Screens/Loans';
 import OverdueLoans from '../src/Admin/Loanmanegements/OverdueLoans';
 import LoanRenewal from '../src/Admin/Loanmanegements/LoanRenewal';
+import GoldRelease from '../src/Admin/Loanmanegements/GoldRelease';
+import LoanDetails from '../src/Admin/Loanmanegements/LoanDetails';
 import LoanCustomerManagement from '../src/Admin/Loanmanegements/LoanCustomerManagement';
 import CreateCustomers from '../src/Admin/Loanmanegements/CreateCustomers';
 
@@ -177,6 +180,36 @@ test('opens the dedicated overdue loans screen from the loan filter', async () =
   act(() => renderer.unmount());
 });
 
+test('opens gold release and completion screens from their loan filters', async () => {
+  const onOpenGoldRelease = jest.fn();
+  const onOpenCompleteLoan = jest.fn();
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  await act(async () => {
+    renderer = ReactTestRenderer.create(
+      <Loans onOpenGoldRelease={onOpenGoldRelease} onOpenCompleteLoan={onOpenCompleteLoan} />,
+    );
+  });
+  const openFilter = async (filter: string) => {
+    await act(async () => {
+      renderer.root
+        .findAll(
+          node =>
+            typeof node.props.accessibilityLabel === 'string' &&
+            node.props.accessibilityLabel.startsWith('Filter loans, current filter '),
+        )[0]
+        .props.onPress();
+    });
+    await act(async () => {
+      renderer.root.findByProps({ accessibilityLabel: `Loan list filter ${filter}` }).props.onPress();
+    });
+  };
+  await openFilter('Gold Release');
+  await openFilter('Complete Loan');
+  expect(onOpenGoldRelease).toHaveBeenCalledTimes(1);
+  expect(onOpenCompleteLoan).toHaveBeenCalledTimes(1);
+  act(() => renderer.unmount());
+});
+
 test('shows only overdue active or suspended loans and filters the list', async () => {
   const overdueLoans = [
     {
@@ -297,6 +330,114 @@ test('opens renewal payment details and posts the supplied renewal payload', asy
   );
   act(() => renderer.unmount());
 }, 30000);
+
+test('loads eligible gold-release loans and records verified signed handover', async () => {
+  const eligibleLoan = {
+    ...loans[0],
+    id: 41,
+    loan_number: 'LN-RELEASE-41',
+    customer_name: 'Arun Kumar',
+    customer_code: 'CUS-041',
+    principal_amount: 25000,
+    outstanding_principal: 0,
+    release_status: 'Pending Release',
+    loan_status: 'Completed',
+  };
+  (api.get as jest.Mock).mockImplementation((path: string) => {
+    if (path === '/loans/gold-release') return Promise.resolve({ data: [eligibleLoan] });
+    if (path === '/loans/41/gold-release') return Promise.resolve({ data: { loan: eligibleLoan, release: null } });
+    if (path === '/loans/41/renewals') return Promise.resolve({ data: [] });
+    return Promise.reject(new Error(`Unexpected request: ${path}`));
+  });
+  (pick as jest.Mock).mockResolvedValue([{
+    uri: 'file:///signed-release.pdf',
+    name: 'signed-release.pdf',
+    type: 'application/pdf',
+    size: 1024,
+  }]);
+  (api.post as jest.Mock).mockResolvedValue({
+    data: {
+      loan: { ...eligibleLoan, release_status: 'Released', loan_status: 'Completed' },
+      release: { released_to: 'Arun Kumar', released_at: '2026-11-09', confirmed_customer_signature: true },
+    },
+  });
+
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<GoldRelease onBack={jest.fn()} />);
+  });
+  expect(api.get).toHaveBeenCalledWith('/loans/gold-release');
+  await act(async () => {
+    renderer.root.findByProps({
+      accessibilityLabel: 'View gold release record for LN-RELEASE-41',
+    }).props.onPress();
+  });
+  expect(api.get).toHaveBeenCalledWith('/loans/41/gold-release');
+  expect(api.get).toHaveBeenCalledWith('/loans/41/renewals');
+
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Choose signed release document' }).props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({
+      accessibilityLabel: 'Confirm signed form, recipient identity, and handover verified',
+    }).props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({
+      accessibilityLabel: 'Confirm gold released and complete loan',
+    }).props.onPress();
+  });
+  expect(api.post).toHaveBeenCalledWith(
+    '/loans/41/gold-release',
+    expect.any(FormData),
+    { headers: { 'Content-Type': 'multipart/form-data' } },
+  );
+  act(() => renderer.unmount());
+}, 30000);
+
+test('loads full loan details and opens the correct follow-up action', async () => {
+  const loan = {
+    ...loans[0],
+    id: 52,
+    loan_number: 'LN-DETAIL-52',
+    customer_name: 'Arun Kumar',
+    release_status: 'Pending Release',
+    outstanding_principal: 0,
+    gold_pledge_number: 'GP-052',
+    gross_weight: 8,
+    stone_weight: 1,
+    net_gold_weight: 7,
+    gold_purity: '22K',
+    interest_type: 'simple_interest',
+    day_count_convention: 'actual_365',
+  };
+  (api.get as jest.Mock).mockResolvedValue({ data: loan });
+  const onOpenGoldRelease = jest.fn();
+  const onOpenRenewal = jest.fn();
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  await act(async () => {
+    renderer = ReactTestRenderer.create(
+      <LoanDetails
+        loanId={52}
+        onBack={jest.fn()}
+        onOpenGoldRelease={onOpenGoldRelease}
+        onOpenRenewal={onOpenRenewal}
+      />,
+    );
+  });
+
+  expect(api.get).toHaveBeenCalledWith('/loans/52');
+  expect(renderer.root.findAll(node => node.props.children === 'LN-DETAIL-52').length).toBeGreaterThan(0);
+  expect(renderer.root.findAll(node => node.props.children === 'Paid · Awaiting Gold Release').length).toBeGreaterThan(0);
+  expect(renderer.root.findAll(node => node.props.children === 'GP-052').length).toBeGreaterThan(0);
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Complete loan and release gold' }).props.onPress();
+  });
+  expect(onOpenGoldRelease).toHaveBeenCalledTimes(1);
+  expect(onOpenRenewal).not.toHaveBeenCalled();
+  act(() => renderer.unmount());
+});
 
 test('shows an explicit retry state when the loan request fails', async () => {
   (api.get as jest.Mock).mockRejectedValueOnce({ message: 'Network unavailable' });
