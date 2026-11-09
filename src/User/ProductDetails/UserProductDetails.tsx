@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Image,
   Pressable,
@@ -13,6 +12,7 @@ import {
 import api from '../../api';
 import type { ProductCardData } from '../../Components/ProductCard';
 import { getProductImageUrl } from '../../utils/productImage';
+import HomeSkeleton from '../Home/components/HomeSkeleton';
 
 type Product = Record<string, unknown> & {
   id?: string | number;
@@ -325,7 +325,8 @@ function UserProductDetails({
       {isLoading ? (
         <ScrollView
           className="flex-1"
-          contentContainerClassName="grow items-center justify-center px-6"
+          contentContainerClassName="grow gap-4 px-4 py-4 pb-8"
+          showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
@@ -335,10 +336,7 @@ function UserProductDetails({
             />
           }
         >
-          <ActivityIndicator size="large" color="#004D40" />
-          <Text className="mt-3 text-sm text-slate-500">
-            Loading product details…
-          </Text>
+          <ProductDetailsSkeleton />
         </ScrollView>
       ) : !product ? (
         <ScrollView
@@ -736,6 +734,46 @@ function UserProductDetails({
           />
         </ScrollView>
       )}
+    </View>
+  );
+}
+
+function ProductDetailsSkeleton() {
+  return (
+    <View
+      accessibilityRole="progressbar"
+      accessibilityLabel="Loading product details"
+    >
+      <View className="overflow-hidden rounded-2xl border border-[#eee8dc] bg-white p-3">
+        <HomeSkeleton className="h-72 w-full rounded-xl bg-[#eee8dc]" />
+        <View className="mt-4">
+          <HomeSkeleton className="h-5 w-3/4 bg-[#e8dfd0]" />
+          <HomeSkeleton className="mt-2 h-3 w-1/2 bg-[#e8dfd0]" />
+          <HomeSkeleton className="mt-4 h-7 w-2/5 bg-[#e8dfd0]" />
+          <HomeSkeleton className="mt-4 h-3 w-full bg-[#e8dfd0]" />
+          <HomeSkeleton className="mt-2 h-3 w-4/5 bg-[#e8dfd0]" />
+          <HomeSkeleton className="mt-5 h-12 w-full rounded-full bg-[#e8dfd0]" />
+        </View>
+      </View>
+      {[0, 1, 2, 3].map(card => (
+        <View
+          key={card}
+          className="mt-4 overflow-hidden rounded-2xl border border-[#eadfce] bg-white"
+        >
+          <HomeSkeleton className="h-12 w-full rounded-none bg-[#f0ece4]" />
+          <View className="px-4">
+            {[0, 1, 2, 3].map(row => (
+              <View
+                key={row}
+                className="flex-row items-center justify-between border-b border-[#f3eee5] py-3"
+              >
+                <HomeSkeleton className="h-3 w-1/3 bg-[#e8dfd0]" />
+                <HomeSkeleton className="h-3 w-2/5 bg-[#e8dfd0]" />
+              </View>
+            ))}
+          </View>
+        </View>
+      ))}
     </View>
   );
 }
