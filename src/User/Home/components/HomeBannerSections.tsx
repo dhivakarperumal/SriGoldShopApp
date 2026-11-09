@@ -23,29 +23,36 @@ function HomeBannerSections() {
       {PROMOTIONS.map(promotion => (
         <View
           key={promotion.title}
-          className="relative min-h-40 justify-center overflow-hidden rounded-xl border border-[#d9b568] p-5"
+          className="relative aspect-[3/1] justify-center overflow-hidden rounded-xl border border-[#d9b568] p-5"
           accessibilityLabel={`${promotion.title}. ${promotion.subtitle}`}
           accessible
         >
           <Image
             source={promotion.image}
-            resizeMode="cover"
+            resizeMode="contain"
             style={StyleSheet.absoluteFill}
             accessible={false}
           />
-          <View
-            className={`absolute inset-0 ${
-              promotion.lightText ? 'bg-primary-dark/70' : 'bg-[#36210b]/55'
-            }`}
-          />
           <View className="relative max-w-[78%]">
-            <Text className="text-[9px] font-semibold uppercase tracking-[2px] text-[#f8d77e]">
+            <Text
+              className={`text-[9px] font-semibold uppercase tracking-[2px] ${
+                promotion.lightText ? 'text-[#f8d77e]' : 'text-[#8a5814]'
+              }`}
+            >
               {promotion.eyebrow}
             </Text>
-            <Text className="mt-1 font-serif text-xl font-bold text-white">
+            <Text
+              className={`mt-1 font-serif text-xl font-bold ${
+                promotion.lightText ? 'text-white' : 'text-[#35220d]'
+              }`}
+            >
               {promotion.title}
             </Text>
-            <Text className="mt-1.5 text-xs leading-5 text-white">
+            <Text
+              className={`mt-1.5 text-xs leading-5 ${
+                promotion.lightText ? 'text-white' : 'text-[#493314]'
+              }`}
+            >
               {promotion.subtitle}
             </Text>
           </View>
