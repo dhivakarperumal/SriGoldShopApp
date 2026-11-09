@@ -219,7 +219,9 @@ function UserProductDetails({
   const goldRate = product?.gold_rate_per_gram;
   const metalWeight = product?.net_gold_weight ?? product?.gross_weight;
   const goldAmount =
-    goldRate != null && metalWeight != null
+    product?.gold_amount != null
+      ? money(product.gold_amount)
+      : goldRate != null && metalWeight != null
       ? money(number(goldRate) * number(metalWeight))
       : '';
   const makingCharge =
@@ -234,7 +236,15 @@ function UserProductDetails({
       : String(product.wastage_type || '').toLowerCase() === 'percentage'
       ? `${number(product.wastage).toFixed(3)}%`
       : `${text(product.wastage)} g`;
-  const offerPrice = product?.offer_price ?? (discount > 0 ? price : undefined);
+  const offerPrice =
+    currentVariant?.offer_price ??
+    product?.offer_price ??
+    (discount > 0 ? price : undefined);
+  const finalPrice =
+    currentVariant?.final_selling_price ??
+    currentVariant?.offer_price ??
+    product?.final_selling_price ??
+    price;
 
   const shareProduct = async () => {
     try {
@@ -626,7 +636,7 @@ function UserProductDetails({
               ],
               ['Offer price', offerPrice != null ? money(offerPrice) : ''],
               ['Discount', discount > 0 ? `${discount}%` : ''],
-              ['Final price', money(product.final_selling_price ?? price)],
+              ['Final price', money(finalPrice)],
               ['Price includes GST', product.price_includes_gst],
             ]}
           />
