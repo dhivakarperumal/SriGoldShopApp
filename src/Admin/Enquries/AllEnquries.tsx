@@ -22,6 +22,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
 import AddEnquries, { type EnquiryRecord } from './AddEnquries';
+import AdminStatCard from '../Components/AdminStatCard';
 
 type Props = {
   onBack: () => void;
@@ -300,11 +301,11 @@ function AllEnquries({ onBack }: Props) {
             />
           }
         >
-          <View className="mb-4 flex-row gap-2">
-            <StatCard label="Total" value={stats.total} />
-            <StatCard label="Pending" value={stats.pending} />
-            <StatCard label="Responded" value={stats.responded} />
-            <StatCard label="Closed" value={stats.closed} />
+          <View className="mb-1 flex-row flex-wrap justify-between">
+            <AdminStatCard label="Total" value={stats.total} icon="message" tone="green" />
+            <AdminStatCard label="Pending" value={stats.pending} icon="clock" tone="blue" />
+            <AdminStatCard label="Responded" value={stats.responded} icon="check" tone="purple" />
+            <AdminStatCard label="Closed" value={stats.closed} icon="list" tone="wine" />
           </View>
 
           <TextInput
@@ -566,17 +567,6 @@ function AllEnquries({ onBack }: Props) {
           </View>
         </Pressable>
       </Modal>
-    </View>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <View className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white p-2.5">
-      <Text className="text-[9px] font-semibold uppercase tracking-wide text-slate-500" numberOfLines={1}>
-        {label}
-      </Text>
-      <Text className="mt-1 text-base font-extrabold text-primary">{value.toLocaleString('en-IN')}</Text>
     </View>
   );
 }

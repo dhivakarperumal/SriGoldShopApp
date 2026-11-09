@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
 import PulseFab from '../Componets/PulseFab';
+import AdminStatCard from '../Components/AdminStatCard';
 import CreateCustomers, { type LoanCustomer } from './CreateCustomers';
 import LoanCUstomerdetails from './LoanCUstomerdetails';
 
@@ -206,10 +207,10 @@ function LoanCustomerManagement({
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadCustomers(true)} tintColor="#004D40" />}
           keyboardShouldPersistTaps="handled"
         >
-          <View className="flex-row gap-3">
-            <Summary label="Total customers" value={customers.length} />
-            <Summary label="KYC verified" value={verifiedCount} />
-            <Summary label="KYC pending" value={pendingCount} />
+          <View className="flex-row flex-wrap justify-between">
+            <AdminStatCard label="Total customers" value={customers.length} icon="users" tone="green" />
+            <AdminStatCard label="KYC verified" value={verifiedCount} icon="check" tone="blue" />
+            <AdminStatCard label="KYC pending" value={pendingCount} icon="clock" tone="purple" />
           </View>
           <View className="gap-3 rounded-2xl border border-slate-200 bg-white p-3">
             <TextInput
@@ -315,15 +316,6 @@ function LoanCustomerManagement({
           ) : null}
         </View>
       </SafeAreaView>
-    </View>
-  );
-}
-
-function Summary({ label, value }: { label: string; value: number }) {
-  return (
-    <View className="min-h-20 flex-1 justify-center rounded-2xl border border-slate-100 bg-white p-3">
-      <Text className="text-[10px] font-semibold text-slate-500">{label}</Text>
-      <Text className="mt-1 text-xl font-extrabold text-primary">{value.toLocaleString()}</Text>
     </View>
   );
 }

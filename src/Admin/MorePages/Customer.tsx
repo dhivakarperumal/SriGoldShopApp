@@ -21,6 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
 import PulseFab from '../Componets/PulseFab';
+import AdminStatCard from '../Components/AdminStatCard';
 
 type Customer = {
   id: string | number;
@@ -441,11 +442,11 @@ function Customer({ onBack, openCreateOnMount = false, onCreateOpened }: Props) 
           }
           keyboardShouldPersistTaps="handled"
         >
-          <View className="flex-row gap-2">
-            <StatCard label="Total" value={customers.length} color="bg-emerald-50 text-emerald-700" />
-            <StatCard label="Today" value={todayCount} color="bg-amber-50 text-amber-700" />
-            <StatCard label="Active" value={activeCount} color="bg-sky-50 text-sky-700" />
-            <StatCard label="Inactive" value={inactiveCount} color="bg-rose-50 text-rose-700" />
+          <View className="flex-row flex-wrap justify-between">
+            <AdminStatCard label="Total" value={customers.length} icon="users" tone="green" />
+            <AdminStatCard label="Today" value={todayCount} icon="calendar" tone="blue" />
+            <AdminStatCard label="Active" value={activeCount} icon="check" tone="purple" />
+            <AdminStatCard label="Inactive" value={inactiveCount} icon="pause" tone="wine" />
           </View>
 
           <View className="gap-3 rounded-2xl border border-slate-200 bg-surface p-4">
@@ -578,25 +579,6 @@ function Customer({ onBack, openCreateOnMount = false, onCreateOpened }: Props) 
       <View className="absolute bottom-4 right-5 z-20">
         <PulseFab accessibilityLabel="Create new customer" onPress={openAddForm} />
       </View>
-    </View>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: number;
-  color: string;
-}) {
-  return (
-    <View className="min-h-20 flex-1 items-center justify-center rounded-xl border border-slate-100 bg-surface p-2 shadow-xs">
-      <Text className="text-[10px] font-semibold text-slate-500">{label}</Text>
-      <Text className={`mt-1 text-xl font-extrabold ${color.split(' ')[1]}`}>
-        {value.toLocaleString()}
-      </Text>
     </View>
   );
 }

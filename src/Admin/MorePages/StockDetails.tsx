@@ -21,6 +21,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
 import { getProductImageUrl } from '../../utils/productImage';
+import AdminStatCard from '../Components/AdminStatCard';
 
 type Props = {
   onBack: () => void;
@@ -221,10 +222,10 @@ function StockDetails({ onBack }: Props) {
             />
           }
         >
-          <View className="mb-4 flex-row gap-2">
-            <StatCard label="Products" value={products.length} color="text-primary" />
-            <StatCard label="Low stock" value={lowStockCount} color="text-amber-700" />
-            <StatCard label="Out of stock" value={outOfStockCount} color="text-rose-700" />
+          <View className="mb-1 flex-row flex-wrap justify-between">
+            <AdminStatCard label="Products" value={products.length} icon="box" tone="green" />
+            <AdminStatCard label="Low stock" value={lowStockCount} icon="alert" tone="blue" />
+            <AdminStatCard label="Out of stock" value={outOfStockCount} icon="alert" tone="wine" />
           </View>
 
           <TextInput
@@ -350,27 +351,6 @@ function StockDetails({ onBack }: Props) {
           </View>
         </View>
       </Modal>
-    </View>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: number;
-  color: string;
-}) {
-  return (
-    <View className="flex-1 rounded-xl border border-slate-200 bg-white p-3">
-      <Text className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-        {label}
-      </Text>
-      <Text className={`mt-1 text-lg font-extrabold ${color}`}>
-        {value.toLocaleString('en-IN')}
-      </Text>
     </View>
   );
 }
