@@ -420,10 +420,7 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
             />
           </View>
         </View>
-      </ScrollView>
 
-      {/* ── Submit button ── */}
-      <View className="border-t border-slate-200 bg-white px-4 py-3">
         <Pressable
           className={`min-h-12 flex-row items-center justify-center rounded-xl bg-[#003B2D] px-4 py-3 ${
             isSubmitting ? 'opacity-70' : 'active:opacity-80'
@@ -440,7 +437,7 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
             {isSubmitting ? 'Sending…' : 'Send Enquiry'}
           </Text>
         </Pressable>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
