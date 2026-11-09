@@ -255,8 +255,7 @@ function UserProductDetails({
         String(product?.id ?? productId),
       )}`;
       await Share.share({
-        title: productName,
-        message: `${productName}${productCode ? `\nCode: ${productCode}` : ''}\n${productUrl}`,
+        message: productUrl,
       });
     } catch (error) {
       console.error('Failed to share product:', error);
