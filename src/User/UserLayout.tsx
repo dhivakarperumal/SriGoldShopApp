@@ -17,6 +17,7 @@ import UserProfile from './Profile/UserProfile';
 import UserProductDetails from './ProductDetails/UserProductDetails';
 import UserProductEnquiry from './Enquiry/UserProductEnquiry';
 import UserFavorites, { type WishlistItem } from './Favorites/UserFavorites';
+import UserEnquiry from './Enquiry/UserEnquiry';
 
 function mediaPath(value: unknown): string | undefined {
   if (typeof value === 'string' && value.trim()) {
