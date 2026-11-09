@@ -48,7 +48,8 @@ import type { AdminRoute } from './src/Admin/Navigations/TopHeader';
 import UserLayout from './src/User/UserLayout';
 import { clearTokenCache, setTokenCache } from './src/api';
 
-const ADMIN_BACK_ROUTES: Partial<Record<AdminRoute, AdminRoute>> = {
+const ADMIN_BACK_ROUTES: Record<AdminRoute, AdminRoute | null> = {
+  home: null,
   profile: 'home',
   loans: 'home',
   billing: 'home',
@@ -60,7 +61,19 @@ const ADMIN_BACK_ROUTES: Partial<Record<AdminRoute, AdminRoute>> = {
   dailyGoldRates: 'more',
   addGoldrate: 'dailyGoldRates',
   customers: 'more',
+  loanCustomers: 'more',
+  overdueLoans: 'loans',
+  loanRenewal: 'loans',
+  goldRelease: 'loans',
+  completeLoan: 'loans',
+  loanDetails: 'loans',
+  stockDetails: 'more',
+  enquiries: 'more',
+  fundManagement: 'more',
   receipt: 'more',
+  reports: 'more',
+  homeSections: 'more',
+  reviews: 'more',
   more: 'home',
 };
 
@@ -214,7 +227,17 @@ function App() {
       'hardwareBackPress',
       () => {
         const backRoute = ADMIN_BACK_ROUTES[adminRoute];
-        if (!backRoute) return false;
+        if (!backRoute) {
+          Alert.alert('Exit app?', 'Do you want to close Sri Golds?', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Exit',
+              style: 'destructive',
+              onPress: () => BackHandler.exitApp(),
+            },
+          ]);
+          return true;
+        }
         setAdminRoute(backRoute);
         return true;
       },

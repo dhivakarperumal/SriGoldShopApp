@@ -392,7 +392,15 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
           setMorePage(null);
           return true;
         }
-        return false;
+        Alert.alert('Exit app?', 'Do you want to close Sri Golds?', [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Exit',
+            style: 'destructive',
+            onPress: () => BackHandler.exitApp(),
+          },
+        ]);
+        return true;
       },
     );
 
