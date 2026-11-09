@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, BackHandler, StatusBar, Text, View } from 'react-native';
+import { Alert, BackHandler, StatusBar, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../api';
 import type { ProductCardData } from '../Components/ProductCard';
@@ -458,14 +458,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
             }
           >
             {visitedTabs.has('enquiry') ? (
-              <View className="flex-1 items-center justify-center px-8">
-                <Text className="text-xl font-bold text-primary-dark">
-                  Enquiry
-                </Text>
-                <Text className="mt-2 text-center text-sm leading-5 text-slate-600">
-                  This section is coming in the next step.
-                </Text>
-              </View>
+              <UserEnquiry user={user} />
             ) : null}
           </View>
           {!isStandalonePage ? (
