@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, BackHandler, Platform, StatusBar, View } from 'react-native';
+import { Alert, BackHandler, StatusBar, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../api';
 import type { ProductCardData } from '../Components/ProductCard';
@@ -344,19 +344,6 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
   const contentSafeAreaEdges = isStandalonePage
     ? (['left', 'right', 'bottom'] as const)
     : (['left', 'right'] as const);
-
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      StatusBar.setBackgroundColor(
-        selectedProductId
-          ? '#003B2D'
-          : isStandalonePage
-          ? '#FFFFFF'
-          : '#004D40',
-        true,
-      );
-    }
-  }, [isStandalonePage, selectedProductId]);
 
   return (
     <SafeAreaView
