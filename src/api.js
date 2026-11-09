@@ -66,19 +66,14 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     const retryCount = originalRequest?._retryCount || 0;
+    const isCanceled =
+      error.code === "ERR_CANCELED" || error.name === "CanceledError";
     const isNetworkError =
-      !error.response && (error.code || error.message === "Network Error");
+      !error.response &&
+      !isCanceled &&
+      (error.code === "ERR_NETWORK" || error.message === "Network Error");
 
-    if (__DEV__) {
-      console.warn("[API] Request failed", {
-        method: originalRequest?.method?.toUpperCase(),
-        baseURL: originalRequest?.baseURL || API_BASE_URL,
-        url: originalRequest?.url,
-        code: error.code,
-        message: error.message,
-        status: error.response?.status,
-      });
-    }
+    if (isCanceled) return Promise.reject(error);
 
     if (isNetworkError && originalRequest && retryCount < MAX_RETRIES) {
       originalRequest._retryCount = retryCount + 1;
@@ -89,6 +84,17 @@ api.interceptors.response.use(
         });
       }
       return api(originalRequest);
+    }
+
+    if (__DEV__) {
+      const method = originalRequest?.method?.toUpperCase() || "UNKNOWN";
+      const baseURL = originalRequest?.baseURL || API_BASE_URL;
+      const url = originalRequest?.url || "";
+      console.warn(
+        `[API] Request failed: ${method} ${baseURL}${url}; ` +
+          `status=${error.response?.status ?? "none"}; ` +
+          `code=${error.code || "none"}; message=${error.message || "Unknown error"}`,
+      );
     }
 
     if (error.response) {
@@ -108,7 +114,7 @@ api.interceptors.response.use(
 
     return Promise.reject({
       status: "network_error",
-      message: `Cannot connect to the server at ${API_BASE_URL}. Check your internet connection and try again.`,
+      message: `Cannot connect to ${originalRequest?.baseURL || API_BASE_URL}${originalRequest?.url || ""}. Check your internet connection and try again.`,
     });
   },
 );
