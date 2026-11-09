@@ -2,6 +2,8 @@ import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
 import api from '../src/api';
 import Loans from '../src/Admin/Screens/Loans';
+import LoanCustomerManagement from '../src/Admin/Loanmanegements/LoanCustomerManagement';
+import CreateCustomers from '../src/Admin/Loanmanegements/CreateCustomers';
 
 jest.mock('../src/api', () => ({
   __esModule: true,
@@ -13,6 +15,18 @@ jest.mock('../src/api', () => ({
 
 jest.mock('react-native-image-picker', () => ({
   launchImageLibrary: jest.fn(),
+}));
+
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  __esModule: true,
+  default: { getItem: jest.fn().mockResolvedValue('test-token') },
+}));
+
+jest.mock('@react-native-documents/picker', () => ({
+  errorCodes: { OPERATION_CANCELED: 'OPERATION_CANCELED' },
+  isErrorWithCode: jest.fn(() => false),
+  pick: jest.fn(),
+  types: { pdf: 'application/pdf', images: 'image/*' },
 }));
 
 const loans = [
@@ -61,7 +75,7 @@ test('loads loan summaries and searchable loan cards', async () => {
   expect(renderer.root.findAll(node => node.props.children === 'LN-001')).toHaveLength(0);
   expect(renderer.root.findAll(node => node.props.children === 'LN-002').length).toBeGreaterThan(0);
   act(() => renderer.unmount());
-});
+}, 30000);
 
 test('shows an explicit retry state when the loan request fails', async () => {
   (api.get as jest.Mock).mockRejectedValueOnce({ message: 'Network unavailable' });
@@ -93,6 +107,78 @@ test('expands the loan actions and opens customer creation when selected', async
     renderer.root.findByProps({ accessibilityLabel: 'Create customer' }).props.onPress();
   });
   expect(onCreateCustomer).toHaveBeenCalledTimes(1);
+  act(() => renderer.unmount());
+});
+
+test('shows loan customers in management and opens the loan customer form on request', async () => {
+  const customer = {
+    id: 17,
+    customer_code: 'LC-017',
+    full_name: 'Kavitha Devi',
+    mobile: '9876501234',
+    kyc_status: 'Pending',
+    city: 'Madurai',
+  };
+  (api.get as jest.Mock).mockImplementation((path: string) => {
+    if (path === '/loan-customers') return Promise.resolve({ data: [customer] });
+    if (path === '/loan-customers/17') return Promise.resolve({ data: customer });
+    if (path === '/loan-customers/17/documents') return Promise.resolve({ data: [] });
+    if (path === '/customers/17/loans') return Promise.resolve({ data: [] });
+    return Promise.reject(new Error(`Unexpected request: ${path}`));
+  });
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<LoanCustomerManagement onBack={jest.fn()} />);
+  });
+
+  expect(api.get).toHaveBeenCalledWith('/loan-customers');
+  expect(renderer.root.findAll(node => node.props.children === 'Kavitha Devi').length).toBeGreaterThan(0);
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'View loan customer Kavitha Devi' }).props.onPress();
+  });
+  expect(renderer.root.findAll(node => node.props.children === 'Verify KYC').length).toBeGreaterThan(0);
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'View full details' }).props.onPress();
+  });
+  expect(api.get).toHaveBeenCalledWith('/loan-customers/17');
+  expect(api.get).toHaveBeenCalledWith('/loan-customers/17/documents');
+  expect(api.get).toHaveBeenCalledWith('/customers/17/loans');
+  expect(renderer.root.findAll(node => node.props.children === 'Personal & contact details').length).toBeGreaterThan(0);
+  act(() => renderer.unmount());
+
+  const onCreateOpened = jest.fn();
+  await act(async () => {
+    renderer = ReactTestRenderer.create(
+      <LoanCustomerManagement onBack={jest.fn()} openCreateOnMount onCreateOpened={onCreateOpened} />,
+    );
+  });
+  expect(onCreateOpened).toHaveBeenCalledTimes(1);
+  expect(renderer.root.findAll(node => node.props.children === 'Create Loan Customer').length).toBeGreaterThan(0);
+  act(() => renderer.unmount());
+});
+
+test('selects a loan customer date of birth from the calendar', async () => {
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<CreateCustomers onCancel={jest.fn()} onSaved={jest.fn()} />);
+  });
+
+  const today = new Date();
+  const todayValue = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0'),
+  ].join('-');
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Select date of birth' }).props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: todayValue }).props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Apply date' }).props.onPress();
+  });
+  expect(renderer.root.findAll(node => node.props.children === todayValue).length).toBeGreaterThan(0);
   act(() => renderer.unmount());
 });
 

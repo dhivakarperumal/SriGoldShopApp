@@ -23,6 +23,7 @@ import AllGoldRate, {
 } from './src/Admin/DailyGoldRate/AllGoldRate';
 import AddGoldrate from './src/Admin/DailyGoldRate/AddGoldrate';
 import Customers from './src/Admin/MorePages/Customer';
+import LoanCustomerManagement from './src/Admin/Loanmanegements/LoanCustomerManagement';
 import StockDetails from './src/Admin/MorePages/StockDetails';
 import AllEnquries from './src/Admin/Enquries/AllEnquries';
 import FundManagement from './src/Admin/FundManagement/Fundmanegement';
@@ -44,7 +45,7 @@ function App() {
   const [billingSession, setBillingSession] = useState(0);
   const [isBillingFormOpen, setIsBillingFormOpen] = useState(false);
   const [isLoanFormOpen, setIsLoanFormOpen] = useState(false);
-  const [isCustomerCreateRequested, setIsCustomerCreateRequested] = useState(false);
+  const [isLoanCustomerCreateRequested, setIsLoanCustomerCreateRequested] = useState(false);
   const isLoggingOut = useRef(false);
 
   useEffect(() => {
@@ -161,8 +162,8 @@ function App() {
           <Loans
             onFormVisibilityChange={setIsLoanFormOpen}
             onCreateCustomer={() => {
-              setIsCustomerCreateRequested(true);
-              navigateAdmin('customers');
+              setIsLoanCustomerCreateRequested(true);
+              navigateAdmin('loanCustomers');
             }}
           />
         )
@@ -243,10 +244,16 @@ function App() {
                         ? (
                           <Customers
                             onBack={() => navigateAdmin('more')}
-                            openCreateOnMount={isCustomerCreateRequested}
-                            onCreateOpened={() => setIsCustomerCreateRequested(false)}
                           />
                         )
+                        : adminRoute === 'loanCustomers'
+                          ? (
+                            <LoanCustomerManagement
+                              onBack={() => navigateAdmin('more')}
+                              openCreateOnMount={isLoanCustomerCreateRequested}
+                              onCreateOpened={() => setIsLoanCustomerCreateRequested(false)}
+                            />
+                          )
                         : adminRoute === 'stockDetails'
                           ? <StockDetails onBack={() => navigateAdmin('more')} />
                         : adminRoute === 'enquiries'

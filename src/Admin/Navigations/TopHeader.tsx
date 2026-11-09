@@ -33,6 +33,7 @@ export type AdminRoute =
   | 'dailyGoldRates'
   | 'addGoldrate'
   | 'customers'
+  | 'loanCustomers'
   | 'stockDetails'
   | 'enquiries'
   | 'fundManagement'

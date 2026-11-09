@@ -44,6 +44,7 @@ function AdminLayout({
     activeRoute !== 'dailyGoldRates' &&
     activeRoute !== 'addGoldrate' &&
     activeRoute !== 'customers' &&
+    activeRoute !== 'loanCustomers' &&
     activeRoute !== 'stockDetails' &&
     activeRoute !== 'enquiries' &&
     activeRoute !== 'fundManagement' &&
