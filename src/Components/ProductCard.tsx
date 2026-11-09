@@ -82,6 +82,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
     marginBottom: 10,
+    // Fixed height so every card in the grid is identical
+    height: 310,
   },
   imageBox: {
     width: '100%',
@@ -247,6 +249,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     marginBottom: 10,
     gap: 5,
+    // Pin to bottom of fixed-height card
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   enquireBtnText: {
     fontSize: 12,
@@ -394,7 +401,7 @@ function CatalogCard({
             layout === 'carousel' && styles.carouselNameRow,
           ]}
         >
-          <Text style={styles.productName} numberOfLines={2}>
+          <Text style={styles.productName} numberOfLines={1} ellipsizeMode="tail">
             {productName}
           </Text>
         </View>
