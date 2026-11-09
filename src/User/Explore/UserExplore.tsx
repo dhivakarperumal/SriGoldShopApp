@@ -6,7 +6,6 @@ import {
   Platform,
   RefreshControl,
   ScrollView,
-  StatusBar,
   Text,
   TextInput,
   View,
@@ -67,7 +66,12 @@ const OFFER_FILTERS = [10, 20, 30, 40];
 const RATING_FILTERS = [4, 3, 2, 1];
 
 type SystemNavigationBarModule = {
-  setAppearance: (color: string, lightIcons: boolean) => Promise<void>;
+  setAppearance: (
+    navigationBarColor: string,
+    useDarkNavigationIcons: boolean,
+    statusBarColor: string,
+    useDarkStatusIcons: boolean,
+  ) => Promise<void>;
 };
 
 const systemNavigationBar = NativeModules
@@ -126,16 +130,19 @@ function UserExplore({
 
     const color = filtersVisible ? '#FFFFFF' : '#003B2D';
     systemNavigationBar
-      .setAppearance(color, filtersVisible)
-      .catch(error => {
-      console.error('Failed to update system navigation bar:', error);
+      .setAppearance(color, filtersVisible, color, filtersVisible)
+      .catch(systemBarError => {
+        console.error('Failed to update Android system bars:', systemBarError);
       });
 
     return () => {
       systemNavigationBar
-        .setAppearance('#003B2D', false)
-        .catch(error => {
-          console.error('Failed to restore system navigation bar:', error);
+        .setAppearance('#003B2D', false, '#003B2D', false)
+        .catch(systemBarError => {
+          console.error(
+            'Failed to restore Android system bars:',
+            systemBarError,
+          );
         });
     };
   }, [filtersVisible]);
@@ -409,9 +416,6 @@ function UserExplore({
 
   return (
     <View className="flex-1 bg-[#fffdf8]">
-      {filtersVisible ? (
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      ) : null}
       <ScrollView
         className="flex-1"
         contentContainerClassName="grow px-4 pb-6 pt-4"

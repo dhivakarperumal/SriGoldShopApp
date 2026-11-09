@@ -17,25 +17,41 @@ class SystemNavigationBarModule(
   override fun getName() = "SystemNavigationBar"
 
   @ReactMethod
-  fun setAppearance(color: String, useDarkIcons: Boolean, promise: Promise) {
+  fun setAppearance(
+    navigationBarColor: String,
+    useDarkNavigationIcons: Boolean,
+    statusBarColor: String,
+    useDarkStatusIcons: Boolean,
+    promise: Promise,
+  ) {
     val activity = currentActivity
     if (activity == null) {
-      promise.reject("E_NO_ACTIVITY", "Cannot update the navigation bar without an active screen.")
+      promise.reject(
+        "E_NO_ACTIVITY",
+        "Cannot update system bars without an active screen.",
+      )
       return
     }
 
     activity.runOnUiThread {
       try {
-        activity.window.navigationBarColor = Color.parseColor(color)
+        val window = activity.window
+        window.statusBarColor = Color.parseColor(statusBarColor)
+        window.navigationBarColor = Color.parseColor(navigationBarColor)
+        val insetsController =
+          WindowInsetsControllerCompat(window, window.decorView)
+        insetsController.isAppearanceLightStatusBars = useDarkStatusIcons
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-          WindowInsetsControllerCompat(
-            activity.window,
-            activity.window.decorView,
-          ).isAppearanceLightNavigationBars = useDarkIcons
+          insetsController.isAppearanceLightNavigationBars =
+            useDarkNavigationIcons
         }
         promise.resolve(null)
       } catch (error: Exception) {
-        promise.reject("E_NAVIGATION_BAR", "Could not update the navigation bar appearance.", error)
+        promise.reject(
+          "E_SYSTEM_BARS",
+          "Could not update the system bar appearance.",
+          error,
+        )
       }
     }
   }
