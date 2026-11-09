@@ -117,19 +117,21 @@ function displayText(value: unknown): string {
     : '';
 }
 
-function getItemPrice(item: WishlistItem): string {
+function getNumericPrice(item: WishlistItem): number | null {
   const value =
     item.price ??
     item.offer_price ??
     item.final_selling_price ??
     item.mrp;
   if (value === undefined || value === null || value === '') {
-    return 'Price on request';
+    return null;
   }
   const amount = Number(value);
-  return Number.isFinite(amount)
-    ? `₹${amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
-    : 'Price on request';
+  return Number.isFinite(amount) ? amount : null;
+}
+
+function formatPrice(value: number): string {
+  return `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 }
 
 function WishlistSkeletonCard() {
@@ -159,15 +161,25 @@ function WishlistCard({
   const [hasImageError, setHasImageError] = useState(false);
   const imageUrl = getProductImageUrl(item);
   const name = displayText(item.name) || 'Jewellery';
-  const metal = displayText(item.metal_type || item.purity);
+  const metal = displayText(
+    item.category_name || item.category || item.metal_type || item.purity,
+  );
   const weight = displayText(item.gross_weight || item.net_weight);
-  const category = displayText(item.category_name || item.category);
   const details = [
-    metal || category,
+    metal,
     weight ? `${weight}g` : '',
   ].filter(Boolean).join(' · ');
   const rating = Number(item.rating);
   const hasRating = Number.isFinite(rating) && rating > 0;
+  const sellingPrice = getNumericPrice(item);
+  const originalPrice = Number(item.mrp);
+  const hasDiscount =
+    sellingPrice !== null &&
+    Number.isFinite(originalPrice) &&
+    originalPrice > sellingPrice;
+  const discount = hasDiscount
+    ? Math.round(((originalPrice - sellingPrice) / originalPrice) * 100)
+    : 0;
 
   return (
     <View style={styles.card}>
@@ -202,20 +214,48 @@ function WishlistCard({
               {details}
             </Text>
           ) : null}
-          {hasRating ? (
-            <View className="mt-1 flex-row items-center">
-              <Ionicons name="star" size={12} color="#e0a51b" />
-              <Text className="ml-1 text-[9px] text-slate-500">
-                {rating.toFixed(1)}
-              </Text>
-            </View>
-          ) : null}
-          <Text
-            className="mt-1 text-xs font-extrabold text-[#00594a]"
-            numberOfLines={1}
-          >
-            {getItemPrice(item)}
-          </Text>
+          <View className="mt-1 flex-row items-center">
+            {[1, 2, 3, 4, 5].map(star => (
+              <Ionicons
+                key={star}
+                name={hasRating && star <= Math.round(rating) ? 'star' : 'star-outline'}
+                size={11}
+                color={
+                  hasRating && star <= Math.round(rating)
+                    ? '#e0a51b'
+                    : '#c9c4ba'
+                }
+              />
+            ))}
+            <Text className="ml-1 text-[9px] text-slate-500">
+              {hasRating ? rating.toFixed(1) : '—'}
+            </Text>
+          </View>
+          <View className="mt-1 flex-row flex-wrap items-center">
+            <Text
+              className="text-[11px] font-extrabold text-[#00594a]"
+              numberOfLines={1}
+            >
+              {sellingPrice === null
+                ? 'Price on request'
+                : formatPrice(sellingPrice)}
+            </Text>
+            {hasDiscount ? (
+              <>
+                <Text
+                  className="ml-1.5 text-[9px] text-slate-400 line-through"
+                  numberOfLines={1}
+                >
+                  {formatPrice(originalPrice)}
+                </Text>
+                <View className="ml-1.5 rounded bg-[#08796a] px-1.5 py-0.5">
+                  <Text className="text-[8px] font-bold text-white">
+                    {discount}% OFF
+                  </Text>
+                </View>
+              </>
+            ) : null}
+          </View>
         </View>
       </Pressable>
       <Pressable
