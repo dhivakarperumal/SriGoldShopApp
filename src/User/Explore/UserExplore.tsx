@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -9,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../api';
 import ProductCard from '../../Components/ProductCard';
 import type { ProductCardData } from '../../Components/ProductCard';
@@ -33,13 +35,15 @@ type Availability = '' | 'in-stock' | 'out-of-stock';
 
 function uniqueFacets(facets: Facet[]): Facet[] {
   const seen = new Set<string>();
-  return facets.filter(facet => {
-    const name = facet.name.trim();
-    const normalizedName = name.toLowerCase();
-    if (!name || seen.has(normalizedName)) return false;
-    seen.add(normalizedName);
-    return true;
-  }).map(facet => ({ name: facet.name.trim() }));
+  return facets
+    .filter(facet => {
+      const name = facet.name.trim();
+      const normalizedName = name.toLowerCase();
+      if (!name || seen.has(normalizedName)) return false;
+      seen.add(normalizedName);
+      return true;
+    })
+    .map(facet => ({ name: facet.name.trim() }));
 }
 
 const PAGE_SIZE = 100;
@@ -60,7 +64,9 @@ const OFFER_FILTERS = [10, 20, 30, 40];
 const RATING_FILTERS = [4, 3, 2, 1];
 
 const getPrice = (product: ExploreProduct) =>
-  Number(product.offer_price ?? product.final_selling_price ?? product.mrp ?? 0);
+  Number(
+    product.offer_price ?? product.final_selling_price ?? product.mrp ?? 0,
+  );
 
 const getDiscount = (product: ExploreProduct) => {
   const discount = Number(product.discount ?? 0);
@@ -99,6 +105,7 @@ function UserExplore({
   const [availability, setAvailability] = useState<Availability>('');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [filtersVisible, setFiltersVisible] = useState(false);
+  const [sortDropdownVisible, setSortDropdownVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -145,7 +152,9 @@ function UserExplore({
           signal: controller.signal,
         });
         if (!Array.isArray(firstResponse.data?.products)) {
-          throw new TypeError('The products response must contain a products array.');
+          throw new TypeError(
+            'The products response must contain a products array.',
+          );
         }
 
         const totalPages = Math.max(
@@ -168,7 +177,9 @@ function UserExplore({
         const allPages = [firstResponse, ...otherPages];
         const allProducts = allPages.flatMap(response => {
           if (!Array.isArray(response.data?.products)) {
-            throw new TypeError('A products page did not contain a products array.');
+            throw new TypeError(
+              'A products page did not contain a products array.',
+            );
           }
           return response.data.products as ExploreProduct[];
         });
@@ -205,7 +216,10 @@ function UserExplore({
             .filter(category => category.name),
         );
       } else if (categoryResult.status === 'rejected') {
-        console.error('Failed to load explore categories:', categoryResult.reason);
+        console.error(
+          'Failed to load explore categories:',
+          categoryResult.reason,
+        );
       }
 
       if (
@@ -245,9 +259,7 @@ function UserExplore({
     const matchingFacets = uniqueFacets(categories).filter(category =>
       productCategoryNames.has(category.name.toLowerCase()),
     );
-    return matchingFacets.length
-      ? matchingFacets
-      : productCategories;
+    return matchingFacets.length ? matchingFacets : productCategories;
   }, [categories, products]);
 
   const availableMetals = useMemo(() => {
@@ -263,9 +275,7 @@ function UserExplore({
     const matchingFacets = uniqueFacets(metals).filter(metal =>
       productMetalNames.has(metal.name.toLowerCase()),
     );
-    return matchingFacets.length
-      ? matchingFacets
-      : productMetals;
+    return matchingFacets.length ? matchingFacets : productMetals;
   }, [metals, products]);
 
   const popularProducts = useMemo(
@@ -286,15 +296,21 @@ function UserExplore({
           product.metal_type,
           product.product_type,
           product.brand,
-        ].some(value => String(value || '').toLowerCase().includes(query));
+        ].some(value =>
+          String(value || '')
+            .toLowerCase()
+            .includes(query),
+        );
       const matchesCategory =
         !selectedCategory ||
-        String(product.category || '').trim().toLowerCase() ===
-          selectedCategory.toLowerCase();
+        String(product.category || '')
+          .trim()
+          .toLowerCase() === selectedCategory.toLowerCase();
       const matchesMetal =
         !selectedMetal ||
-        String(product.metal_type || '').trim().toLowerCase() ===
-          selectedMetal.toLowerCase();
+        String(product.metal_type || '')
+          .trim()
+          .toLowerCase() === selectedMetal.toLowerCase();
       const price = getPrice(product);
       const matchesPrice =
         (minimumPrice === undefined || price >= minimumPrice) &&
@@ -319,11 +335,15 @@ function UserExplore({
       if (sortBy === 'price-low') return getPrice(first) - getPrice(second);
       if (sortBy === 'price-high') return getPrice(second) - getPrice(first);
       if (sortBy === 'name') {
-        return String(first.name || '').localeCompare(String(second.name || ''));
+        return String(first.name || '').localeCompare(
+          String(second.name || ''),
+        );
       }
       const firstDate = new Date(first.created_at || 0).getTime();
       const secondDate = new Date(second.created_at || 0).getTime();
-      return sortBy === 'oldest' ? firstDate - secondDate : secondDate - firstDate;
+      return sortBy === 'oldest'
+        ? firstDate - secondDate
+        : secondDate - firstDate;
     });
   }, [
     availability,
@@ -355,271 +375,392 @@ function UserExplore({
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-[#fffdf8]"
-      contentContainerClassName="grow px-4 pb-6 pt-4"
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefreshing}
-          onRefresh={refresh}
-          tintColor="#004D40"
-          colors={['#004D40']}
-        />
-      }
-    >
-      <View className="mb-4">
-        <Text className="text-[10px] font-bold uppercase tracking-[2px] text-[#a67b2e]">
-          Sri Golds collection
-        </Text>
-        <Text className="mt-1 text-2xl font-bold text-[#153b2e]">Explore</Text>
-        <Text className="mt-1 text-xs text-[#777066]">
-          Find jewellery for every occasion
-        </Text>
-      </View>
-
-      <View className="mb-4 flex-row items-center rounded-xl border border-[#e8dfd1] bg-white px-3">
-        <Svg width={19} height={19} viewBox="0 0 24 24" fill="none">
-          <Path
-            d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16ZM21 21l-4.35-4.35"
-            stroke="#A77525"
-            strokeWidth={1.8}
-            strokeLinecap="round"
-            strokeLinejoin="round"
+    <View className="flex-1 bg-[#fffdf8]">
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="grow px-4 pb-6 pt-4"
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={refresh}
+            tintColor="#004D40"
+            colors={['#004D40']}
           />
-        </Svg>
-        <TextInput
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Search jewellery, category or metal"
-          placeholderTextColor="#9a9286"
-          className="ml-2 min-h-12 flex-1 text-sm text-[#30271b]"
-          returnKeyType="search"
-          accessibilityLabel="Search products"
-        />
-        {search ? (
-          <Pressable
-            onPress={() => setSearch('')}
-            accessibilityRole="button"
-            accessibilityLabel="Clear search"
-          >
-            <Text className="px-1 text-lg text-[#777066]">×</Text>
-          </Pressable>
-        ) : null}
-      </View>
-
-      {popularProducts.length > 0 ? (
+        }
+      >
         <View className="mb-4">
-          <Text className="mb-2 text-sm font-bold text-[#29231c]">Popular searches</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {popularProducts.map((product, index) => (
+          <Text className="text-[10px] font-bold uppercase tracking-[2px] text-[#a67b2e]">
+            Sri Golds collection
+          </Text>
+          <Text className="mt-1 text-2xl font-bold text-[#153b2e]">
+            Explore
+          </Text>
+          <Text className="mt-1 text-xs text-[#777066]">
+            Find jewellery for every occasion
+          </Text>
+        </View>
+
+        <View className="mb-4 flex-row items-center rounded-xl border border-[#e8dfd1] bg-white px-3">
+          <Svg width={19} height={19} viewBox="0 0 24 24" fill="none">
+            <Path
+              d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16ZM21 21l-4.35-4.35"
+              stroke="#A77525"
+              strokeWidth={1.8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search jewellery, category or metal"
+            placeholderTextColor="#9a9286"
+            className="ml-2 min-h-12 flex-1 text-sm text-[#30271b]"
+            returnKeyType="search"
+            accessibilityLabel="Search products"
+          />
+          {search ? (
+            <Pressable
+              onPress={() => setSearch('')}
+              accessibilityRole="button"
+              accessibilityLabel="Clear search"
+            >
+              <Text className="px-1 text-lg text-[#777066]">×</Text>
+            </Pressable>
+          ) : null}
+        </View>
+
+        {popularProducts.length > 0 ? (
+          <View className="mb-4">
+            <Text className="mb-2 text-sm font-bold text-[#29231c]">
+              Popular searches
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {popularProducts.map((product, index) => (
+                <Pressable
+                  key={String(product.id ?? product.product_code ?? index)}
+                  onPress={() =>
+                    setSearch(current =>
+                      current === product.name ? '' : product.name || '',
+                    )
+                  }
+                  className={`mr-2 rounded-full border px-3 py-2 ${
+                    search === product.name
+                      ? 'border-primary bg-[#edf5ef]'
+                      : 'border-[#eee5d6] bg-white'
+                  }`}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Search ${product.name}`}
+                  accessibilityState={{ selected: search === product.name }}
+                >
+                  <Text
+                    className="max-w-36 text-xs font-medium text-[#514638]"
+                    numberOfLines={1}
+                  >
+                    {product.name}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
+
+        <View className="mb-3 flex-row items-center justify-between">
+          <View>
+            <Text className="text-lg font-bold text-[#29231c]">
+              {search.trim()
+                ? `Results for “${search.trim()}”`
+                : 'All products'}
+            </Text>
+            <Text className="mt-0.5 text-xs text-[#81786b]">
+              {isLoading
+                ? 'Loading products…'
+                : `${filteredProducts.length} products`}
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => setFiltersVisible(visible => !visible)}
+            className="flex-row items-center rounded-lg border border-[#e8dfd1] bg-white px-3 py-2"
+            accessibilityRole="button"
+            accessibilityState={{ expanded: filtersVisible }}
+          >
+            <Text className="mr-1.5 text-sm text-primary">☷</Text>
+            <Text className="text-xs font-semibold text-primary">Filters</Text>
+          </Pressable>
+        </View>
+
+        <View className="mb-3 flex-row items-center justify-between">
+          <Text className="text-xs font-medium text-[#62594d]">Sort by</Text>
+          <Pressable
+            onPress={() => setSortDropdownVisible(visible => !visible)}
+            className="min-w-48 flex-row items-center justify-between rounded-lg border border-[#e8dfd1] bg-white px-3 py-2.5"
+            accessibilityRole="button"
+            accessibilityLabel={`Sort by ${
+              SORT_OPTIONS.find(option => option.value === sortBy)?.label
+            }`}
+            accessibilityState={{ expanded: sortDropdownVisible }}
+          >
+            <Text className="mr-3 text-xs font-semibold text-[#30271b]">
+              {SORT_OPTIONS.find(option => option.value === sortBy)?.label}
+            </Text>
+            <Text className="text-xs text-[#a77525]">
+              {sortDropdownVisible ? '⌃' : '⌄'}
+            </Text>
+          </Pressable>
+        </View>
+        {sortDropdownVisible ? (
+          <View className="z-10 mb-3 overflow-hidden rounded-lg border border-[#e8dfd1] bg-white">
+            {SORT_OPTIONS.map((option, index) => (
               <Pressable
-                key={String(product.id ?? product.product_code ?? index)}
-                onPress={() =>
-                  setSearch(current =>
-                    current === product.name ? '' : product.name || '',
-                  )
-                }
-                className={`mr-2 rounded-full border px-3 py-2 ${
-                  search === product.name
-                    ? 'border-primary bg-[#edf5ef]'
-                    : 'border-[#eee5d6] bg-white'
-                }`}
+                key={option.value}
+                onPress={() => {
+                  setSortBy(option.value);
+                  setSortDropdownVisible(false);
+                }}
+                className={`flex-row items-center justify-between px-3 py-3 ${
+                  index < SORT_OPTIONS.length - 1
+                    ? 'border-b border-[#f1ece3]'
+                    : ''
+                } ${sortBy === option.value ? 'bg-[#f5f8f3]' : ''}`}
                 accessibilityRole="button"
-                accessibilityLabel={`Search ${product.name}`}
-                accessibilityState={{ selected: search === product.name }}
+                accessibilityState={{ selected: sortBy === option.value }}
               >
-                <Text className="max-w-36 text-xs font-medium text-[#514638]" numberOfLines={1}>
-                  {product.name}
+                <Text
+                  className={`text-xs ${
+                    sortBy === option.value
+                      ? 'font-semibold text-primary'
+                      : 'text-[#514638]'
+                  }`}
+                >
+                  {option.label}
                 </Text>
+                {sortBy === option.value ? (
+                  <Text className="text-sm font-bold text-primary">✓</Text>
+                ) : null}
               </Pressable>
             ))}
-          </ScrollView>
-        </View>
-      ) : null}
-
-      <View className="mb-3 flex-row items-center justify-between">
-        <View>
-          <Text className="text-lg font-bold text-[#29231c]">
-            {search.trim() ? `Results for “${search.trim()}”` : 'All products'}
-          </Text>
-          <Text className="mt-0.5 text-xs text-[#81786b]">
-            {isLoading ? 'Loading products…' : `${filteredProducts.length} products`}
-          </Text>
-        </View>
-        <Pressable
-          onPress={() => setFiltersVisible(visible => !visible)}
-          className="flex-row items-center rounded-lg border border-[#e8dfd1] bg-white px-3 py-2"
-          accessibilityRole="button"
-          accessibilityState={{ expanded: filtersVisible }}
-        >
-          <Text className="mr-1.5 text-sm text-primary">☷</Text>
-          <Text className="text-xs font-semibold text-primary">
-            {filtersVisible ? 'Hide filters' : 'Filters'}
-          </Text>
-        </Pressable>
-      </View>
-
-      {filtersVisible ? (
-        <View className="mb-4 rounded-xl border border-[#eee7dc] bg-white p-3">
-          <View className="mb-3 flex-row items-center justify-between">
-            <Text className="text-base font-bold text-[#29231c]">Filters</Text>
-            <Pressable
-              onPress={clearFilters}
-              accessibilityRole="button"
-              accessibilityLabel="Clear all filters"
-            >
-              <Text className="text-xs font-semibold text-[#a77525]">Clear all</Text>
-            </Pressable>
           </View>
+        ) : null}
 
-          <FilterChips
-            title="Category"
-            options={availableCategories.map(item => item.name)}
-            selected={selectedCategory}
-            onSelect={value => setSelectedCategory(current => current === value ? '' : value)}
-          />
-          <FilterChips
-            title="Metal"
-            options={availableMetals.map(item => item.name)}
-            selected={selectedMetal}
-            onSelect={value => setSelectedMetal(current => current === value ? '' : value)}
-          />
-          <FilterChips
-            title="Offer"
-            options={OFFER_FILTERS.map(value => `${value}%+`)}
-            selected={offerThreshold ? `${offerThreshold}%+` : ''}
-            onSelect={value => {
-              const threshold = Number(value.replace('%+', ''));
-              setOfferThreshold(current => current === threshold ? 0 : threshold);
-            }}
-          />
-          <FilterChips
-            title="Price"
-            options={PRICE_RANGES.map(range => range.label)}
-            selected={
-              PRICE_RANGES.find(
-                range => range.min === minimumPrice && range.max === maximumPrice,
-              )?.label || ''
-            }
-            onSelect={value => {
-              const range = PRICE_RANGES.find(option => option.label === value);
-              if (range && minimumPrice === range.min && maximumPrice === range.max) {
-                setMinimumPrice(undefined);
-                setMaximumPrice(undefined);
-              } else if (range) {
-                setMinimumPrice(range.min || undefined);
-                setMaximumPrice(range.max);
-              }
-            }}
-          />
-          <FilterChips
-            title="Rating"
-            options={RATING_FILTERS.map(value => `${value}★ & up`)}
-            selected={minimumRating ? `${minimumRating}★ & up` : ''}
-            onSelect={value => {
-              const rating = Number(value.charAt(0));
-              setMinimumRating(current => current === rating ? 0 : rating);
-            }}
-          />
-          <FilterChips
-            title="Availability"
-            options={['In stock', 'Out of stock']}
-            selected={
-              availability === 'in-stock'
-                ? 'In stock'
-                : availability === 'out-of-stock'
-                  ? 'Out of stock'
-                  : ''
-            }
-            onSelect={value => {
-              const nextValue =
-                value === 'In stock' ? 'in-stock' : 'out-of-stock';
-              setAvailability(current => current === nextValue ? '' : nextValue);
-            }}
-          />
-        </View>
-      ) : null}
-
-      <View className="mb-3 flex-row items-center justify-between rounded-lg border border-[#eee7dc] bg-white px-3 py-2">
-        <Text className="text-xs font-medium text-[#62594d]">Sort by</Text>
-        <View className="flex-1 flex-row flex-wrap justify-end">
-          {SORT_OPTIONS.map(option => (
-            <Pressable
-              key={option.value}
-              onPress={() => setSortBy(option.value)}
-              className={`mb-1 ml-1 rounded-full px-2 py-1 ${
-                sortBy === option.value ? 'bg-primary' : 'bg-[#f6f1e8]'
-              }`}
-              accessibilityRole="button"
-              accessibilityState={{ selected: sortBy === option.value }}
+        {isLoading && products.length === 0 ? (
+          <View className="items-center rounded-xl border border-[#eee7dc] bg-white py-12">
+            <ActivityIndicator color="#004D40" />
+            <Text className="mt-3 text-xs text-[#81786b]">
+              Loading the collection…
+            </Text>
+          </View>
+        ) : error ? (
+          <View className="items-center rounded-xl border border-rose-200 bg-white px-5 py-10">
+            <Text
+              className="text-center text-sm text-rose-700"
+              accessibilityRole="alert"
             >
-              <Text
-                className={`text-[9px] font-semibold ${
-                  sortBy === option.value ? 'text-white' : 'text-[#514638]'
-                }`}
-              >
-                {option.label}
+              {error}
+            </Text>
+            <Pressable
+              onPress={refresh}
+              className="mt-3 rounded-lg bg-primary px-4 py-2"
+              accessibilityRole="button"
+            >
+              <Text className="text-xs font-semibold text-white">
+                Try again
               </Text>
             </Pressable>
-          ))}
-        </View>
-      </View>
-
-      {isLoading && products.length === 0 ? (
-        <View className="items-center rounded-xl border border-[#eee7dc] bg-white py-12">
-          <ActivityIndicator color="#004D40" />
-          <Text className="mt-3 text-xs text-[#81786b]">Loading the collection…</Text>
-        </View>
-      ) : error ? (
-        <View className="items-center rounded-xl border border-rose-200 bg-white px-5 py-10">
-          <Text className="text-center text-sm text-rose-700" accessibilityRole="alert">
-            {error}
-          </Text>
+          </View>
+        ) : filteredProducts.length > 0 ? (
+          <View className="flex-row flex-wrap justify-between">
+            {filteredProducts.map((product, index) => (
+              <ProductCard
+                key={String(product.id ?? product.product_code ?? index)}
+                product={product}
+                layout="catalog"
+                onPress={() => {
+                  if (product.id != null) onSelectProduct(String(product.id));
+                }}
+                onEnquire={onEnquireProduct}
+                isFavorite={
+                  product.id != null && isFavorite(String(product.id))
+                }
+                onToggleFavorite={onToggleFavorite}
+              />
+            ))}
+          </View>
+        ) : (
+          <View className="items-center rounded-xl border border-[#eee7dc] bg-white px-5 py-12">
+            <Text className="text-3xl text-[#bd913e]">◇</Text>
+            <Text className="mt-3 text-base font-bold text-[#29231c]">
+              No products match these filters
+            </Text>
+            <Text className="mt-1 text-center text-xs text-[#81786b]">
+              Try another search or clear your filters to see more jewellery.
+            </Text>
+            <Pressable
+              onPress={clearFilters}
+              className="mt-4 rounded-lg bg-primary px-4 py-2"
+              accessibilityRole="button"
+            >
+              <Text className="text-xs font-semibold text-white">
+                Clear filters
+              </Text>
+            </Pressable>
+          </View>
+        )}
+      </ScrollView>
+      <Modal
+        visible={filtersVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setFiltersVisible(false)}
+      >
+        <View className="flex-1 flex-row bg-black/40">
           <Pressable
-            onPress={refresh}
-            className="mt-3 rounded-lg bg-primary px-4 py-2"
+            className="flex-1"
+            onPress={() => setFiltersVisible(false)}
             accessibilityRole="button"
+            accessibilityLabel="Close filters"
+          />
+          <SafeAreaView
+            className="h-full w-[88%] bg-[#fffdf8] shadow-2xl"
+            edges={['top', 'bottom']}
           >
-            <Text className="text-xs font-semibold text-white">Try again</Text>
-          </Pressable>
+            <View className="border-b border-[#eee7dc] bg-white px-5 pb-4 pt-5">
+              <View className="flex-row items-center justify-between">
+                <View>
+                  <Text className="text-[10px] font-bold uppercase tracking-[1.8px] text-[#a67b2e]">
+                    Refine your search
+                  </Text>
+                  <Text className="mt-1 text-xl font-bold text-[#153b2e]">
+                    Filters
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => setFiltersVisible(false)}
+                  className="h-10 w-10 items-center justify-center rounded-full bg-[#f7f3eb]"
+                  accessibilityRole="button"
+                  accessibilityLabel="Close filters"
+                >
+                  <Text className="text-xl text-[#514638]">×</Text>
+                </Pressable>
+              </View>
+            </View>
+            <ScrollView
+              className="flex-1"
+              contentContainerClassName="px-5 py-4"
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <FilterChips
+                title="Category"
+                options={availableCategories.map(item => item.name)}
+                selected={selectedCategory}
+                onSelect={value =>
+                  setSelectedCategory(current =>
+                    current === value ? '' : value,
+                  )
+                }
+              />
+              <FilterChips
+                title="Metal"
+                options={availableMetals.map(item => item.name)}
+                selected={selectedMetal}
+                onSelect={value =>
+                  setSelectedMetal(current => (current === value ? '' : value))
+                }
+              />
+              <FilterChips
+                title="Offer"
+                options={OFFER_FILTERS.map(value => `${value}%+`)}
+                selected={offerThreshold ? `${offerThreshold}%+` : ''}
+                onSelect={value => {
+                  const threshold = Number(value.replace('%+', ''));
+                  setOfferThreshold(current =>
+                    current === threshold ? 0 : threshold,
+                  );
+                }}
+              />
+              <FilterChips
+                title="Price"
+                options={PRICE_RANGES.map(range => range.label)}
+                selected={
+                  PRICE_RANGES.find(
+                    range =>
+                      range.min === minimumPrice && range.max === maximumPrice,
+                  )?.label || ''
+                }
+                onSelect={value => {
+                  const range = PRICE_RANGES.find(
+                    option => option.label === value,
+                  );
+                  if (
+                    range &&
+                    minimumPrice === range.min &&
+                    maximumPrice === range.max
+                  ) {
+                    setMinimumPrice(undefined);
+                    setMaximumPrice(undefined);
+                  } else if (range) {
+                    setMinimumPrice(range.min || undefined);
+                    setMaximumPrice(range.max);
+                  }
+                }}
+              />
+              <FilterChips
+                title="Rating"
+                options={RATING_FILTERS.map(value => `${value}★ & up`)}
+                selected={minimumRating ? `${minimumRating}★ & up` : ''}
+                onSelect={value => {
+                  const rating = Number(value.charAt(0));
+                  setMinimumRating(current =>
+                    current === rating ? 0 : rating,
+                  );
+                }}
+              />
+              <FilterChips
+                title="Availability"
+                options={['In stock', 'Out of stock']}
+                selected={
+                  availability === 'in-stock'
+                    ? 'In stock'
+                    : availability === 'out-of-stock'
+                    ? 'Out of stock'
+                    : ''
+                }
+                onSelect={value => {
+                  const nextValue =
+                    value === 'In stock' ? 'in-stock' : 'out-of-stock';
+                  setAvailability(current =>
+                    current === nextValue ? '' : nextValue,
+                  );
+                }}
+              />
+            </ScrollView>
+            <View className="flex-row border-t border-[#eee7dc] bg-white px-5 py-4">
+              <Pressable
+                onPress={clearFilters}
+                className="mr-3 flex-1 items-center justify-center rounded-lg border border-[#e8dfd1] py-3"
+                accessibilityRole="button"
+                accessibilityLabel="Clear all filters"
+              >
+                <Text className="text-sm font-semibold text-[#62594d]">
+                  Clear all
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setFiltersVisible(false)}
+                className="flex-[1.4] items-center justify-center rounded-lg bg-primary py-3"
+                accessibilityRole="button"
+              >
+                <Text className="text-sm font-semibold text-white">
+                  Show {filteredProducts.length} products
+                </Text>
+              </Pressable>
+            </View>
+          </SafeAreaView>
         </View>
-      ) : filteredProducts.length > 0 ? (
-        <View className="flex-row flex-wrap justify-between">
-          {filteredProducts.map((product, index) => (
-            <ProductCard
-              key={String(product.id ?? product.product_code ?? index)}
-              product={product}
-              layout="catalog"
-              onPress={() => {
-                if (product.id != null) onSelectProduct(String(product.id));
-              }}
-              onEnquire={onEnquireProduct}
-              isFavorite={product.id != null && isFavorite(String(product.id))}
-              onToggleFavorite={onToggleFavorite}
-            />
-          ))}
-        </View>
-      ) : (
-        <View className="items-center rounded-xl border border-[#eee7dc] bg-white px-5 py-12">
-          <Text className="text-3xl text-[#bd913e]">◇</Text>
-          <Text className="mt-3 text-base font-bold text-[#29231c]">
-            No products match these filters
-          </Text>
-          <Text className="mt-1 text-center text-xs text-[#81786b]">
-            Try another search or clear your filters to see more jewellery.
-          </Text>
-          <Pressable
-            onPress={clearFilters}
-            className="mt-4 rounded-lg bg-primary px-4 py-2"
-            accessibilityRole="button"
-          >
-            <Text className="text-xs font-semibold text-white">Clear filters</Text>
-          </Pressable>
-        </View>
-      )}
-    </ScrollView>
+      </Modal>
+    </View>
   );
 }
 
@@ -665,7 +806,9 @@ function FilterChips({
           })}
         </View>
       ) : (
-        <Text className="text-[10px] text-[#81786b]">No options available.</Text>
+        <Text className="text-[10px] text-[#81786b]">
+          No options available.
+        </Text>
       )}
     </View>
   );
