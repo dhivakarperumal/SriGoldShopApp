@@ -417,7 +417,7 @@ function Home({ user, onNavigate }: HomeProps) {
           return (
             <View
               key={card.id}
-              className="mb-3 min-h-[128px] w-[48.5%] overflow-hidden rounded-2xl border px-3 py-2.5 shadow-sm"
+              className="mb-3 min-h-[112px] w-[48.5%] overflow-hidden rounded-2xl border px-3 py-2 shadow-sm"
               style={{
                 backgroundColor: card.backgroundColor,
                 borderColor: `${card.color}35`,
@@ -428,13 +428,13 @@ function Home({ user, onNavigate }: HomeProps) {
               <DashboardCardArtwork icon={card.icon} color={card.color} />
               <View className="z-10 flex-row items-center">
                 <View
-                  className="mr-2.5 h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm"
+                  className="mr-2.5 h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-sm"
                   style={{ backgroundColor: card.color }}
                 >
                   <DashboardIcon
                     name={card.icon}
                     color="#FFFFFF"
-                    size={card.icon === 'check' ? 18 : 22}
+                    size={card.icon === 'check' ? 16 : 20}
                   />
                 </View>
                 <View className="min-w-0 flex-1">
