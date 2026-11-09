@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import api from '../../api';
+import api, { API_BASE_URL } from '../../api';
 import type { ProductCardData } from '../../Components/ProductCard';
 import { getProductImageUrl } from '../../utils/productImage';
 import HomeSkeleton from '../Home/components/HomeSkeleton';
@@ -251,9 +251,12 @@ function UserProductDetails({
 
   const shareProduct = async () => {
     try {
+      const productUrl = `${API_BASE_URL.replace(/\/api\/?$/, '')}/product/${encodeURIComponent(
+        String(product?.id ?? productId),
+      )}`;
       await Share.share({
         title: productName,
-        message: `${productName}${productCode ? `\nCode: ${productCode}` : ''}`,
+        message: `${productName}${productCode ? `\nCode: ${productCode}` : ''}\n${productUrl}`,
       });
     } catch (error) {
       console.error('Failed to share product:', error);
