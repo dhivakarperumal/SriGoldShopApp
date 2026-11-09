@@ -11,6 +11,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api, { setTokenCache } from '../../api';
 
@@ -126,7 +127,13 @@ function Login({ onLoginSuccess }: LoginProps) {
                     Username
                   </Text>
                   <View className="h-14 flex-row items-center rounded-2xl border border-slate-200 bg-white px-4 shadow-sm">
-                    <Text className="mr-4 text-2xl text-slate-800">✉</Text>
+                    <View className="mr-4">
+                      <Ionicons
+                        name="mail-outline"
+                        size={22}
+                        color="#1e293b"
+                      />
+                    </View>
                     <TextInput
                       className="flex-1 py-0 text-base text-slate-900"
                       placeholder="Enter your username or email"
@@ -171,9 +178,11 @@ function Login({ onLoginSuccess }: LoginProps) {
                         showPassword ? 'Hide password' : 'Show password'
                       }
                     >
-                      <Text className="text-xl text-slate-800">
-                        {showPassword ? '◉' : '◎'}
-                      </Text>
+                      <Ionicons
+                        name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                        size={22}
+                        color="#1e293b"
+                      />
                     </Pressable>
                   </View>
                 </View>
