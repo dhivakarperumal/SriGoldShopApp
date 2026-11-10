@@ -14,11 +14,16 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Alert } from '../../Components/AppAlert';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
+import { createImageDataUri } from '../../utils/imageData';
+import { getProductImageUrl } from '../../utils/productImage';
 import PulseFab from '../Componets/PulseFab';
 import CreateLoan from '../Loanmanegements/CreateLoan';
+import { createLoanPrintHtml, type LoanPrintLanguage } from './loanPrint';
+import { printHtmlDocument } from './nativePrint';
 
 type Loan = Record<string, unknown> & {
   id: string | number;
@@ -209,6 +214,7 @@ function Loans({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [deletingLoanId, setDeletingLoanId] = useState<string | number | null>(null);
+  const [printingLoanId, setPrintingLoanId] = useState<string | number | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isFabOpen, setIsFabOpen] = useState(false);
 
@@ -327,6 +333,106 @@ function Loans({
       ],
     );
   };
+
+  const printLoanInLanguage = useCallback(async (
+    loanRow: Loan,
+    language: LoanPrintLanguage,
+  ) => {
+    setPrintingLoanId(loanRow.id);
+    try {
+      const { data } = await api.get(`/loans/${loanRow.id}`);
+      const record =
+        typeof data === 'object' && data !== null
+          ? (data as Record<string, unknown>)
+          : null;
+      const fullLoan =
+        record &&
+        typeof record.loan === 'object' &&
+        record.loan !== null &&
+        !Array.isArray(record.loan)
+          ? (record.loan as Record<string, unknown>)
+          : record;
+      if (!fullLoan || !fullLoan.id) {
+        throw new Error('The server returned invalid loan details.');
+      }
+
+      let pledgedImageDataUri: string | undefined;
+      if (typeof fullLoan.gold_image_url === 'string' && fullLoan.gold_image_url) {
+        try {
+          const imageUrl =
+            getProductImageUrl({ image_url: fullLoan.gold_image_url }) ||
+            fullLoan.gold_image_url;
+          const { data: imageData, headers } = await api.get(imageUrl, {
+            responseType: 'arraybuffer',
+          });
+          const contentType = String(
+            headers?.['content-type'] || 'image/jpeg',
+          ).split(';')[0];
+          pledgedImageDataUri = createImageDataUri(
+            imageData as ArrayBuffer,
+            contentType,
+          );
+        } catch (imageError) {
+          console.error('Failed to load pledged gold image for printing:', imageError);
+          Alert.alert(
+            'Pledged image unavailable',
+            'Print the loan agreement without the pledged gold image?',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Print without image',
+                onPress: () => {
+                  printHtmlDocument(
+                    createLoanPrintHtml(fullLoan, undefined, language),
+                    `Loan-${String(fullLoan.loan_number || fullLoan.id)}`,
+                  ).catch(printError => {
+                    console.error('Failed to print loan agreement:', printError);
+                    Alert.alert(
+                      'Could not print loan',
+                      getErrorMessage(printError),
+                    );
+                  });
+                },
+              },
+            ],
+          );
+          return;
+        }
+      }
+
+      await printHtmlDocument(
+        createLoanPrintHtml(fullLoan, pledgedImageDataUri, language),
+        `Loan-${String(fullLoan.loan_number || fullLoan.id)}`,
+      );
+    } catch (printError) {
+      console.error('Failed to prepare loan agreement:', printError);
+      Alert.alert('Could not print loan', getErrorMessage(printError));
+    } finally {
+      setPrintingLoanId(null);
+    }
+  }, []);
+
+  const printLoan = useCallback((loan: Loan) => {
+    Alert.alert('Choose print language', 'Select the language for the loan agreement.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'English',
+        onPress: () => {
+          printLoanInLanguage(loan, 'en').catch(printError => {
+            console.error('Failed to print loan agreement in English:', printError);
+          });
+        },
+      },
+      {
+        text: 'தமிழ்',
+        onPress: () => {
+          printLoanInLanguage(loan, 'ta').catch(printError => {
+            console.error('Failed to print loan agreement in Tamil:', printError);
+          });
+        },
+      },
+    ]);
+  }, [printLoanInLanguage]);
 
   const statusClass = (status: string): string => {
     switch (status.toLowerCase()) {
@@ -599,6 +705,20 @@ function Loans({
                           strokeWidth={1.8}
                         />
                       </Svg>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => printLoan(loan)}
+                      disabled={printingLoanId === loan.id}
+                      className="h-9 w-9 items-center justify-center rounded-lg border border-sky-200 bg-sky-50"
+                      accessibilityRole="button"
+                      accessibilityLabel={`Print loan agreement for ${loan.loan_number || loan.id}`}
+                      accessibilityHint="Opens the print dialog, where you can also save as PDF."
+                    >
+                      {printingLoanId === loan.id ? (
+                        <ActivityIndicator size="small" color="#075985" />
+                      ) : (
+                        <Ionicons name="print-outline" size={18} color="#075985" />
+                      )}
                     </Pressable>
                     <Pressable
                       onPress={() => deleteLoan(loan)}

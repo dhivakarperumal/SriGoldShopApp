@@ -46,6 +46,20 @@ const getText = (record: BillRecord, ...keys: string[]): string => {
   return '';
 };
 
+const getFirstValue = (record: BillRecord, ...keys: string[]): unknown => {
+  for (const key of keys) {
+    const value = record[key];
+    if (value !== null && value !== undefined && value !== '') return value;
+  }
+  return undefined;
+};
+
+const formatWeight = (value: unknown, unit: string): string => {
+  if (value === undefined) return '—';
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? `${parsed.toFixed(3)} ${unit}` : escapeHtml(value);
+};
+
 const resolveLogoUrl = (logoUrl: string, apiBaseUrl: string): string => {
   if (!logoUrl || /^(data:|https?:|file:)/i.test(logoUrl)) return logoUrl;
   const origin = apiBaseUrl.replace(/\/api\/?$/i, '');
@@ -109,20 +123,55 @@ export function createBillPrintHtml(
   const itemRows = [
     ...products.map((product, index) => {
       const quantity = Math.max(1, getNumber(product.quantity) || 1);
-      const weight = getNumber(product.weight ?? product.net_weight);
-      const wastage = getNumber(product.wastage_weight);
-      const netWeight = getNumber(product.net_weight) || Math.max(0, weight - wastage);
-      const makingCharge = getText(
+      const weight = getFirstValue(product, 'weight', 'gross_weight');
+      const stoneWeight = getFirstValue(product, 'stone_weight');
+      const savedNetWeight = getFirstValue(product, 'net_weight', 'net_gold_weight');
+      const savedWastageWeight = getFirstValue(product, 'wastage_weight');
+      const netWeight =
+        savedNetWeight ??
+        (weight !== undefined
+          ? Math.max(
+              0,
+              getNumber(weight) -
+                getNumber(stoneWeight ?? savedWastageWeight),
+            )
+          : undefined);
+      const wastage = getFirstValue(product, 'wastage', 'wastage_percentage');
+      const wastageText =
+        savedWastageWeight !== undefined
+          ? formatWeight(savedWastageWeight, 'g')
+          : wastage === undefined
+            ? '—'
+            : String(product.wastage_type ?? '').toLowerCase() === 'grams'
+              ? formatWeight(wastage, 'g')
+              : `${escapeHtml(wastage)}%`;
+      const makingCharge = getFirstValue(
         product,
         'making_charge',
         'making_charges',
+        'making_charge_value',
         'making_charge_percentage',
         'making_percentage',
       );
-      const rate = getNumber(
-        product.rate_per_gram ?? product.gold_rate_per_gram ?? product.rate_per_unit,
+      const makingChargeType = String(product.making_charge_type ?? '').toLowerCase();
+      const makingChargeText =
+        makingCharge === undefined
+          ? '—'
+          : makingChargeType === 'percentage' ||
+              (makingChargeType === '' &&
+                (product.making_charge_percentage != null ||
+                  product.making_percentage != null))
+            ? `${escapeHtml(makingCharge)}%`
+            : formatCurrency(makingCharge);
+      const rateValue = getFirstValue(
+        product,
+        'rate_per_gram',
+        'gold_rate_per_gram',
+        'rate_per_unit',
       );
+      const rate = getNumber(rateValue);
       const rateUnit = getText(product, 'rate_unit') || 'gram';
+      const weightUnit = rateUnit.toLowerCase() === 'carat' ? 'ct' : 'g';
       const amount =
         getNumber(product.price ?? product.offer_price) * quantity;
       return `<tr>
@@ -130,11 +179,11 @@ export function createBillPrintHtml(
         <td>${escapeHtml(getText(product, 'product_name', 'name'))}${quantity > 1 ? ` × ${quantity}` : ''}</td>
         <td>${escapeHtml(getText(product, 'category')) || '—'}</td>
         <td>${escapeHtml(getText(product, 'purity')) || '—'}</td>
-        <td>${escapeHtml(makingCharge || '—')}</td>
-        <td>${weight ? `${weight.toFixed(3)} g` : '—'}</td>
-        <td>${wastage ? `${wastage.toFixed(3)} g` : '—'}</td>
-        <td>${netWeight ? `${netWeight.toFixed(3)} g` : '—'}</td>
-        <td>${rate ? `${formatCurrency(rate)} / ${escapeHtml(rateUnit)}` : '—'}</td>
+        <td>${makingChargeText}</td>
+        <td>${formatWeight(weight, weightUnit)}</td>
+        <td>${wastageText}</td>
+        <td>${formatWeight(netWeight, weightUnit)}</td>
+        <td>${rateValue !== undefined ? `${formatCurrency(rate)} / ${escapeHtml(rateUnit)}` : '—'}</td>
         <td class="amount">${formatCurrency(amount)}</td>
       </tr>`;
     }),

@@ -11,14 +11,22 @@ test('creates a printable invoice with bill details and escaped customer data', 
       customers: [{ name: 'A&B <Customer>', phone: '9876543210' }],
       products: [
         {
-          product_name: 'Gold Chain',
-          category: 'Necklace',
-          purity: '22K',
+          product: {
+            name: 'Gold Chain',
+            category: 'Necklace',
+            purity: '22K',
+            gross_weight: 5.2,
+            stone_weight: 0.2,
+            net_gold_weight: 5,
+            making_charge_type: 'Percentage',
+            making_charge: 5,
+            wastage_type: 'Percentage',
+            wastage: 3,
+            gold_rate_per_gram: 7000,
+            rate_unit: 'gram',
+          },
           price: 25000,
           quantity: 2,
-          weight: 5,
-          wastage_weight: 0.2,
-          rate_per_gram: 7000,
         },
       ],
       sub_total: 50000,
@@ -33,6 +41,11 @@ test('creates a printable invoice with bill details and escaped customer data', 
   expect(html).toContain('A&amp;B &lt;Customer&gt;');
   expect(html).toContain('Gold Chain');
   expect(html).toContain('₹51,500.00');
+  expect(html).toContain('5%');
+  expect(html).toContain('5.200 g');
+  expect(html).toContain('3%');
+  expect(html).toContain('5.000 g');
+  expect(html).toContain('₹7,000.00 / gram');
   expect(html).toContain('Net weight');
   expect(html).toContain('https://example.com/images/logo.png');
 });

@@ -783,18 +783,20 @@ export default function Billing({
         );
       }
       return [...current, {
+        ...product,
         product_id: String(product.id),
         product_name: product.name,
         category: product.category,
         purity: product.purity,
         metal_type: product.metal_type || 'Gold',
-        weight: product.weight,
+        weight: product.gross_weight ?? product.weight,
         wastage_weight: product.wastage_weight,
-        net_weight: product.net_weight,
+        net_weight: product.net_gold_weight ?? product.net_weight,
         making_charge: product.making_charge,
         making_charges: product.making_charges,
         making_charge_percentage: product.making_charge_percentage,
         making_percentage: product.making_percentage,
+        stone_weight: product.stone_weight,
         image_url: getProductImageUrl(product),
         images: product.images,
         rate_per_gram: product.gold_rate_per_gram,
