@@ -207,10 +207,10 @@ function LoanCustomerManagement({
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadCustomers(true)} tintColor="#004D40" />}
           keyboardShouldPersistTaps="handled"
         >
-          <View className="flex-row flex-wrap justify-between">
-            <AdminStatCard label="Total customers" value={customers.length} icon="users" tone="green" />
-            <AdminStatCard label="KYC verified" value={verifiedCount} icon="check" tone="blue" />
-            <AdminStatCard label="KYC pending" value={pendingCount} icon="clock" tone="purple" />
+          <View className="flex-row justify-between">
+            <AdminStatCard label="Total customers" value={customers.length} icon="users" tone="green" columns={3} />
+            <AdminStatCard label="KYC verified" value={verifiedCount} icon="check" tone="blue" columns={3} />
+            <AdminStatCard label="KYC pending" value={pendingCount} icon="clock" tone="purple" columns={3} />
           </View>
           <View className="gap-3 rounded-2xl border border-slate-200 bg-white p-3">
             <TextInput

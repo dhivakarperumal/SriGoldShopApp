@@ -222,10 +222,10 @@ function StockDetails({ onBack }: Props) {
             />
           }
         >
-          <View className="mb-1 flex-row flex-wrap justify-between">
-            <AdminStatCard label="Products" value={products.length} icon="box" tone="green" />
-            <AdminStatCard label="Low stock" value={lowStockCount} icon="alert" tone="blue" />
-            <AdminStatCard label="Out of stock" value={outOfStockCount} icon="alert" tone="wine" />
+          <View className="mb-1 flex-row justify-between">
+            <AdminStatCard label="Products" value={products.length} icon="box" tone="green" columns={3} />
+            <AdminStatCard label="Low stock" value={lowStockCount} icon="alert" tone="blue" columns={3} />
+            <AdminStatCard label="Out of stock" value={outOfStockCount} icon="alert" tone="wine" columns={3} />
           </View>
 
           <TextInput

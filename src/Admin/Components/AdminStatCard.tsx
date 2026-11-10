@@ -67,17 +67,66 @@ export default function AdminStatCard({
   value,
   icon,
   tone,
+  columns = 2,
 }: {
   label: string;
   value: number;
   icon: StatIcon;
   tone: StatTone;
+  columns?: 2 | 3;
 }) {
   const { backgroundColor, accentColor } = TONES[tone];
+  const iconBadge = (
+    <View
+      className={`${columns === 3 ? 'h-9 w-9' : 'h-10 w-10'} shrink-0 items-center justify-center`}
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
+      <View
+        className={`${columns === 3 ? 'h-6 w-6' : 'h-7 w-7'} items-center justify-center rounded-lg border`}
+        style={[
+          styles.iconBadge,
+          {
+            borderColor: accentColor,
+            backgroundColor: `${accentColor}35`,
+            transform: [{ rotate: '45deg' }],
+            shadowColor: accentColor,
+          },
+        ]}
+      >
+        <View style={{ transform: [{ rotate: '-45deg' }] }}>
+          <Svg
+            width={columns === 3 ? 15 : 18}
+            height={columns === 3 ? 15 : 18}
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            {ICON_PATHS[icon].map(path => (
+              <Path
+                key={path}
+                d={path}
+                stroke={accentColor}
+                strokeWidth={1.9}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
+          </Svg>
+        </View>
+      </View>
+      <Svg width={9} height={9} viewBox="0 0 24 24" className="absolute right-1 top-0">
+        <Path
+          d="M12 1.5 14.2 9.8 22.5 12l-8.3 2.2-2.2 8.3-2.2-8.3L1.5 12l8.3-2.2L12 1.5Z"
+          fill="#FFF4C2"
+        />
+      </Svg>
+    </View>
+  );
 
   return (
     <View
-      className="relative mb-3 min-h-[108px] w-[48.5%] overflow-hidden rounded-[18px] border-2 px-2.5 pb-2 pt-2 shadow-lg"
+      className={`relative mb-3 min-h-[108px] ${columns === 3 ? 'w-[31.5%]' : 'w-[48.5%]'} overflow-hidden rounded-[18px] border-2 px-2.5 pb-2 pt-2 shadow-lg`}
       style={{ backgroundColor, borderColor: accentColor }}
       accessibilityLabel={`${label}: ${value}`}
       accessible
@@ -89,65 +138,55 @@ export default function AdminStatCard({
           <Path d="M0 90 C72 76 106 98 174 86 C224 76 265 55 300 52 V96 H0Z" fill={accentColor} opacity={0.34} />
         </Svg>
       </View>
-      <View className="z-10 min-h-10 flex-row items-center">
-        <View className="mr-1.5 h-6 w-1 shrink-0 rounded-full" style={{ backgroundColor: accentColor }} />
-        <Text
-          className="min-w-0 flex-1 pr-1 text-[11px] font-bold leading-[14px] text-white"
-          numberOfLines={2}
-          adjustsFontSizeToFit
-          minimumFontScale={0.75}
-        >
-          {label}
-        </Text>
-        <View
-          className="h-10 w-10 shrink-0 items-center justify-center"
-          pointerEvents="none"
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-        >
-          <View
-            className="h-7 w-7 items-center justify-center rounded-lg border"
-            style={[
-              styles.iconBadge,
-              {
-                borderColor: accentColor,
-                backgroundColor: `${accentColor}35`,
-                transform: [{ rotate: '45deg' }],
-                shadowColor: accentColor,
-              },
-            ]}
-          >
-            <View style={{ transform: [{ rotate: '-45deg' }] }}>
-              <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-                {ICON_PATHS[icon].map(path => (
-                  <Path
-                    key={path}
-                    d={path}
-                    stroke={accentColor}
-                    strokeWidth={1.9}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                ))}
-              </Svg>
-            </View>
+      {columns === 3 ? (
+        <>
+          <View className="z-10 min-h-8 flex-row items-center">
+            <View className="mr-1.5 h-6 w-1 shrink-0 rounded-full" style={{ backgroundColor: accentColor }} />
+            <Text
+              className="min-w-0 flex-1 text-[10px] font-bold leading-[13px] text-white"
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
+            >
+              {label}
+            </Text>
           </View>
-          <Svg width={10} height={10} viewBox="0 0 24 24" className="absolute right-1 top-0">
-            <Path
-              d="M12 1.5 14.2 9.8 22.5 12l-8.3 2.2-2.2 8.3-2.2-8.3L1.5 12l8.3-2.2L12 1.5Z"
-              fill="#FFF4C2"
-            />
-          </Svg>
-        </View>
-      </View>
-      <Text
-        className="z-10 mt-1 text-[24px] font-extrabold tracking-tight text-white"
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.7}
-      >
-        {value.toLocaleString('en-IN')}
-      </Text>
+          <View className="z-10 mt-1 flex-row items-center justify-between">
+            <Text
+              className="min-w-0 flex-1 text-[20px] font-extrabold tracking-tight text-white"
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+            >
+              {value.toLocaleString('en-IN')}
+            </Text>
+            {iconBadge}
+          </View>
+        </>
+      ) : (
+        <>
+          <View className="z-10 min-h-10 flex-row items-center">
+            <View className="mr-1.5 h-6 w-1 shrink-0 rounded-full" style={{ backgroundColor: accentColor }} />
+            <Text
+              className="min-w-0 flex-1 pr-1 text-[11px] font-bold leading-[14px] text-white"
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
+            >
+              {label}
+            </Text>
+            {iconBadge}
+          </View>
+          <Text
+            className="z-10 mt-1 text-[24px] font-extrabold tracking-tight text-white"
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+          >
+            {value.toLocaleString('en-IN')}
+          </Text>
+        </>
+      )}
     </View>
   );
 }
