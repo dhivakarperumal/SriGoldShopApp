@@ -14,8 +14,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Alert } from '../../Components/AppAlert';
 import api from '../../api';
+import AdminStatCard from '../Components/AdminStatCard';
 
 type Loan = Record<string, unknown> & {
   id: string | number;
@@ -329,15 +331,6 @@ function Info({ label, value }: { label: string; value?: unknown }) {
   );
 }
 
-function SummaryCard({ label, value, tone }: { label: string; value: string | number; tone: string }) {
-  return (
-    <View className="min-w-[45%] flex-1 rounded-2xl border border-slate-200 bg-white p-4">
-      <Text className="text-xs font-semibold text-slate-500">{label}</Text>
-      <Text className={`mt-2 text-xl font-extrabold ${tone}`}>{value}</Text>
-    </View>
-  );
-}
-
 export function LoanPaymentModal({
   loan: loanRow,
   onClose,
@@ -600,6 +593,7 @@ function AmountLine({ label, value, strong = false }: { label: string; value: st
 }
 
 function LoanRenewal({ onBack }: Props) {
+  const insets = useSafeAreaInsets();
   const [loans, setLoans] = useState<Loan[]>([]);
   const [selectedLoanId, setSelectedLoanId] = useState<string | number | null>(null);
   const [renewalData, setRenewalData] = useState<RenewalData | null>(null);
@@ -1055,11 +1049,11 @@ function LoanRenewal({ onBack }: Props) {
           />
         }
       >
-        <View className="flex-row flex-wrap gap-3">
-          <SummaryCard label="Total loans" value={loading ? '—' : loans.length} tone="text-primary" />
-          <SummaryCard label="Maturing today" value={loading ? '—' : maturingToday} tone="text-amber-700" />
-          <SummaryCard label="Past maturity" value={loading ? '—' : pastMaturity} tone="text-rose-700" />
-          <SummaryCard label="15-month reviews" value={loading ? '—' : reviewCount} tone="text-emerald-700" />
+        <View className="flex-row flex-wrap justify-between">
+          <AdminStatCard label="Total loans" value={loading ? '—' : loans.length} icon="loan" tone="green" />
+          <AdminStatCard label="Maturing today" value={loading ? '—' : maturingToday} icon="calendar" tone="blue" />
+          <AdminStatCard label="Past maturity" value={loading ? '—' : pastMaturity} icon="alert" tone="purple" />
+          <AdminStatCard label="15-month reviews" value={loading ? '—' : reviewCount} icon="clock" tone="teal" />
         </View>
 
         <View className="gap-3 rounded-2xl border border-slate-200 bg-white p-3">
@@ -1072,7 +1066,7 @@ function LoanRenewal({ onBack }: Props) {
           <View className="flex-row items-center gap-2">
             <Pressable
               onPress={() => openDatePicker('startDate')}
-              className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3"
+              className="min-h-12 min-w-0 flex-1 justify-center rounded-xl border border-slate-200 bg-slate-50 px-3"
               accessibilityRole="button"
               accessibilityLabel="Renewal start date"
             >
@@ -1082,7 +1076,7 @@ function LoanRenewal({ onBack }: Props) {
             </Pressable>
             <Pressable
               onPress={() => openDatePicker('endDate')}
-              className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3"
+              className="min-h-12 min-w-0 flex-1 justify-center rounded-xl border border-slate-200 bg-slate-50 px-3"
               accessibilityRole="button"
               accessibilityLabel="Renewal end date"
             >
@@ -1092,7 +1086,7 @@ function LoanRenewal({ onBack }: Props) {
             </Pressable>
             <Pressable
               onPress={applyDateRange}
-              className="items-center justify-center rounded-xl bg-primary px-3"
+              className="min-h-12 w-[84px] items-center justify-center rounded-xl bg-primary px-3"
               accessibilityRole="button"
               accessibilityLabel="Apply renewal date range"
             >
@@ -1208,7 +1202,10 @@ function LoanRenewal({ onBack }: Props) {
         onRequestClose={() => setDatePickerTarget(null)}
       >
         <View className="flex-1 justify-end bg-black/50">
-          <View className="rounded-t-3xl bg-white px-5 pb-6 pt-5">
+          <View
+            className="rounded-t-3xl bg-white px-5 pt-5"
+            style={{ paddingBottom: Math.max(insets.bottom, 24) }}
+          >
             <View className="mb-4 flex-row items-center justify-between">
               <Text className="text-base font-extrabold text-slate-900">
                 {datePickerTarget === 'startDate' ? 'Start date' : 'End date'}
@@ -1289,7 +1286,7 @@ function LoanRenewal({ onBack }: Props) {
               onPress={applyDateSelection}
               accessibilityRole="button"
               accessibilityLabel="Apply date"
-              className="mt-4 items-center rounded-xl bg-primary px-4 py-3"
+              className="mt-4 min-h-12 w-full items-center justify-center rounded-xl bg-primary px-4"
             >
               <Text className="text-sm font-bold text-white">Select date</Text>
             </Pressable>

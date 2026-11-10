@@ -323,6 +323,10 @@ test('selects renewal date range from the calendar picker', async () => {
     renderer.root.findByProps({ accessibilityLabel: 'Renewal start date' }).props.onPress();
   });
   expect(renderer.root.findAll(node => node.props.children === 'Start date').length).toBeGreaterThan(0);
+  const datePickerAction = renderer.root.findByProps({ accessibilityLabel: 'Apply date' });
+  expect(datePickerAction.props.className).toContain('w-full');
+  expect(datePickerAction.props.className).toContain('min-h-12');
+  expect(datePickerAction.parent.parent.props.style.paddingBottom).toBeGreaterThanOrEqual(24);
 
   const selectedStartDate = new Date();
   selectedStartDate.setDate(1);
