@@ -671,6 +671,23 @@ function UserProductDetails({
             </Pressable>
           </View>
 
+          <View className="mb-[-4px] flex-row items-center">
+            <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-[#e8f1eb]">
+              <Ionicons
+                name="list-outline"
+                size={21}
+                color="#08796a"
+              />
+            </View>
+            <View className="flex-1">
+              <Text className="text-lg font-bold text-[#153b2e]">
+                Product details
+              </Text>
+              <Text className="mt-0.5 text-xs text-[#887c69]">
+                Tap a section to view more information
+              </Text>
+            </View>
+          </View>
           <ProductDetailCard
             id="basic-information"
             title="Basic information"
@@ -922,38 +939,86 @@ function ProductDetailCard({
   const visibleFields = fields.filter(([, value]) => displayValue(value));
   if (!visibleFields.length) return null;
   const expanded = expandedDetailId === id;
+  const iconName =
+    id === 'basic-information'
+      ? 'information-circle-outline'
+      : id === 'pricing-information'
+        ? 'cash-outline'
+        : id === 'weight-and-material'
+          ? 'scale-outline'
+          : id === 'size-and-dimensions'
+            ? 'resize-outline'
+            : id === 'additional-details'
+              ? 'sparkles-outline'
+              : id.startsWith('variant-')
+                ? 'git-branch-outline'
+                : id === 'specifications'
+                  ? 'list-outline'
+                  : 'cube-outline';
 
   return (
-    <View className="overflow-hidden rounded-2xl border border-[#eadfce] bg-white">
+    <View
+      className={`overflow-hidden rounded-2xl border bg-white ${
+        expanded
+          ? 'border-[#c6d9cd] shadow-sm'
+          : 'border-[#eee5d7]'
+      }`}
+    >
       <Pressable
-        className="flex-row items-center justify-between border-b border-[#efe5d4] bg-[#fffaf0] px-4 py-3"
+        className={`flex-row items-center px-4 py-3.5 ${
+          expanded ? 'bg-[#f5f8f3]' : 'bg-white'
+        }`}
         onPress={() => onToggle(id)}
         accessibilityRole="button"
-        accessibilityLabel={title}
+        accessibilityLabel={`${title}, ${visibleFields.length} details`}
         accessibilityState={{ expanded }}
       >
-        <Text className="flex-1 text-base font-bold text-primary-dark">
-          {title}
-        </Text>
-        <Ionicons
-          name={expanded ? 'chevron-up' : 'chevron-down'}
-          size={20}
-          color="#08796a"
-        />
+        <View
+          className={`mr-3 h-10 w-10 items-center justify-center rounded-xl ${
+            expanded ? 'bg-[#08796a]' : 'bg-[#edf5f1]'
+          }`}
+        >
+          <Ionicons
+            name={iconName}
+            size={20}
+            color={expanded ? '#FFFFFF' : '#08796a'}
+          />
+        </View>
+        <View className="flex-1">
+          <Text className="text-[14px] font-bold text-[#153b2e]">
+            {title}
+          </Text>
+          <Text className="mt-0.5 text-[11px] text-[#887c69]">
+            {visibleFields.length} {visibleFields.length === 1 ? 'detail' : 'details'}
+          </Text>
+        </View>
+        <View
+          className={`ml-3 h-8 w-8 items-center justify-center rounded-full ${
+            expanded ? 'bg-[#e2eee7]' : 'bg-[#f7f4ed]'
+          }`}
+        >
+          <Ionicons
+            name={expanded ? 'chevron-up' : 'chevron-down'}
+            size={17}
+            color="#08796a"
+          />
+        </View>
       </Pressable>
       {expanded ? (
-        <View className="px-4">
+        <View className="border-t border-[#edf0e9] px-4 pb-1">
           {visibleFields.map(([label, value], index) => (
             <View
               key={`${label}-${index}`}
-              className={`flex-row gap-3 py-3 ${
+              className={`flex-row items-start gap-3 py-3 ${
                 index < visibleFields.length - 1
-                  ? 'border-b border-[#f3eee5]'
+                  ? 'border-b border-[#f1eee7]'
                   : ''
               }`}
             >
-              <Text className="flex-1 text-xs text-[#887c69]">{label}</Text>
-              <Text className="flex-1 text-right text-xs font-semibold text-[#352d22]">
+              <Text className="flex-1 text-xs leading-5 text-[#887c69]">
+                {label}
+              </Text>
+              <Text className="flex-1 text-right text-xs font-semibold leading-5 text-[#352d22]">
                 {displayValue(value)}
               </Text>
             </View>
