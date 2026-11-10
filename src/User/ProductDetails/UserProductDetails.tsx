@@ -131,12 +131,20 @@ function UserProductDetails({
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [activeImage, setActiveImage] = useState(0);
   const [activeVariantIndex, setActiveVariantIndex] = useState(0);
-  const [expandedDetailId, setExpandedDetailId] = useState<string | null>(
-    'basic-information',
+  const [expandedDetailIds, setExpandedDetailIds] = useState<Set<string>>(
+    () => new Set(['basic-information']),
   );
 
   const toggleDetail = (id: string) => {
-    setExpandedDetailId(current => (current === id ? null : id));
+    setExpandedDetailIds(current => {
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -164,7 +172,7 @@ function UserProductDetails({
           setProduct(productData as Product);
           setActiveImage(0);
           setActiveVariantIndex(0);
-          setExpandedDetailId('basic-information');
+          setExpandedDetailIds(new Set(['basic-information']));
         }
       } catch (error) {
         if (!active || controller.signal.aborted) return;
@@ -691,7 +699,7 @@ function UserProductDetails({
           <ProductDetailCard
             id="basic-information"
             title="Basic information"
-            expandedDetailId={expandedDetailId}
+            expandedDetailIds={expandedDetailIds}
             onToggle={toggleDetail}
             fields={[
               ['Product code', product.product_code],
@@ -707,7 +715,7 @@ function UserProductDetails({
           <ProductDetailCard
             id="pricing-information"
             title="Pricing information"
-            expandedDetailId={expandedDetailId}
+            expandedDetailIds={expandedDetailIds}
             onToggle={toggleDetail}
             fields={[
               ['Gold rate', goldRate != null ? `${money(goldRate)} / g` : ''],
@@ -745,7 +753,7 @@ function UserProductDetails({
           <ProductDetailCard
             id="weight-and-material"
             title="Weight and material"
-            expandedDetailId={expandedDetailId}
+            expandedDetailIds={expandedDetailIds}
             onToggle={toggleDetail}
             fields={[
               [
@@ -769,7 +777,7 @@ function UserProductDetails({
           <ProductDetailCard
             id="size-and-dimensions"
             title="Size and dimensions"
-            expandedDetailId={expandedDetailId}
+            expandedDetailIds={expandedDetailIds}
             onToggle={toggleDetail}
             fields={[
               ['Product size', product.product_size],
@@ -785,7 +793,7 @@ function UserProductDetails({
           <ProductDetailCard
             id="additional-details"
             title="Additional details"
-            expandedDetailId={expandedDetailId}
+            expandedDetailIds={expandedDetailIds}
             onToggle={toggleDetail}
             fields={[
               ['Collection', product.collection ?? product.category],
@@ -809,7 +817,7 @@ function UserProductDetails({
               id={`variant-${index}`}
               key={`variant-details-${index}`}
               title={`Variant ${index + 1}`}
-              expandedDetailId={expandedDetailId}
+              expandedDetailIds={expandedDetailIds}
               onToggle={toggleDetail}
               fields={Object.entries(variant)
                 .filter(([key]) => key !== 'images')
@@ -829,7 +837,7 @@ function UserProductDetails({
             <ProductDetailCard
               id="specifications"
               title="Specifications"
-              expandedDetailId={expandedDetailId}
+              expandedDetailIds={expandedDetailIds}
               onToggle={toggleDetail}
               fields={
                 parseArray(product.specifications).length
@@ -845,7 +853,7 @@ function UserProductDetails({
           <ProductDetailCard
             id="stock-and-availability"
             title="Stock and availability"
-            expandedDetailId={expandedDetailId}
+            expandedDetailIds={expandedDetailIds}
             onToggle={toggleDetail}
             fields={[
               ['Stock quantity', selectedStock != null ? `${stock} units` : ''],
@@ -927,18 +935,18 @@ function ProductDetailCard({
   id,
   title,
   fields,
-  expandedDetailId,
+  expandedDetailIds,
   onToggle,
 }: {
   id: string;
   title: string;
   fields: ProductField[];
-  expandedDetailId: string | null;
+  expandedDetailIds: Set<string>;
   onToggle: (id: string) => void;
 }) {
   const visibleFields = fields.filter(([, value]) => displayValue(value));
   if (!visibleFields.length) return null;
-  const expanded = expandedDetailId === id;
+  const expanded = expandedDetailIds.has(id);
   const iconName =
     id === 'basic-information'
       ? 'information-circle-outline'
