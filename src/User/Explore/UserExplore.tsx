@@ -145,16 +145,17 @@ function UserExplore({
   useEffect(() => {
     if (Platform.OS !== 'android' || !systemNavigationBar) return;
 
-    const color = filtersVisible ? '#FFFFFF' : '#003B2D';
+    const navigationBarColor = filtersVisible ? '#FFFFFF' : '#004D40';
+    const statusBarColor = filtersVisible ? '#FFFFFF' : '#003B2D';
     systemNavigationBar
-      .setAppearance(color, filtersVisible, color, filtersVisible)
+      .setAppearance(navigationBarColor, filtersVisible, statusBarColor, filtersVisible)
       .catch(systemBarError => {
         console.error('Failed to update Android system bars:', systemBarError);
       });
 
     return () => {
       systemNavigationBar
-        .setAppearance('#003B2D', false, '#003B2D', false)
+        .setAppearance('#004D40', false, '#003B2D', false)
         .catch(systemBarError => {
           console.error(
             'Failed to restore Android system bars:',

@@ -29,9 +29,9 @@ class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    // Set the system navigation bar (back / home / recents) to dark green
+    // Match the system navigation bar (back / home / recents) to the app top bar.
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      window.navigationBarColor = android.graphics.Color.parseColor("#003B2D")
+      window.navigationBarColor = android.graphics.Color.parseColor("#004D40")
 
       // Make navigation bar icons white (light icons on dark background)
       val insetsController = WindowInsetsControllerCompat(window, window.decorView)
