@@ -209,7 +209,6 @@ function Loans({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [deletingLoanId, setDeletingLoanId] = useState<string | number | null>(null);
-  const [expandedLoanId, setExpandedLoanId] = useState<string | number | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isFabOpen, setIsFabOpen] = useState(false);
 
@@ -316,7 +315,6 @@ function Loans({
             try {
               await api.delete(`/loans/${loan.id}`);
               setLoans(current => current.filter(item => item.id !== loan.id));
-              setExpandedLoanId(current => current === loan.id ? null : current);
               Alert.alert('Loan deleted', `Loan ${loan.loan_number || ''} was deleted.`);
             } catch (deleteError) {
               console.error('Failed to delete loan:', deleteError);
@@ -526,8 +524,6 @@ function Loans({
             {paginatedLoans.map(loan => {
               const status = String(getDisplayStatus(loan));
               const overdue = isOverdueActiveLoan(loan, today);
-              const eligibleForRenewal = isRenewalEligible(loan, loans);
-              const expanded = expandedLoanId === loan.id;
               const outstanding = loan.outstanding_principal ?? loan.principal_amount;
               return (
                 <View
@@ -579,64 +575,55 @@ function Loans({
                     </View>
                   </View>
 
-                  <View className="flex-row items-center justify-between">
-                    <Text className={`text-xs font-semibold ${overdue ? 'text-rose-700' : 'text-slate-500'}`}>
+                  <View className="flex-row items-center gap-2">
+                    <Text className={`min-w-0 flex-1 text-xs font-semibold ${overdue ? 'text-rose-700' : 'text-slate-500'}`}>
                       Maturity: {formatDate(loan.maturity_date)}
                       {overdue ? ` · ${getOverdueDays(loan, today)} days overdue` : ''}
                     </Text>
                     <Pressable
-                      onPress={() => setExpandedLoanId(expanded ? null : loan.id)}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${expanded ? 'Hide' : 'View'} details for ${loan.loan_number || 'loan'}`}
-                    >
-                      <Text className="text-xs font-bold text-primary">
-                        {expanded ? 'Hide details' : 'View details'}
-                      </Text>
-                    </Pressable>
-                  </View>
-
-                  {expanded ? (
-                    <View className="gap-2 rounded-xl bg-slate-50 p-3">
-                      <LoanDetail label="Customer code" value={loan.customer_code} />
-                      <LoanDetail label="Mobile" value={loan.customer_mobile} />
-                      <LoanDetail label="Principal amount" value={formatCurrency(loan.principal_amount)} />
-                      <LoanDetail label="Loan status" value={loan.loan_status} />
-                      <LoanDetail label="Release status" value={loan.release_status} />
-                      {loan.renewal_status ? (
-                        <LoanDetail label="Renewal status" value={loan.renewal_status} />
-                      ) : null}
-                      {eligibleForRenewal ? (
-                        <Text className="mt-1 self-start rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-bold text-sky-700">
-                          Eligible for renewal
-                        </Text>
-                      ) : null}
-                    </View>
-                  ) : null}
-
-                  {onOpenLoanDetails ? (
-                    <Pressable
-                      onPress={() => onOpenLoanDetails(loan.id)}
-                      className="items-center rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5"
+                      onPress={() => onOpenLoanDetails?.(loan.id)}
+                      className="h-9 w-9 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50"
                       accessibilityRole="button"
                       accessibilityLabel={`Open full details for ${loan.loan_number || loan.id}`}
                     >
-                      <Text className="text-sm font-bold text-emerald-800">Full loan details</Text>
+                      <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+                        <Path
+                          d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"
+                          stroke="#004D40"
+                          strokeWidth={1.8}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <Path
+                          d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                          stroke="#004D40"
+                          strokeWidth={1.8}
+                        />
+                      </Svg>
                     </Pressable>
-                  ) : null}
+                    <Pressable
+                      onPress={() => deleteLoan(loan)}
+                      disabled={deletingLoanId === loan.id}
+                      className="h-9 w-9 items-center justify-center rounded-lg border border-rose-200 bg-rose-50"
+                      accessibilityRole="button"
+                      accessibilityLabel={`Delete loan ${loan.loan_number || loan.id}`}
+                    >
+                      {deletingLoanId === loan.id ? (
+                        <ActivityIndicator size="small" color="#BE123C" />
+                      ) : (
+                        <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+                          <Path
+                            d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v6m4-6v6"
+                            stroke="#BE123C"
+                            strokeWidth={1.8}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </Svg>
+                      )}
+                    </Pressable>
+                  </View>
 
-                  <Pressable
-                    onPress={() => deleteLoan(loan)}
-                    disabled={deletingLoanId === loan.id}
-                    className="items-center rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5"
-                    accessibilityRole="button"
-                    accessibilityLabel={`Delete loan ${loan.loan_number || loan.id}`}
-                  >
-                    {deletingLoanId === loan.id ? (
-                      <ActivityIndicator size="small" color="#BE123C" />
-                    ) : (
-                      <Text className="text-sm font-bold text-rose-700">Delete loan</Text>
-                    )}
-                  </Pressable>
                 </View>
               );
             })}
@@ -847,17 +834,6 @@ function SummaryCard({
         minimumFontScale={0.7}
       >
         {value.toLocaleString('en-IN')}
-      </Text>
-    </View>
-  );
-}
-
-function LoanDetail({ label, value }: { label: string; value: unknown }) {
-  return (
-    <View className="flex-row justify-between gap-3">
-      <Text className="text-xs text-slate-500">{label}</Text>
-      <Text className="flex-1 text-right text-xs font-semibold text-slate-700">
-        {value == null || value === '' ? '—' : String(value)}
       </Text>
     </View>
   );

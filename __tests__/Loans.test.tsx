@@ -107,6 +107,24 @@ test('loads loan summaries and searchable loan cards', async () => {
   act(() => renderer.unmount());
 }, 30000);
 
+test('opens the full loan details screen from the view icon', async () => {
+  const onOpenLoanDetails = jest.fn();
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<Loans onOpenLoanDetails={onOpenLoanDetails} />);
+  });
+
+  await act(async () => {
+    renderer.root
+      .findByProps({ accessibilityLabel: 'Open full details for LN-001' })
+      .props.onPress();
+  });
+
+  expect(onOpenLoanDetails).toHaveBeenCalledWith(1);
+  expect(renderer.root.findAll(node => node.props.children === 'Full loan details')).toHaveLength(0);
+  act(() => renderer.unmount());
+});
+
 test('filters loans by overdue, unrenewed, gold release, and completed status', async () => {
   const statusLoans = [
     { ...loans[0], id: 21, loan_number: 'LN-ACTIVE', loan_status: 'Active', maturity_date: '2099-01-01' },
