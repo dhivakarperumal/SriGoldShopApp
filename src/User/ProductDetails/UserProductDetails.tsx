@@ -681,6 +681,7 @@ function UserProductDetails({
             </View>
           </View>
           <ProductDetailCard
+            defaultExpanded
             id="basic-information"
             title="Basic information"
             fields={[
@@ -903,12 +904,14 @@ function ProductDetailCard({
   id,
   title,
   fields,
+  defaultExpanded = false,
 }: {
   id: string;
   title: string;
   fields: ProductField[];
+  defaultExpanded?: boolean;
 }) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const visibleFields = fields.filter(([, value]) => displayValue(value));
   if (!visibleFields.length) return null;
   const iconName =
