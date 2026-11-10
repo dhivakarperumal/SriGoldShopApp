@@ -131,6 +131,13 @@ function UserProductDetails({
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [activeImage, setActiveImage] = useState(0);
   const [activeVariantIndex, setActiveVariantIndex] = useState(0);
+  const [expandedDetailId, setExpandedDetailId] = useState<string | null>(
+    'basic-information',
+  );
+
+  const toggleDetail = (id: string) => {
+    setExpandedDetailId(current => (current === id ? null : id));
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -157,6 +164,7 @@ function UserProductDetails({
           setProduct(productData as Product);
           setActiveImage(0);
           setActiveVariantIndex(0);
+          setExpandedDetailId('basic-information');
         }
       } catch (error) {
         if (!active || controller.signal.aborted) return;
@@ -664,7 +672,10 @@ function UserProductDetails({
           </View>
 
           <ProductDetailCard
+            id="basic-information"
             title="Basic information"
+            expandedDetailId={expandedDetailId}
+            onToggle={toggleDetail}
             fields={[
               ['Product code', product.product_code],
               ['Brand', product.brand],
@@ -677,7 +688,10 @@ function UserProductDetails({
             ]}
           />
           <ProductDetailCard
+            id="pricing-information"
             title="Pricing information"
+            expandedDetailId={expandedDetailId}
+            onToggle={toggleDetail}
             fields={[
               ['Gold rate', goldRate != null ? `${money(goldRate)} / g` : ''],
               [
@@ -712,7 +726,10 @@ function UserProductDetails({
             ]}
           />
           <ProductDetailCard
+            id="weight-and-material"
             title="Weight and material"
+            expandedDetailId={expandedDetailId}
+            onToggle={toggleDetail}
             fields={[
               [
                 'Net metal weight',
@@ -733,7 +750,10 @@ function UserProductDetails({
             ]}
           />
           <ProductDetailCard
+            id="size-and-dimensions"
             title="Size and dimensions"
+            expandedDetailId={expandedDetailId}
+            onToggle={toggleDetail}
             fields={[
               ['Product size', product.product_size],
               ['Available sizes', product.available_sizes],
@@ -746,7 +766,10 @@ function UserProductDetails({
             ]}
           />
           <ProductDetailCard
+            id="additional-details"
             title="Additional details"
+            expandedDetailId={expandedDetailId}
+            onToggle={toggleDetail}
             fields={[
               ['Collection', product.collection ?? product.category],
               ['Brand', product.brand],
@@ -766,8 +789,11 @@ function UserProductDetails({
           />
           {variants.map((variant, index) => (
             <ProductDetailCard
+              id={`variant-${index}`}
               key={`variant-details-${index}`}
               title={`Variant ${index + 1}`}
+              expandedDetailId={expandedDetailId}
+              onToggle={toggleDetail}
               fields={Object.entries(variant)
                 .filter(([key]) => key !== 'images')
                 .map(
@@ -784,7 +810,10 @@ function UserProductDetails({
           ))}
           {product.specifications != null ? (
             <ProductDetailCard
+              id="specifications"
               title="Specifications"
+              expandedDetailId={expandedDetailId}
+              onToggle={toggleDetail}
               fields={
                 parseArray(product.specifications).length
                   ? parseArray(product.specifications).map((item, index) =>
@@ -797,7 +826,10 @@ function UserProductDetails({
             />
           ) : null}
           <ProductDetailCard
+            id="stock-and-availability"
             title="Stock and availability"
+            expandedDetailId={expandedDetailId}
+            onToggle={toggleDetail}
             fields={[
               ['Stock quantity', selectedStock != null ? `${stock} units` : ''],
               ['Warehouse', product.warehouse],
@@ -875,37 +907,59 @@ function ProductDetailsSkeleton() {
 }
 
 function ProductDetailCard({
+  id,
   title,
   fields,
+  expandedDetailId,
+  onToggle,
 }: {
+  id: string;
   title: string;
   fields: ProductField[];
+  expandedDetailId: string | null;
+  onToggle: (id: string) => void;
 }) {
   const visibleFields = fields.filter(([, value]) => displayValue(value));
   if (!visibleFields.length) return null;
+  const expanded = expandedDetailId === id;
 
   return (
     <View className="overflow-hidden rounded-2xl border border-[#eadfce] bg-white">
-      <Text className="border-b border-[#efe5d4] bg-[#fffaf0] px-4 py-3 text-base font-bold text-primary-dark">
-        {title}
-      </Text>
-      <View className="px-4">
-        {visibleFields.map(([label, value], index) => (
-          <View
-            key={`${label}-${index}`}
-            className={`flex-row gap-3 py-3 ${
-              index < visibleFields.length - 1
-                ? 'border-b border-[#f3eee5]'
-                : ''
-            }`}
-          >
-            <Text className="flex-1 text-xs text-[#887c69]">{label}</Text>
-            <Text className="flex-1 text-right text-xs font-semibold text-[#352d22]">
-              {displayValue(value)}
-            </Text>
-          </View>
-        ))}
-      </View>
+      <Pressable
+        className="flex-row items-center justify-between border-b border-[#efe5d4] bg-[#fffaf0] px-4 py-3"
+        onPress={() => onToggle(id)}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        accessibilityState={{ expanded }}
+      >
+        <Text className="flex-1 text-base font-bold text-primary-dark">
+          {title}
+        </Text>
+        <Ionicons
+          name={expanded ? 'chevron-up' : 'chevron-down'}
+          size={20}
+          color="#08796a"
+        />
+      </Pressable>
+      {expanded ? (
+        <View className="px-4">
+          {visibleFields.map(([label, value], index) => (
+            <View
+              key={`${label}-${index}`}
+              className={`flex-row gap-3 py-3 ${
+                index < visibleFields.length - 1
+                  ? 'border-b border-[#f3eee5]'
+                  : ''
+              }`}
+            >
+              <Text className="flex-1 text-xs text-[#887c69]">{label}</Text>
+              <Text className="flex-1 text-right text-xs font-semibold text-[#352d22]">
+                {displayValue(value)}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
