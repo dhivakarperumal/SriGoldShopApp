@@ -109,11 +109,11 @@ function buildInitialForm(
   const category = getText(product?.category);
   const metalType = getText(product?.metal_type) || 'Gold';
   return {
-    customer_name: user.name || user.username || '',
-    phone: user.phone || user.mobile || user.phone_number || '',
+    customer_name: user?.name || user?.username || '',
+    phone: user?.phone || user?.mobile || user?.phone_number || '',
     alternate_phone: '',
-    email: user.email || '',
-    address: user.address || '',
+    email: user?.email || '',
+    address: user?.address || '',
     city: '',
     state: '',
     pincode: '',
