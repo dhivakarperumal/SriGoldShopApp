@@ -18,6 +18,7 @@ import { Alert } from '../../Components/AppAlert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../api';
 import { getProductImageUrl } from '../../utils/productImage';
+import AdminStatCard from '../Components/AdminStatCard';
 
 type RecordValue = Record<string, unknown>;
 type Product = RecordValue & {
@@ -1654,17 +1655,21 @@ export default function Billing({
           />
         }
       >
-        <View className="flex-row gap-3">
-          <View className="flex-1 rounded-2xl bg-primary p-4">
-            <Text className="text-xs font-semibold text-emerald-100">Total billed</Text>
-            <Text className="mt-2 text-lg font-extrabold text-white">{currency(totalBilled)}</Text>
-            <Text className="mt-1 text-xs text-emerald-100">{bills.length} bills</Text>
-          </View>
-          <View className="flex-1 rounded-2xl bg-sky-800 p-4">
-            <Text className="text-xs font-semibold text-sky-100">Today</Text>
-            <Text className="mt-2 text-lg font-extrabold text-white">{currency(todayBilled)}</Text>
-            <Text className="mt-1 text-xs text-sky-100">Today’s sales</Text>
-          </View>
+        <View className="flex-row flex-wrap justify-between">
+          <AdminStatCard
+            label="Total billed"
+            value={currency(totalBilled)}
+            icon="fund"
+            tone="green"
+            detail={`${bills.length} bills`}
+          />
+          <AdminStatCard
+            label="Today"
+            value={currency(todayBilled)}
+            icon="calendar"
+            tone="blue"
+            detail="Today’s sales"
+          />
         </View>
 
         <View className="gap-3 rounded-2xl border border-slate-200 bg-white p-4">
