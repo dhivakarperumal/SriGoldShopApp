@@ -16,6 +16,7 @@ import ProductCard from '../../Components/ProductCard';
 import { getProductImageUrl } from '../../utils/productImage';
 import type { AuthenticatedUser } from '../Auth/Login';
 import type { AdminRoute } from '../Navigations/TopHeader';
+import { getDashboardDateFilterParams } from './dashboardDateFilters';
 
 type DashboardStat = {
   id?: string;
@@ -328,7 +329,7 @@ function Home({ user, onNavigate }: HomeProps) {
     api
       .get('/dashboard', {
         params: {
-          datePreset: selectedFilter,
+          ...getDashboardDateFilterParams(selectedFilter),
         },
         signal: controller.signal,
       })
@@ -451,30 +452,7 @@ function Home({ user, onNavigate }: HomeProps) {
         ) : null}
       </View>
 
-      <View className="mb-4 flex-row rounded-xl bg-slate-200/70 p-1">
-        {FILTERS.map(filter => {
-          const isSelected = selectedFilter === filter.value;
-          return (
-            <Pressable
-              key={filter.value}
-              onPress={() => setSelectedFilter(filter.value)}
-              className={`flex-1 items-center rounded-lg px-2 py-2 ${
-                isSelected ? 'bg-white shadow-sm' : ''
-              }`}
-              accessibilityRole="button"
-              accessibilityState={{ selected: isSelected }}
-            >
-              <Text
-                className={`text-xs font-semibold ${
-                  isSelected ? 'text-primary-dark' : 'text-slate-500'
-                }`}
-              >
-                {filter.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      
 
       {loadError ? (
         <View className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3">
