@@ -34,6 +34,8 @@ import AllGoldRate, {
 } from './src/Admin/DailyGoldRate/AllGoldRate';
 import AddGoldrate from './src/Admin/DailyGoldRate/AddGoldrate';
 import Customers from './src/Admin/MorePages/Customer';
+import Dealers from './src/Admin/MorePages/Dealers';
+import AddDealers from './src/Admin/MorePages/AddDealers';
 import LoanCustomerManagement from './src/Admin/Loanmanegements/LoanCustomerManagement';
 import OverdueLoans from './src/Admin/Loanmanegements/OverdueLoans';
 import LoanRenewal from './src/Admin/Loanmanegements/LoanRenewal';
@@ -65,6 +67,8 @@ const ADMIN_BACK_ROUTES: Record<AdminRoute, AdminRoute | null> = {
   dailyGoldRates: 'more',
   addGoldrate: 'dailyGoldRates',
   customers: 'more',
+  dealers: 'more',
+  addDealer: 'dealers',
   loanCustomers: 'more',
   overdueLoans: 'loans',
   loanRenewal: 'loans',
@@ -374,7 +378,21 @@ function App() {
                             onBack={() => navigateAdmin('more')}
                           />
                         )
-                        : adminRoute === 'loanCustomers'
+                      : adminRoute === 'dealers'
+                        ? (
+                          <Dealers
+                            onBack={() => navigateAdmin('more')}
+                            onAddDealer={() => navigateAdmin('addDealer')}
+                          />
+                        )
+                      : adminRoute === 'addDealer'
+                        ? (
+                          <AddDealers
+                            onBack={() => navigateAdmin('dealers')}
+                            onCreated={() => navigateAdmin('dealers')}
+                          />
+                        )
+                      : adminRoute === 'loanCustomers'
                           ? (
                             <LoanCustomerManagement
                               onBack={() => navigateAdmin('more')}

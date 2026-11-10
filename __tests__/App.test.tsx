@@ -150,3 +150,20 @@ test('clicking Loan Customers card opens borrower and KYC management', () => {
 
   expect(onNavigateMock).toHaveBeenCalledWith('loanCustomers');
 });
+
+test('clicking Dealers card opens dealer management', () => {
+  const onNavigateMock = jest.fn();
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  act(() => {
+    renderer = ReactTestRenderer.create(<More onNavigate={onNavigateMock} />);
+  });
+
+  const dealersCard = renderer.root.findByProps({
+    accessibilityLabel: 'Manage dealers',
+  });
+  act(() => {
+    dealersCard.props.onPress();
+  });
+
+  expect(onNavigateMock).toHaveBeenCalledWith('dealers');
+});

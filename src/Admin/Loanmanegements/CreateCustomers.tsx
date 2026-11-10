@@ -397,7 +397,6 @@ function CreateCustomers({ customer, onCancel, onSaved }: Props) {
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView contentContainerClassName="gap-4 p-4 pb-8" keyboardShouldPersistTaps="handled">
             <FormSection title="Personal details">
-              <ChoiceField label="Customer type" value={form.customer_type || 'Individual'} options={['Individual', 'Business']} onChange={value => update('customer_type', value)} />
               <Field label="Full name" value={form.full_name} onChangeText={value => update('full_name', value)} required />
               <Field label="Mobile" value={form.mobile} onChangeText={value => update('mobile', value)} keyboardType="phone-pad" required />
               {!customer ? (
