@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import UserPageHeader from '../../components/UserPageHeader';
@@ -75,6 +76,8 @@ const POLICY_SECTIONS = [
 ];
 
 function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
+  const [expandedSection, setExpandedSection] = useState(0);
+
   return (
     <View className="flex-1 bg-[#fffaf0]">
       <UserPageHeader
@@ -152,9 +155,25 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
           {POLICY_SECTIONS.map((section, index) => (
             <View
               key={section.title}
-              className="overflow-hidden rounded-2xl border border-[#eee5d7] bg-white"
+              className={`overflow-hidden rounded-2xl border bg-white ${
+                expandedSection === index
+                  ? 'border-[#c6d9cd] shadow-sm'
+                  : 'border-[#eee5d7]'
+              }`}
             >
-              <View className="flex-row items-center bg-[#f8faf6] px-4 py-4">
+              <Pressable
+                className={`flex-row items-center px-4 py-4 ${
+                  expandedSection === index ? 'bg-[#f5f8f3]' : 'bg-white'
+                }`}
+                onPress={() =>
+                  setExpandedSection(current =>
+                    current === index ? -1 : index,
+                  )
+                }
+                accessibilityRole="button"
+                accessibilityLabel={section.title}
+                accessibilityState={{ expanded: expandedSection === index }}
+              >
                 <View className="h-10 w-10 items-center justify-center rounded-xl bg-[#e8f1eb]">
                   <Text className="text-xs font-extrabold text-[#08796a]">
                     {String(index + 1).padStart(2, '0')}
@@ -168,38 +187,52 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
                     {section.title}
                   </Text>
                 </View>
-                <Ionicons
-                  name="shield-checkmark-outline"
-                  size={18}
-                  color="#9caf9f"
-                />
-              </View>
-              <View className="gap-3 p-4">
-                {section.paragraphs.map(paragraph => (
-                  <Text
-                    key={paragraph}
-                    className="text-justify text-[13px] leading-[22px] text-[#625b50]"
-                  >
-                    {paragraph}
-                  </Text>
-                ))}
-                {section.bullets?.map(bullet => (
-                  <View
-                    key={bullet}
-                    className="flex-row rounded-xl bg-[#faf9f5] px-3 py-2.5"
-                  >
-                    <View className="mr-3 mt-1.5 h-1.5 w-1.5 rounded-full bg-[#c39543]" />
-                    <Text className="flex-1 text-justify text-xs leading-5 text-[#625b50]">
-                      {bullet}
+                <View
+                  className={`ml-3 h-8 w-8 items-center justify-center rounded-full ${
+                    expandedSection === index
+                      ? 'bg-[#e2eee7]'
+                      : 'bg-[#f7f4ed]'
+                  }`}
+                >
+                  <Ionicons
+                    name={
+                      expandedSection === index
+                        ? 'chevron-up'
+                        : 'chevron-down'
+                    }
+                    size={17}
+                    color="#08796a"
+                  />
+                </View>
+              </Pressable>
+              {expandedSection === index ? (
+                <View className="gap-3 border-t border-[#edf0e9] p-4">
+                  {section.paragraphs.map(paragraph => (
+                    <Text
+                      key={paragraph}
+                      className="text-justify text-[13px] leading-[22px] text-[#625b50]"
+                    >
+                      {paragraph}
                     </Text>
-                  </View>
-                ))}
-                {section.closing ? (
-                  <Text className="border-l-2 border-[#d6b66d] pl-3 text-justify text-xs leading-5 text-[#776747]">
-                    {section.closing}
-                  </Text>
-                ) : null}
-              </View>
+                  ))}
+                  {section.bullets?.map(bullet => (
+                    <View
+                      key={bullet}
+                      className="flex-row rounded-xl bg-[#faf9f5] px-3 py-2.5"
+                    >
+                      <View className="mr-3 mt-1.5 h-1.5 w-1.5 rounded-full bg-[#c39543]" />
+                      <Text className="flex-1 text-justify text-xs leading-5 text-[#625b50]">
+                        {bullet}
+                      </Text>
+                    </View>
+                  ))}
+                  {section.closing ? (
+                    <Text className="border-l-2 border-[#d6b66d] pl-3 text-justify text-xs leading-5 text-[#776747]">
+                      {section.closing}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
             </View>
           ))}
         </View>
