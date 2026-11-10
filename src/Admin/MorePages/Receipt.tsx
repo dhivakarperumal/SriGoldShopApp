@@ -25,26 +25,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { launchImageLibrary } from 'react-native-image-picker';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
-
-export type ReceiptSettingsData = {
-  shopName: string;
-  logoUrl: string;
-  address: string;
-  gstNumber: string;
-  phone: string;
-  email: string;
-  footerMessage: string;
-};
-
-export const DEFAULT_RECEIPT_SETTINGS: ReceiptSettingsData = {
-  shopName: 'Sri Golds',
-  logoUrl: '/images/logo.png',
-  address: 'Tirupattur – Singarapet Road, Tirupattur, Tirupathur, Tirupattur, Tamil Nadu, 635600, India',
-  gstNumber: '',
-  phone: '',
-  email: '',
-  footerMessage: 'Thank you for choosing us. We value your trust and look forward to serving you again.',
-};
+import {
+  DEFAULT_RECEIPT_SETTINGS,
+  normalizeReceiptSettings,
+  type ReceiptSettingsData,
+} from './receiptSettings';
 
 type Props = {
   onBack: () => void;
@@ -99,19 +84,9 @@ function Receipt({ onBack }: Props) {
 
     try {
       const response = await api.get('/receipt-settings');
-      if (response.data && typeof response.data === 'object' && !Array.isArray(response.data)) {
-        const loaded: ReceiptSettingsData = {
-          shopName: response.data.shopName ?? DEFAULT_RECEIPT_SETTINGS.shopName,
-          logoUrl: response.data.logoUrl ?? DEFAULT_RECEIPT_SETTINGS.logoUrl,
-          address: response.data.address ?? DEFAULT_RECEIPT_SETTINGS.address,
-          gstNumber: response.data.gstNumber ?? DEFAULT_RECEIPT_SETTINGS.gstNumber,
-          phone: response.data.phone ?? DEFAULT_RECEIPT_SETTINGS.phone,
-          email: response.data.email ?? DEFAULT_RECEIPT_SETTINGS.email,
-          footerMessage: response.data.footerMessage ?? DEFAULT_RECEIPT_SETTINGS.footerMessage,
-        };
-        setSettings(loaded);
-        setDraftSettings(loaded);
-      }
+      const loaded = normalizeReceiptSettings(response.data);
+      setSettings(loaded);
+      setDraftSettings(loaded);
     } catch (error) {
       console.error('Error fetching receipt settings:', error);
       // Fallback to defaults gracefully
