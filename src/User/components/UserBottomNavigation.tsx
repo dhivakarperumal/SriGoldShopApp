@@ -13,7 +13,7 @@ const TABS: { id: UserTab; label: string; path: string }[] = [
   {
     id: 'explore',
     label: 'Explore',
-    path: 'M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16ZM21 21l-4.35-4.35',
+    path: 'M3 5h2l2.2 9.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 7H7.2M9 18.5a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2ZM17 18.5a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2Z',
   },
   {
     id: 'favorites',
@@ -163,7 +163,7 @@ function UserBottomNavigation({
                     <View style={styles.inactiveIndicatorSpacer} />
                   )}
 
-                  <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+                  <Svg width={30} height={30} viewBox="0 0 24 24" fill="none">
                     <Path
                       d={tab.path}
                       stroke={iconColor}
