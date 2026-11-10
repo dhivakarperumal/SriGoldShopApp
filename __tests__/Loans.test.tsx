@@ -1,8 +1,9 @@
 import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
-import { RefreshControl, ScrollView } from 'react-native';
+import { Image, RefreshControl, ScrollView } from 'react-native';
 import { pick } from '@react-native-documents/picker';
 import api from '../src/api';
+import { getProductImageUrl } from '../src/utils/productImage';
 import { createLoanRequestKey } from '../src/Admin/Loanmanegements/CreateLoan';
 import Loans from '../src/Admin/Screens/Loans';
 import OverdueLoans from '../src/Admin/Loanmanegements/OverdueLoans';
@@ -14,6 +15,7 @@ import CreateCustomers from '../src/Admin/Loanmanegements/CreateCustomers';
 
 jest.mock('../src/api', () => ({
   __esModule: true,
+  API_BASE_URL: 'https://srigold.qtechx.com/api',
   default: {
     get: jest.fn(),
     delete: jest.fn(),
@@ -76,6 +78,14 @@ test('creates UUID-formatted idempotency keys for loan requests', () => {
   const requestKey = createLoanRequestKey();
   expect(requestKey).toMatch(
     /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+  );
+});
+
+test('resolves API-prefixed gold image paths to the correct server URL', () => {
+  expect(getProductImageUrl({
+    image_url: '/api/loans/gold-images/732218d1-f433-4c3d-aa23-5a50eebf52b4.jpg',
+  })).toBe(
+    'https://srigold.qtechx.com/api/loans/gold-images/732218d1-f433-4c3d-aa23-5a50eebf52b4.jpg',
   );
 });
 
@@ -251,7 +261,12 @@ test('shows only overdue active or suspended loans and filters the list', async 
 
 test('opens renewal payment details and posts the supplied renewal payload', async () => {
   const renewalData = {
-    loan: { ...loans[0], loan_status: 'Active', maturity_date: '2026-01-01' },
+    loan: {
+      ...loans[0],
+      loan_status: 'Active',
+      maturity_date: '2026-01-01',
+      gold_image_url: '/api/loans/gold-images/test-image.jpg',
+    },
     preview: {
       current_principal: 2000,
       regular_interest: 200,
@@ -268,6 +283,12 @@ test('opens renewal payment details and posts the supplied renewal payload', asy
     if (path === '/loans') return Promise.resolve({ data: [{ ...loans[0], outstanding_principal: 2000 }] });
     if (path === '/loans/1/renewal') return Promise.resolve({ data: renewalData });
     if (path === '/funds/accounts') return Promise.resolve({ data: [{ id: 8, name: 'Cash Account', is_active: true }] });
+    if (path === 'https://srigold.qtechx.com/api/loans/gold-images/test-image.jpg') {
+      return Promise.resolve({
+        data: new Uint8Array([0x89, 0x50]).buffer,
+        headers: { 'content-type': 'image/jpeg' },
+      });
+    }
     return Promise.reject(new Error(`Unexpected request: ${path}`));
   });
   (api.post as jest.Mock).mockResolvedValue({
@@ -287,6 +308,11 @@ test('opens renewal payment details and posts the supplied renewal payload', asy
   });
   expect(api.get).toHaveBeenCalledWith('/loans/1/renewal');
   expect(api.get).toHaveBeenCalledWith('/funds/accounts');
+  expect(api.get).toHaveBeenCalledWith(
+    'https://srigold.qtechx.com/api/loans/gold-images/test-image.jpg',
+    { responseType: 'arraybuffer' },
+  );
+  expect(renderer.root.findByType(Image).props.source.uri).toMatch(/^data:image\/jpeg;base64,/);
   const paymentSheet = renderer.root.findByProps({ className: 'max-h-[92%] rounded-t-3xl bg-white' });
   expect(paymentSheet.props.style.paddingBottom).toBeGreaterThanOrEqual(16);
   const paymentForm = renderer.root.findByProps({
@@ -515,11 +541,11 @@ test('keeps loan details above the bottom safe area and handles missing gold ima
     ...loans[0],
     id: 53,
     loan_number: 'LN-DETAIL-53',
-    gold_image_url: '/loans/53/gold-image',
+    gold_image_url: '/api/loans/gold-images/test-image.jpg',
   };
   (api.get as jest.Mock).mockImplementation((path: string) => {
     if (path === '/loans/53') return Promise.resolve({ data: loan });
-    if (path === loan.gold_image_url) {
+    if (path === 'https://srigold.qtechx.com/api/loans/gold-images/test-image.jpg') {
       return Promise.reject({ response: { status: 404, data: { message: 'Server error' } } });
     }
     return Promise.reject(new Error(`Unexpected request: ${path}`));

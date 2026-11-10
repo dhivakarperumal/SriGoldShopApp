@@ -18,6 +18,8 @@ import {
 import { Alert } from '../../Components/AppAlert';
 import { isErrorWithCode, errorCodes, pick, types } from '@react-native-documents/picker';
 import api from '../../api';
+import { getProductImageUrl } from '../../utils/productImage';
+import { createImageDataUri, encodeBase64 } from '../../utils/imageData';
 
 type Loan = Record<string, unknown> & {
   id: string | number;
@@ -125,22 +127,6 @@ const errorMessage = (error: unknown, fallback: string) => {
     }
   }
   return fallback;
-};
-
-const encodeBase64 = (bytes: Uint8Array) => {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  let encoded = '';
-  for (let index = 0; index < bytes.length; index += 3) {
-    const first = bytes[index];
-    const second = bytes[index + 1];
-    const third = bytes[index + 2];
-    encoded += alphabet[Math.floor(first / 4)];
-    encoded += alphabet[(first % 4) * 16 + Math.floor((second ?? 0) / 16)];
-    encoded += second === undefined
-      ? '=='
-      : `${alphabet[(second % 16) * 4 + Math.floor((third ?? 0) / 64)]}${third === undefined ? '=' : alphabet[third % 64]}`;
-  }
-  return encoded;
 };
 
 function Header({ title, subtitle, onBack }: { title: string; subtitle: string; onBack: () => void }) {
@@ -294,11 +280,14 @@ function GoldRelease({ onBack, completionPage = false }: Props) {
     let active = true;
     setGoldImageSource('');
     setGoldImageError('');
-    api.get(imageReference, { responseType: 'arraybuffer' })
+    api.get(
+      getProductImageUrl({ image_url: imageReference }) || imageReference,
+      { responseType: 'arraybuffer' },
+    )
       .then(({ data, headers }) => {
         if (!active) return;
         const contentType = String(headers?.['content-type'] || 'image/jpeg').split(';')[0];
-        setGoldImageSource(`data:${contentType};base64,${encodeBase64(new Uint8Array(data as ArrayBuffer))}`);
+        setGoldImageSource(createImageDataUri(data as ArrayBuffer, contentType));
       })
       .catch(imageError => {
         console.error('Failed to load pledged gold image:', imageError);

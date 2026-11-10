@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../api';
+import { getProductImageUrl } from '../../utils/productImage';
+import { createImageDataUri } from '../../utils/imageData';
 
 type Loan = Record<string, unknown> & {
   id: string | number;
@@ -107,22 +109,6 @@ const getErrorMessage = (error: unknown) => {
   return 'Could not load loan details.';
 };
 
-const encodeBase64 = (bytes: Uint8Array) => {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  let encoded = '';
-  for (let index = 0; index < bytes.length; index += 3) {
-    const first = bytes[index];
-    const second = bytes[index + 1];
-    const third = bytes[index + 2];
-    encoded += alphabet[Math.floor(first / 4)];
-    encoded += alphabet[(first % 4) * 16 + Math.floor((second ?? 0) / 16)];
-    encoded += second === undefined
-      ? '=='
-      : `${alphabet[(second % 16) * 4 + Math.floor((third ?? 0) / 64)]}${third === undefined ? '=' : alphabet[third % 64]}`;
-  }
-  return encoded;
-};
-
 function Header({ onBack }: { onBack: () => void }) {
   return (
     <View className="h-16 flex-row items-center gap-3 border-b border-[#00382E] bg-primary px-4">
@@ -203,16 +189,23 @@ function LoanDetails({ loanId, onBack, onOpenRenewal, onOpenGoldRelease }: Props
     setGoldImage('');
     setImageError('');
     setImageLoading(true);
-    api.get(loan.gold_image_url, { responseType: 'arraybuffer' })
+    api.get(
+      getProductImageUrl({ image_url: loan.gold_image_url }) || loan.gold_image_url,
+      { responseType: 'arraybuffer' },
+    )
       .then(({ data, headers }) => {
         if (!active) return;
         const contentType = String(headers?.['content-type'] || 'image/jpeg').split(';')[0];
-        setGoldImage(`data:${contentType};base64,${encodeBase64(new Uint8Array(data as ArrayBuffer))}`);
+        setGoldImage(createImageDataUri(data as ArrayBuffer, contentType));
       })
       .catch(imageLoadError => {
         if (!active) return;
-        const status = typeof imageLoadError === 'object' && imageLoadError !== null && 'response' in imageLoadError
-          ? (imageLoadError as { response?: { status?: number } }).response?.status
+        const status = typeof imageLoadError === 'object' && imageLoadError !== null
+          ? ('status' in imageLoadError
+            ? imageLoadError.status
+            : 'response' in imageLoadError
+              ? (imageLoadError as { response?: { status?: number } }).response?.status
+              : undefined)
           : undefined;
         setImageError(
           status === 404

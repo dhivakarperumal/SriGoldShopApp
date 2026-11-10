@@ -6,6 +6,7 @@ import {
 } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Modal,
   Pressable,
   RefreshControl,
@@ -17,6 +18,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Alert } from '../../Components/AppAlert';
 import api from '../../api';
+import { getProductImageUrl } from '../../utils/productImage';
+import { createImageDataUri } from '../../utils/imageData';
 import AdminStatCard from '../Components/AdminStatCard';
 
 type Loan = Record<string, unknown> & {
@@ -69,6 +72,7 @@ type Loan = Record<string, unknown> & {
   maximum_interest_amount?: number | string;
   processing_fee?: number | string;
   other_charges?: number | string;
+  gold_image_url?: string;
   notes?: string;
   loan_status?: string;
   release_status?: string;
@@ -351,6 +355,9 @@ export function LoanPaymentModal({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const [goldImage, setGoldImage] = useState('');
+  const [goldImageError, setGoldImageError] = useState('');
+  const [goldImageLoading, setGoldImageLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -379,6 +386,48 @@ export function LoanPaymentModal({
       });
     return () => { active = false; };
   }, [loanRow.id]);
+
+  useEffect(() => {
+    const imageReference = renewalData?.loan.gold_image_url;
+    if (!imageReference) {
+      setGoldImage('');
+      setGoldImageError('');
+      setGoldImageLoading(false);
+      return undefined;
+    }
+
+    let active = true;
+    setGoldImage('');
+    setGoldImageError('');
+    setGoldImageLoading(true);
+    api.get(
+      getProductImageUrl({ image_url: imageReference }) || imageReference,
+      { responseType: 'arraybuffer' },
+    )
+      .then(({ data, headers }) => {
+        if (!active) return;
+        const contentType = String(headers?.['content-type'] || 'image/jpeg').split(';')[0];
+        setGoldImage(createImageDataUri(data as ArrayBuffer, contentType));
+      })
+      .catch(imageError => {
+        if (!active) return;
+        const status = typeof imageError === 'object' && imageError !== null && 'status' in imageError
+          ? imageError.status
+          : undefined;
+        setGoldImageError(
+          status === 404
+            ? 'Pledged gold image is unavailable.'
+            : getErrorMessage(imageError, 'Could not load pledged gold image.'),
+        );
+      })
+      .finally(() => {
+        if (active) setGoldImageLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [renewalData?.loan.gold_image_url]);
 
   const loan = renewalData?.loan;
   const preview = renewalData?.preview;
@@ -472,6 +521,28 @@ export function LoanPaymentModal({
               contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 16 }}
               keyboardShouldPersistTaps="handled"
             >
+              {loan.gold_image_url ? (
+                <View className="gap-2 rounded-2xl border border-slate-200 bg-white p-3">
+                  <Text className="text-sm font-extrabold text-slate-800">Pledged gold image</Text>
+                  {goldImage ? (
+                    <Image
+                      source={{ uri: goldImage }}
+                      resizeMode="contain"
+                      className="h-48 w-full rounded-xl bg-slate-50"
+                      accessibilityLabel={`Pledged ${loan.jewellery_type || 'gold'}`}
+                    />
+                  ) : goldImageLoading ? (
+                    <View className="h-36 items-center justify-center">
+                      <ActivityIndicator color="#004D40" />
+                      <Text className="mt-2 text-xs text-slate-500">Loading pledged gold image…</Text>
+                    </View>
+                  ) : (
+                    <Text className="text-xs text-rose-700">
+                      {goldImageError || 'Could not load the pledged gold image.'}
+                    </Text>
+                  )}
+                </View>
+              ) : null}
               <View className="gap-3 rounded-2xl bg-slate-50 p-4">
                 <Text className="text-sm font-extrabold text-slate-800">
                   Payment and renewal
