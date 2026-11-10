@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import UserPageHeader from '../../components/UserPageHeader';
 
@@ -76,7 +82,11 @@ const POLICY_SECTIONS = [
 ];
 
 function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
-  const [expandedSection, setExpandedSection] = useState(0);
+  const [expandedSection, setExpandedSection] = useState<number | null>(0);
+
+  const toggleSection = (index: number) => {
+    setExpandedSection(current => (current === index ? null : index));
+  };
 
   return (
     <View className="flex-1 bg-[#fffaf0]">
@@ -161,15 +171,12 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
                   : 'border-[#eee5d7]'
               }`}
             >
-              <Pressable
-                className={`flex-row items-center px-4 py-4 ${
+              <TouchableOpacity
+                className={`w-full flex-row items-center px-4 py-4 ${
                   expandedSection === index ? 'bg-[#f5f8f3]' : 'bg-white'
                 }`}
-                onPress={() =>
-                  setExpandedSection(current =>
-                    current === index ? -1 : index,
-                  )
-                }
+                activeOpacity={0.75}
+                onPress={() => toggleSection(index)}
                 accessibilityRole="button"
                 accessibilityLabel={section.title}
                 accessibilityState={{ expanded: expandedSection === index }}
@@ -204,7 +211,7 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
                     color="#08796a"
                   />
                 </View>
-              </Pressable>
+              </TouchableOpacity>
               {expandedSection === index ? (
                 <View className="gap-3 border-t border-[#edf0e9] p-4">
                   {section.paragraphs.map(paragraph => (
