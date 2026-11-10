@@ -205,7 +205,7 @@ function UserHome({
     >
       <HomeBanner
         banners={data.banners}
-        userName={user.name}
+        userName={user?.name}
         error={errors.banners}
         isLoading={isLoading}
       />
