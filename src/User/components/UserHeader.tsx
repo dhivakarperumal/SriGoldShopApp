@@ -145,7 +145,7 @@ function UserHeader({
 
           {user ? (
             <Pressable
-              className="h-11 w-11 items-center justify-center rounded-xl border-2 border-accent-light bg-primary-dark"
+              className="h-11 w-11 items-center justify-center rounded-full border-2 border-accent-light bg-primary-dark"
               onPress={() => setIsAccountMenuOpen(true)}
               accessibilityRole="button"
               accessibilityLabel="Open account menu"
@@ -165,20 +165,27 @@ function UserHeader({
             </Pressable>
           ) : (
             <Pressable
-              className="h-11 items-center justify-center rounded-xl border border-accent-light bg-primary-dark px-4"
+              className="h-11 w-11 items-center justify-center rounded-full border-2 border-accent-light bg-primary-dark"
               onPress={onOpenLogin}
               accessibilityRole="button"
               accessibilityLabel="Login"
             >
-              <Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: '700',
-                  color: '#F5C45E',
-                }}
-              >
-                Login
-              </Text>
+              <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M20 21a8 8 0 0 0-16 0"
+                  stroke="#F5C45E"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <Path
+                  d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
+                  stroke="#F5C45E"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
             </Pressable>
           )}
         </View>
