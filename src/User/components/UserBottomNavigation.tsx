@@ -163,7 +163,7 @@ function UserBottomNavigation({
                     <View style={styles.inactiveIndicatorSpacer} />
                   )}
 
-                  <Svg width={30} height={30} viewBox="0 0 24 24" fill="none">
+                  <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
                     <Path
                       d={tab.path}
                       stroke={iconColor}
