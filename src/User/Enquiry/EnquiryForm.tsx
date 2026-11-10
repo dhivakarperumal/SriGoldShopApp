@@ -280,36 +280,6 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
               keyboardType="phone-pad"
               maxLength={32}
             />
-            <EnquiryInput
-              label="Address"
-              value={form.address}
-              onChangeText={v => updateField('address', v)}
-              multiline
-              maxLength={2000}
-            />
-            <View className="flex-row gap-2">
-              <EnquiryInput
-                className="flex-1"
-                label="City"
-                value={form.city}
-                onChangeText={v => updateField('city', v)}
-                maxLength={100}
-              />
-              <EnquiryInput
-                className="flex-1"
-                label="State"
-                value={form.state}
-                onChangeText={v => updateField('state', v)}
-                maxLength={100}
-              />
-            </View>
-            <EnquiryInput
-              label="Pincode"
-              value={form.pincode}
-              onChangeText={v => updateField('pincode', v)}
-              keyboardType="number-pad"
-              maxLength={20}
-            />
           </View>
         </View>
 
