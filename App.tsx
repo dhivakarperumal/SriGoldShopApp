@@ -226,7 +226,10 @@ function App() {
     setAdminRoute('home');
   };
 
-  const isAdmin = user?.role.trim().toLowerCase() === 'admin';
+  const isAdmin = (() => {
+    const role = typeof user?.role === 'string' ? user.role.trim().toLowerCase() : '';
+    return role === 'admin';
+  })();
 
   useEffect(() => {
     if (!user || !isAdmin) return undefined;
