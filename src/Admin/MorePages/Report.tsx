@@ -17,6 +17,7 @@ import { Alert } from '../../Components/AppAlert';
 import type { ReactNode } from 'react';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
+import AdminStatCard from '../Components/AdminStatCard';
 
 type DatePreset = 'all' | 'month' | 'week';
 
@@ -49,10 +50,10 @@ const DATE_RANGES: { value: DatePreset; label: string }[] = [
 ];
 
 const STAT_CARDS = [
-  { id: 'total_customers', fallbackLabel: 'Total customers', color: '#047857', background: '#ECFDF5' },
-  { id: 'active_gold_loans', fallbackLabel: 'Active gold loans', color: '#B7791F', background: '#FFFBEB' },
-  { id: 'total_products', fallbackLabel: 'Total products', color: '#0E7490', background: '#ECFEFF' },
-  { id: 'gold_stock_value', fallbackLabel: 'Gold stock value', color: '#B45309', background: '#FFF7ED' },
+  { id: 'total_customers', fallbackLabel: 'Total customers', icon: 'users', tone: 'green' },
+  { id: 'active_gold_loans', fallbackLabel: 'Active gold loans', icon: 'loan', tone: 'blue' },
+  { id: 'total_products', fallbackLabel: 'Total products', icon: 'box', tone: 'purple' },
+  { id: 'gold_stock_value', fallbackLabel: 'Gold stock value', icon: 'gold', tone: 'wine' },
 ] as const;
 
 const DISPLAYED_STATUSES = [
@@ -260,35 +261,18 @@ function Report({ onBack }: Props) {
           </View>
         ) : (
           <>
-            <View className="flex-row flex-wrap justify-between gap-y-3">
+            <View className="flex-row flex-wrap justify-between">
               {STAT_CARDS.map(card => {
                 const stat = statsById.get(card.id);
                 return (
-                  <View
+                  <AdminStatCard
                     key={card.id}
-                    className="min-h-[132px] w-[48%] justify-center rounded-2xl border p-4"
-                    style={{ backgroundColor: card.background, borderColor: `${card.color}40` }}
-                  >
-                    <View
-                      className="mb-3 h-9 w-9 items-center justify-center rounded-xl"
-                      style={{ backgroundColor: card.color }}
-                    >
-                      <Svg width={19} height={19} viewBox="0 0 24 24" fill="none">
-                        <Path d="M4 19V5m0 14h16M8 15l4-4 3 2 5-7" stroke="#FFFFFF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                      </Svg>
-                    </View>
-                    <Text className="text-xs font-semibold text-slate-600" numberOfLines={1}>
-                      {stat?.label || card.fallbackLabel}
-                    </Text>
-                    <Text className="mt-1 text-xl font-extrabold text-slate-900" numberOfLines={1}>
-                      {isLoading && !stat ? '—' : stat?.value ?? '—'}
-                    </Text>
-                    {stat?.trend ? (
-                      <Text className="mt-1 text-[10px] font-semibold" style={{ color: card.color }} numberOfLines={1}>
-                        {stat.trend}
-                      </Text>
-                    ) : null}
-                  </View>
+                    label={stat?.label || card.fallbackLabel}
+                    value={isLoading && !stat ? '—' : stat?.value ?? '—'}
+                    icon={card.icon}
+                    tone={card.tone}
+                    detail={stat?.trend}
+                  />
                 );
               })}
             </View>

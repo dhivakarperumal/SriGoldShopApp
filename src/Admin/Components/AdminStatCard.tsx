@@ -11,7 +11,12 @@ type StatIcon =
   | 'alert'
   | 'message'
   | 'clock'
-  | 'list';
+  | 'list'
+  | 'star'
+  | 'fund'
+  | 'debit'
+  | 'credit'
+  | 'gold';
 
 type StatTone = 'green' | 'blue' | 'purple' | 'wine' | 'teal';
 
@@ -50,6 +55,11 @@ const ICON_PATHS: Record<StatIcon, string[]> = {
   ],
   clock: ['M12 8v4l3 2', 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
   list: ['M8 6h13', 'M8 12h13', 'M8 18h13', 'M3 6h.01', 'M3 12h.01', 'M3 18h.01'],
+  star: ['m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z'],
+  fund: ['M12 2v20', 'M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6'],
+  debit: ['M12 5v14', 'm19 12-7 7-7-7'],
+  credit: ['M12 19V5', 'm5 12 7-7 7 7'],
+  gold: ['m12 3 8 6-8 12L4 9l8-6Z', 'M4 9h16', 'm9 9 3 12 3-12'],
 };
 
 const styles = StyleSheet.create({
@@ -68,12 +78,14 @@ export default function AdminStatCard({
   icon,
   tone,
   columns = 2,
+  detail,
 }: {
   label: string;
-  value: number;
+  value: number | string;
   icon: StatIcon;
   tone: StatTone;
   columns?: 2 | 3;
+  detail?: string;
 }) {
   const { backgroundColor, accentColor } = TONES[tone];
   const iconBadge = (
@@ -158,7 +170,7 @@ export default function AdminStatCard({
               adjustsFontSizeToFit
               minimumFontScale={0.7}
             >
-              {value.toLocaleString('en-IN')}
+              {typeof value === 'number' ? value.toLocaleString('en-IN') : value}
             </Text>
             {iconBadge}
           </View>
@@ -183,10 +195,20 @@ export default function AdminStatCard({
             adjustsFontSizeToFit
             minimumFontScale={0.7}
           >
-            {value.toLocaleString('en-IN')}
+            {typeof value === 'number' ? value.toLocaleString('en-IN') : value}
           </Text>
         </>
       )}
+      {detail ? (
+        <Text
+          className="z-10 mt-0.5 text-[9px] font-semibold text-amber-100"
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+        >
+          {detail}
+        </Text>
+      ) : null}
     </View>
   );
 }

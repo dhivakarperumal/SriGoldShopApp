@@ -23,6 +23,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { launchImageLibrary } from 'react-native-image-picker';
 import api from '../../api';
 import { getProductImageUrl } from '../../utils/productImage';
+import AdminStatCard from '../Components/AdminStatCard';
 
 type Props = {
   onBack: () => void;
@@ -375,10 +376,10 @@ function AllReview({ onBack }: Props) {
             />
           }
         >
-          <View className="mb-4 flex-row gap-2">
-            <StatCard label="Total" value={stats.total_reviews.toLocaleString('en-IN')} />
-            <StatCard label="Average" value={`${stats.average_rating.toFixed(1)} ★`} />
-            <StatCard label="Pending" value={stats.pending_count.toLocaleString('en-IN')} />
+          <View className="mb-1 flex-row justify-between">
+            <AdminStatCard label="Total" value={stats.total_reviews} icon="message" tone="green" columns={3} />
+            <AdminStatCard label="Average" value={`${stats.average_rating.toFixed(1)} ★`} icon="star" tone="blue" columns={3} />
+            <AdminStatCard label="Pending" value={stats.pending_count} icon="clock" tone="purple" columns={3} />
           </View>
 
           <TextInput
@@ -806,17 +807,6 @@ function ReviewCard({
           </Text>
         </Pressable>
       </View>
-    </View>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <View className="flex-1 rounded-xl border border-slate-200 bg-white p-3">
-      <Text className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-        {label}
-      </Text>
-      <Text className="mt-1 text-lg font-extrabold text-primary">{value}</Text>
     </View>
   );
 }

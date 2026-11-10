@@ -19,6 +19,7 @@ import { Alert } from '../../Components/AppAlert';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
+import AdminStatCard from '../Components/AdminStatCard';
 
 type Props = {
   onBack: () => void;
@@ -385,15 +386,15 @@ function FundManagement({ onBack }: Props) {
   };
 
   const statCards = [
-    { label: 'Opening Balance', value: summary?.opening_balance, tone: 'bg-[#103F35]', accent: '#6EE7B7' },
-    { label: 'Total Fund Added', value: summary?.fund_added, tone: 'bg-[#3D3218]', accent: '#FCD34D' },
-    { label: 'Total Debit', value: summary?.total_debit, tone: 'bg-[#12324B]', accent: '#7DD3FC' },
-    { label: 'Total Credit', value: summary?.total_credit, tone: 'bg-[#48281F]', accent: '#FDBA74' },
-    { label: 'Loan Disbursed', value: summary?.loan_disbursed, tone: 'bg-[#103F35]', accent: '#6EE7B7' },
-    { label: 'Loan Repayment', value: summary?.loan_repayment_received, tone: 'bg-[#3D3218]', accent: '#FCD34D' },
-    { label: 'Billing Collection', value: summary?.billing_collection, tone: 'bg-[#12324B]', accent: '#7DD3FC' },
-    { label: 'Available Balance', value: summary?.current_balance, tone: 'bg-[#103F35]', accent: '#6EE7B7' },
-  ];
+    { label: 'Opening Balance', value: summary?.opening_balance, icon: 'fund', tone: 'green' },
+    { label: 'Total Fund Added', value: summary?.fund_added, icon: 'credit', tone: 'blue' },
+    { label: 'Total Debit', value: summary?.total_debit, icon: 'debit', tone: 'purple' },
+    { label: 'Total Credit', value: summary?.total_credit, icon: 'credit', tone: 'wine' },
+    { label: 'Loan Disbursed', value: summary?.loan_disbursed, icon: 'loan', tone: 'teal' },
+    { label: 'Loan Repayment', value: summary?.loan_repayment_received, icon: 'fund', tone: 'green' },
+    { label: 'Billing Collection', value: summary?.billing_collection, icon: 'credit', tone: 'blue' },
+    { label: 'Available Balance', value: summary?.current_balance, icon: 'fund', tone: 'purple' },
+  ] as const;
 
   return (
     <View className="flex-1 bg-primary">
@@ -436,22 +437,20 @@ function FundManagement({ onBack }: Props) {
             />
           }
         >
-          <View className="mb-3 flex-row flex-wrap gap-2">
+          <View className="mb-1 flex-row flex-wrap justify-between">
             {statCards.map(card => (
-              <View key={card.label} className={`min-h-[82px] min-w-[46%] flex-1 justify-center rounded-xl border border-white/10 p-3 ${card.tone}`}>
-                <Text className="text-[9px] font-semibold text-slate-200" numberOfLines={1}>
-                  {card.label}
-                </Text>
-                <Text className="mt-1 text-base font-extrabold text-white" numberOfLines={1}>
-                  {isLoading && card.value == null ? '—' : formatMoney(card.value)}
-                </Text>
-                {card.label === 'Available Balance' && summary ? (
-                  <Text className="mt-0.5 text-[9px] text-slate-300" numberOfLines={1}>
-                    Period close: {formatMoney(summary.closing_balance)}
-                  </Text>
-                ) : null}
-                <View className="mt-1 h-0.5 w-8 rounded-full" style={{ backgroundColor: card.accent }} />
-              </View>
+              <AdminStatCard
+                key={card.label}
+                label={card.label}
+                value={isLoading && card.value == null ? '—' : formatMoney(card.value)}
+                icon={card.icon}
+                tone={card.tone}
+                detail={
+                  card.label === 'Available Balance' && summary
+                    ? `Period close: ${formatMoney(summary.closing_balance)}`
+                    : undefined
+                }
+              />
             ))}
           </View>
 

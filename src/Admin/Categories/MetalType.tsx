@@ -24,6 +24,7 @@ import AddMetaltype, {
   type MetalFormData,
   type MetalImageSelection,
 } from './AddMetaltype';
+import AdminStatCard from '../Components/AdminStatCard';
 
 type Metal = {
   id: string | number;
@@ -334,10 +335,10 @@ function MetalType({ onBack }: { onBack: () => void }) {
           />
         }
       >
-        <View className="mb-4 flex-row gap-2">
-          <StatCard label="Total" value={metals.length} />
-          <StatCard label="Active" value={activeCount} />
-          <StatCard label="Inactive" value={inactiveCount} />
+        <View className="mb-1 flex-row justify-between">
+          <AdminStatCard label="Total" value={metals.length} icon="gold" tone="green" columns={3} />
+          <AdminStatCard label="Active" value={activeCount} icon="check" tone="blue" columns={3} />
+          <AdminStatCard label="Inactive" value={inactiveCount} icon="pause" tone="purple" columns={3} />
         </View>
 
         <TextInput
@@ -524,15 +525,6 @@ function MetalType({ onBack }: { onBack: () => void }) {
         </View>
       </View>
 
-    </View>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <View className="flex-1 rounded-xl border border-border bg-surface px-3 py-3">
-      <Text className="text-[10px] font-bold text-slate-400">{label}</Text>
-      <Text className="mt-1 text-xl font-black text-slate-800">{value}</Text>
     </View>
   );
 }
