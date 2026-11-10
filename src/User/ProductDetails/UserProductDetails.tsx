@@ -1,4 +1,4 @@
-import {
+﻿import {
   useEffect,
   useMemo,
   useState,
@@ -57,7 +57,7 @@ function number(value: unknown): number {
 }
 
 function money(value: unknown): string {
-  return `₹${number(value).toLocaleString('en-IN', {
+  return `â‚¹${number(value).toLocaleString('en-IN', {
     maximumFractionDigits: 2,
   })}`;
 }
@@ -85,7 +85,7 @@ function displayValue(value: unknown): string {
         return content ? `${key}: ${content}` : '';
       })
       .filter(Boolean)
-      .join(' · ');
+      .join(' Â· ');
   }
   return String(value);
 }
@@ -131,21 +131,6 @@ function UserProductDetails({
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [activeImage, setActiveImage] = useState(0);
   const [activeVariantIndex, setActiveVariantIndex] = useState(0);
-  const [expandedDetailIds, setExpandedDetailIds] = useState<Set<string>>(
-    () => new Set(['basic-information']),
-  );
-
-  const toggleDetail = (id: string) => {
-    setExpandedDetailIds(current => {
-      const next = new Set(current);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -172,7 +157,6 @@ function UserProductDetails({
           setProduct(productData as Product);
           setActiveImage(0);
           setActiveVariantIndex(0);
-          setExpandedDetailIds(new Set(['basic-information']));
         }
       } catch (error) {
         if (!active || controller.signal.aborted) return;
@@ -488,7 +472,7 @@ function UserProductDetails({
                 />
               ) : (
                 <View className="items-center px-4">
-                  <Text className="text-4xl text-[#bd913e]">◇</Text>
+                  <Text className="text-4xl text-[#bd913e]">â—‡</Text>
                   <Text className="mt-2 text-sm text-slate-500">
                     Product image unavailable
                   </Text>
@@ -506,7 +490,7 @@ function UserProductDetails({
                     accessibilityRole="button"
                     accessibilityLabel="Previous image"
                   >
-                    <Text className="text-xl text-primary">‹</Text>
+                    <Text className="text-xl text-primary">â€¹</Text>
                   </Pressable>
                   <Pressable
                     className="h-9 w-9 items-center justify-center rounded-full bg-white/95"
@@ -516,7 +500,7 @@ function UserProductDetails({
                     accessibilityRole="button"
                     accessibilityLabel="Next image"
                   >
-                    <Text className="text-xl text-primary">›</Text>
+                    <Text className="text-xl text-primary">â€º</Text>
                   </Pressable>
                 </View>
               ) : null}
@@ -564,7 +548,7 @@ function UserProductDetails({
                   {[product.category, product.metal_type, product.purity]
                     .map(text)
                     .filter(Boolean)
-                    .join(' · ') || 'Jewellery'}
+                    .join(' Â· ') || 'Jewellery'}
                 </Text>
               </View>
               <Text
@@ -582,7 +566,7 @@ function UserProductDetails({
               <View className="mt-3 flex-row flex-wrap gap-x-3 gap-y-1">
                 {product.rating != null ? (
                   <Text className="text-xs font-bold text-[#a66b00]">
-                    ★ {number(product.rating).toFixed(1)} / 5
+                    â˜… {number(product.rating).toFixed(1)} / 5
                     {product.total_reviews != null
                       ? ` (${text(product.total_reviews)} reviews)`
                       : ''}
@@ -692,15 +676,13 @@ function UserProductDetails({
                 Product details
               </Text>
               <Text className="mt-0.5 text-xs text-[#887c69]">
-                Tap a section to view more information
+                Product information
               </Text>
             </View>
           </View>
           <ProductDetailCard
             id="basic-information"
             title="Basic information"
-            expandedDetailIds={expandedDetailIds}
-            onToggle={toggleDetail}
             fields={[
               ['Product code', product.product_code],
               ['Brand', product.brand],
@@ -715,8 +697,6 @@ function UserProductDetails({
           <ProductDetailCard
             id="pricing-information"
             title="Pricing information"
-            expandedDetailIds={expandedDetailIds}
-            onToggle={toggleDetail}
             fields={[
               ['Gold rate', goldRate != null ? `${money(goldRate)} / g` : ''],
               [
@@ -753,8 +733,6 @@ function UserProductDetails({
           <ProductDetailCard
             id="weight-and-material"
             title="Weight and material"
-            expandedDetailIds={expandedDetailIds}
-            onToggle={toggleDetail}
             fields={[
               [
                 'Net metal weight',
@@ -777,8 +755,6 @@ function UserProductDetails({
           <ProductDetailCard
             id="size-and-dimensions"
             title="Size and dimensions"
-            expandedDetailIds={expandedDetailIds}
-            onToggle={toggleDetail}
             fields={[
               ['Product size', product.product_size],
               ['Available sizes', product.available_sizes],
@@ -793,8 +769,6 @@ function UserProductDetails({
           <ProductDetailCard
             id="additional-details"
             title="Additional details"
-            expandedDetailIds={expandedDetailIds}
-            onToggle={toggleDetail}
             fields={[
               ['Collection', product.collection ?? product.category],
               ['Brand', product.brand],
@@ -817,8 +791,6 @@ function UserProductDetails({
               id={`variant-${index}`}
               key={`variant-details-${index}`}
               title={`Variant ${index + 1}`}
-              expandedDetailIds={expandedDetailIds}
-              onToggle={toggleDetail}
               fields={Object.entries(variant)
                 .filter(([key]) => key !== 'images')
                 .map(
@@ -837,8 +809,6 @@ function UserProductDetails({
             <ProductDetailCard
               id="specifications"
               title="Specifications"
-              expandedDetailIds={expandedDetailIds}
-              onToggle={toggleDetail}
               fields={
                 parseArray(product.specifications).length
                   ? parseArray(product.specifications).map((item, index) =>
@@ -853,8 +823,6 @@ function UserProductDetails({
           <ProductDetailCard
             id="stock-and-availability"
             title="Stock and availability"
-            expandedDetailIds={expandedDetailIds}
-            onToggle={toggleDetail}
             fields={[
               ['Stock quantity', selectedStock != null ? `${stock} units` : ''],
               ['Warehouse', product.warehouse],
@@ -935,18 +903,14 @@ function ProductDetailCard({
   id,
   title,
   fields,
-  expandedDetailIds,
-  onToggle,
 }: {
   id: string;
   title: string;
   fields: ProductField[];
-  expandedDetailIds: Set<string>;
-  onToggle: (id: string) => void;
 }) {
+  const [isExpanded, setIsExpanded] = useState(true);
   const visibleFields = fields.filter(([, value]) => displayValue(value));
   if (!visibleFields.length) return null;
-  const expanded = expandedDetailIds.has(id);
   const iconName =
     id === 'basic-information'
       ? 'information-circle-outline'
@@ -965,32 +929,18 @@ function ProductDetailCard({
                   : 'cube-outline';
 
   return (
-    <View
-      className={`overflow-hidden rounded-2xl border bg-white ${
-        expanded
-          ? 'border-[#c6d9cd] shadow-sm'
-          : 'border-[#eee5d7]'
-      }`}
-    >
+    <View className="overflow-hidden rounded-2xl border border-[#eee5d7] bg-white">
       <Pressable
-        className={`flex-row items-center px-4 py-3.5 ${
-          expanded ? 'bg-[#f5f8f3]' : 'bg-white'
-        }`}
-        onPress={() => onToggle(id)}
+        className="flex-row items-center bg-[#f5f8f3] px-4 py-3.5 active:opacity-80"
+        onPress={() => setIsExpanded(expanded => !expanded)}
         accessibilityRole="button"
-        accessibilityLabel={`${title}, ${visibleFields.length} details`}
-        accessibilityState={{ expanded }}
+        accessibilityLabel={`${isExpanded ? 'Collapse' : 'Expand'} ${title}`}
+        accessibilityState={{ expanded: isExpanded }}
       >
         <View
-          className={`mr-3 h-10 w-10 items-center justify-center rounded-xl ${
-            expanded ? 'bg-[#08796a]' : 'bg-[#edf5f1]'
-          }`}
+          className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-[#08796a]"
         >
-          <Ionicons
-            name={iconName}
-            size={20}
-            color={expanded ? '#FFFFFF' : '#08796a'}
-          />
+          <Ionicons name={iconName} size={20} color="#FFFFFF" />
         </View>
         <View className="flex-1">
           <Text className="text-[14px] font-bold text-[#153b2e]">
@@ -1000,19 +950,13 @@ function ProductDetailCard({
             {visibleFields.length} {visibleFields.length === 1 ? 'detail' : 'details'}
           </Text>
         </View>
-        <View
-          className={`ml-3 h-8 w-8 items-center justify-center rounded-full ${
-            expanded ? 'bg-[#e2eee7]' : 'bg-[#f7f4ed]'
-          }`}
-        >
-          <Ionicons
-            name={expanded ? 'chevron-up' : 'chevron-down'}
-            size={17}
-            color="#08796a"
-          />
-        </View>
+        <Ionicons
+          name={isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'}
+          size={18}
+          color="#887c69"
+        />
       </Pressable>
-      {expanded ? (
+      {isExpanded ? (
         <View className="border-t border-[#edf0e9] px-4 pb-1">
           {visibleFields.map(([label, value], index) => (
             <View
