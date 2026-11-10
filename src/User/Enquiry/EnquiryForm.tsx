@@ -1,4 +1,4 @@
-import {
+﻿import {
   useState,
 } from 'react';
 import {
@@ -16,7 +16,7 @@ import api from '../../api';
 import type { AuthenticatedUser } from '../../Admin/Auth/Login';
 import type { ProductCardData } from '../../Components/ProductCard';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type EnquiryType =
   | 'Gold Jewellery'
@@ -48,14 +48,14 @@ type EnquiryFormData = {
 };
 
 export type EnquiryFormProps = {
-  user: AuthenticatedUser;
+  user: AuthenticatedUser | null;
   /** Pass a product to pre-fill product fields (from card Enquire Now) */
   product?: ProductCardData;
   /** Called after successful submission */
   onSuccess?: () => void;
 };
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const ENQUIRY_TYPES: EnquiryType[] = [
   'Gold Jewellery',
@@ -65,7 +65,7 @@ const ENQUIRY_TYPES: EnquiryType[] = [
   'Other',
 ];
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function getText(value: unknown): string {
   return typeof value === 'string' || typeof value === 'number'
@@ -103,17 +103,17 @@ function getErrorMessage(error: unknown): string {
 }
 
 function buildInitialForm(
-  user: AuthenticatedUser,
+  user: AuthenticatedUser | null,
   product?: ProductCardData,
 ): EnquiryFormData {
   const category = getText(product?.category);
   const metalType = getText(product?.metal_type) || 'Gold';
   return {
-    customer_name: user.name || user.username || '',
-    phone: user.phone || user.mobile || user.phone_number || '',
+    customer_name: user?.name || user?.username || '',
+    phone: user?.phone || user?.mobile || user?.phone_number || '',
     alternate_phone: '',
-    email: user.email || '',
-    address: user.address || '',
+    email: user?.email || '',
+    address: user?.address || '',
     city: '',
     state: '',
     pincode: '',
@@ -133,7 +133,7 @@ function buildInitialForm(
   };
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * Shared enquiry form used both by the product card modal
@@ -217,7 +217,7 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
       });
 
       Alert.alert(
-        'Enquiry sent ✓',
+        'Enquiry sent âœ“',
         'Thank you! Our team will contact you shortly.',
         [{ text: 'Done', onPress: onSuccess }],
       );
@@ -240,7 +240,7 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Customer Information ── */}
+        {/* â”€â”€ Customer Information â”€â”€ */}
         <View className="rounded-2xl border border-slate-100 bg-white p-4">
           <SectionHeading
             title="Customer Information"
@@ -313,7 +313,7 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
           </View>
         </View>
 
-        {/* ── Enquiry Details ── */}
+        {/* â”€â”€ Enquiry Details â”€â”€ */}
         <View className="rounded-2xl border border-slate-100 bg-white p-4">
           <SectionHeading
             title="Enquiry Details"
@@ -401,7 +401,7 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
               />
             </View>
             <EnquiryInput
-              label="Approx. Budget (₹)"
+              label="Approx. Budget (â‚¹)"
               value={form.approx_budget}
               onChangeText={v => updateField('approx_budget', v)}
               keyboardType="decimal-pad"
@@ -436,7 +436,7 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : null}
           <Text className="ml-2 text-sm font-bold text-white">
-            {isSubmitting ? 'Sending…' : 'Send Enquiry'}
+            {isSubmitting ? 'Sendingâ€¦' : 'Send Enquiry'}
           </Text>
         </Pressable>
       </ScrollView>
@@ -444,7 +444,7 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
   );
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SectionHeading({
   title,

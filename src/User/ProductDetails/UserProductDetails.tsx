@@ -1,4 +1,4 @@
-import {
+﻿import {
   useEffect,
   useMemo,
   useState,
@@ -57,7 +57,7 @@ function number(value: unknown): number {
 }
 
 function money(value: unknown): string {
-  return `₹${number(value).toLocaleString('en-IN', {
+  return `â‚¹${number(value).toLocaleString('en-IN', {
     maximumFractionDigits: 2,
   })}`;
 }
@@ -85,7 +85,7 @@ function displayValue(value: unknown): string {
         return content ? `${key}: ${content}` : '';
       })
       .filter(Boolean)
-      .join(' · ');
+      .join(' Â· ');
   }
   return String(value);
 }
@@ -472,7 +472,7 @@ function UserProductDetails({
                 />
               ) : (
                 <View className="items-center px-4">
-                  <Text className="text-4xl text-[#bd913e]">◇</Text>
+                  <Text className="text-4xl text-[#bd913e]">â—‡</Text>
                   <Text className="mt-2 text-sm text-slate-500">
                     Product image unavailable
                   </Text>
@@ -490,7 +490,7 @@ function UserProductDetails({
                     accessibilityRole="button"
                     accessibilityLabel="Previous image"
                   >
-                    <Text className="text-xl text-primary">‹</Text>
+                    <Text className="text-xl text-primary">â€¹</Text>
                   </Pressable>
                   <Pressable
                     className="h-9 w-9 items-center justify-center rounded-full bg-white/95"
@@ -500,7 +500,7 @@ function UserProductDetails({
                     accessibilityRole="button"
                     accessibilityLabel="Next image"
                   >
-                    <Text className="text-xl text-primary">›</Text>
+                    <Text className="text-xl text-primary">â€º</Text>
                   </Pressable>
                 </View>
               ) : null}
@@ -548,7 +548,7 @@ function UserProductDetails({
                   {[product.category, product.metal_type, product.purity]
                     .map(text)
                     .filter(Boolean)
-                    .join(' · ') || 'Jewellery'}
+                    .join(' Â· ') || 'Jewellery'}
                 </Text>
               </View>
               <Text
@@ -566,7 +566,7 @@ function UserProductDetails({
               <View className="mt-3 flex-row flex-wrap gap-x-3 gap-y-1">
                 {product.rating != null ? (
                   <Text className="text-xs font-bold text-[#a66b00]">
-                    ★ {number(product.rating).toFixed(1)} / 5
+                    â˜… {number(product.rating).toFixed(1)} / 5
                     {product.total_reviews != null
                       ? ` (${text(product.total_reviews)} reviews)`
                       : ''}
@@ -663,7 +663,26 @@ function UserProductDetails({
             </Pressable>
           </View>
 
+          <View className="mb-[-4px] flex-row items-center">
+            <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-[#e8f1eb]">
+              <Ionicons
+                name="list-outline"
+                size={21}
+                color="#08796a"
+              />
+            </View>
+            <View className="flex-1">
+              <Text className="text-lg font-bold text-[#153b2e]">
+                Product details
+              </Text>
+              <Text className="mt-0.5 text-xs text-[#887c69]">
+                Product information
+              </Text>
+            </View>
+          </View>
           <ProductDetailCard
+            defaultExpanded
+            id="basic-information"
             title="Basic information"
             fields={[
               ['Product code', product.product_code],
@@ -677,6 +696,7 @@ function UserProductDetails({
             ]}
           />
           <ProductDetailCard
+            id="pricing-information"
             title="Pricing information"
             fields={[
               ['Gold rate', goldRate != null ? `${money(goldRate)} / g` : ''],
@@ -712,6 +732,7 @@ function UserProductDetails({
             ]}
           />
           <ProductDetailCard
+            id="weight-and-material"
             title="Weight and material"
             fields={[
               [
@@ -733,6 +754,7 @@ function UserProductDetails({
             ]}
           />
           <ProductDetailCard
+            id="size-and-dimensions"
             title="Size and dimensions"
             fields={[
               ['Product size', product.product_size],
@@ -746,6 +768,7 @@ function UserProductDetails({
             ]}
           />
           <ProductDetailCard
+            id="additional-details"
             title="Additional details"
             fields={[
               ['Collection', product.collection ?? product.category],
@@ -766,6 +789,7 @@ function UserProductDetails({
           />
           {variants.map((variant, index) => (
             <ProductDetailCard
+              id={`variant-${index}`}
               key={`variant-details-${index}`}
               title={`Variant ${index + 1}`}
               fields={Object.entries(variant)
@@ -784,6 +808,7 @@ function UserProductDetails({
           ))}
           {product.specifications != null ? (
             <ProductDetailCard
+              id="specifications"
               title="Specifications"
               fields={
                 parseArray(product.specifications).length
@@ -797,6 +822,7 @@ function UserProductDetails({
             />
           ) : null}
           <ProductDetailCard
+            id="stock-and-availability"
             title="Stock and availability"
             fields={[
               ['Stock quantity', selectedStock != null ? `${stock} units` : ''],
@@ -875,37 +901,85 @@ function ProductDetailsSkeleton() {
 }
 
 function ProductDetailCard({
+  id,
   title,
   fields,
+  defaultExpanded = false,
 }: {
+  id: string;
   title: string;
   fields: ProductField[];
+  defaultExpanded?: boolean;
 }) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const visibleFields = fields.filter(([, value]) => displayValue(value));
   if (!visibleFields.length) return null;
+  const iconName =
+    id === 'basic-information'
+      ? 'information-circle-outline'
+      : id === 'pricing-information'
+        ? 'cash-outline'
+        : id === 'weight-and-material'
+          ? 'scale-outline'
+          : id === 'size-and-dimensions'
+            ? 'resize-outline'
+            : id === 'additional-details'
+              ? 'sparkles-outline'
+              : id.startsWith('variant-')
+                ? 'git-branch-outline'
+                : id === 'specifications'
+                  ? 'list-outline'
+                  : 'cube-outline';
 
   return (
-    <View className="overflow-hidden rounded-2xl border border-[#eadfce] bg-white">
-      <Text className="border-b border-[#efe5d4] bg-[#fffaf0] px-4 py-3 text-base font-bold text-primary-dark">
-        {title}
-      </Text>
-      <View className="px-4">
-        {visibleFields.map(([label, value], index) => (
-          <View
-            key={`${label}-${index}`}
-            className={`flex-row gap-3 py-3 ${
-              index < visibleFields.length - 1
-                ? 'border-b border-[#f3eee5]'
-                : ''
-            }`}
-          >
-            <Text className="flex-1 text-xs text-[#887c69]">{label}</Text>
-            <Text className="flex-1 text-right text-xs font-semibold text-[#352d22]">
-              {displayValue(value)}
-            </Text>
-          </View>
-        ))}
-      </View>
+    <View className="overflow-hidden rounded-2xl border border-[#eee5d7] bg-white">
+      <Pressable
+        className="flex-row items-center bg-[#f5f8f3] px-4 py-3.5 active:opacity-80"
+        onPress={() => setIsExpanded(expanded => !expanded)}
+        accessibilityRole="button"
+        accessibilityLabel={`${isExpanded ? 'Collapse' : 'Expand'} ${title}`}
+        accessibilityState={{ expanded: isExpanded }}
+      >
+        <View
+          className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-[#08796a]"
+        >
+          <Ionicons name={iconName} size={20} color="#FFFFFF" />
+        </View>
+        <View className="flex-1">
+          <Text className="text-[14px] font-bold text-[#153b2e]">
+            {title}
+          </Text>
+          <Text className="mt-0.5 text-[11px] text-[#887c69]">
+            {visibleFields.length} {visibleFields.length === 1 ? 'detail' : 'details'}
+          </Text>
+        </View>
+        <Ionicons
+          name={isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'}
+          size={18}
+          color="#887c69"
+        />
+      </Pressable>
+      {isExpanded ? (
+        <View className="border-t border-[#edf0e9] px-4 pb-1">
+          {visibleFields.map(([label, value], index) => (
+            <View
+              key={`${label}-${index}`}
+              className={`flex-row items-start gap-3 py-3 ${
+                index < visibleFields.length - 1
+                  ? 'border-b border-[#f1eee7]'
+                  : ''
+              }`}
+            >
+              <Text className="flex-1 text-xs leading-5 text-[#887c69]">
+                {label}
+              </Text>
+              <Text className="flex-1 text-right text-xs font-semibold leading-5 text-[#352d22]">
+                {displayValue(value)}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }

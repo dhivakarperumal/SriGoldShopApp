@@ -33,22 +33,22 @@ const METAL_TEXT_COLORS: Record<
   gold: {
     title: 'text-[#fff8e7]',
     detail: 'text-white',
-    overlay: 'bg-[#00382c]/20',
+    overlay: 'rgba(0, 56, 44, 0.2)',
   },
   silver: {
     title: 'text-[#10382d]',
     detail: 'text-[#172f26]',
-    overlay: 'bg-[#f4f4ed]/20',
+    overlay: 'rgba(244, 244, 237, 0.2)',
   },
   diamond: {
     title: 'text-[#70420f]',
     detail: 'text-[#283c32]',
-    overlay: 'bg-[#fff8e9]/15',
+    overlay: 'rgba(255, 248, 233, 0.15)',
   },
   platinum: {
     title: 'text-[#fff1bd]',
     detail: 'text-white',
-    overlay: 'bg-[#00382c]/20',
+    overlay: 'rgba(0, 56, 44, 0.2)',
   },
 };
 
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     left: 0,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   content: {
     width: '60%',
@@ -146,7 +146,7 @@ function HomeMetalsShowcase({
           pointerEvents="none"
           style={[
             styles.overlay,
-            { backgroundColor: colors.overlay.replace('bg-[', '').replace(']', '') },
+            { backgroundColor: colors.overlay },
           ]}
         />
       ) : null}
