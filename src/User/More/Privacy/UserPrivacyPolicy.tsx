@@ -110,7 +110,7 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
           <Text className="mt-5 text-2xl font-bold leading-8 text-white">
             Your privacy matters.
           </Text>
-          <Text className="mt-2 text-sm leading-6 text-white/75">
+          <Text className="mt-2 text-justify text-sm leading-6 text-white/75">
             Learn what information Sri Golds collects, why we use it, and the
             choices available to you when using our website, jewellery and
             gold-loan services.
@@ -131,7 +131,7 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
               color="#a66b00"
             />
           </View>
-          <Text className="ml-3 flex-1 self-center text-xs leading-5 text-[#665842]">
+          <Text className="ml-3 flex-1 self-center text-justify text-xs leading-5 text-[#665842]">
             This policy applies to information handled through the Sri Golds
             website and related shop services. It explains our current
             practices in plain language; the information requested depends on
@@ -143,7 +143,7 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
           <Text className="text-xl font-bold text-[#153b2e]">
             Your information, explained
           </Text>
-          <Text className="mt-1 text-sm leading-5 text-[#887c69]">
+          <Text className="mt-1 text-justify text-sm leading-5 text-[#887c69]">
             Browse the ways we handle and protect your information.
           </Text>
         </View>
@@ -178,7 +178,7 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
                 {section.paragraphs.map(paragraph => (
                   <Text
                     key={paragraph}
-                    className="text-[13px] leading-[22px] text-[#625b50]"
+                    className="text-justify text-[13px] leading-[22px] text-[#625b50]"
                   >
                     {paragraph}
                   </Text>
@@ -189,13 +189,13 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
                     className="flex-row rounded-xl bg-[#faf9f5] px-3 py-2.5"
                   >
                     <View className="mr-3 mt-1.5 h-1.5 w-1.5 rounded-full bg-[#c39543]" />
-                    <Text className="flex-1 text-xs leading-5 text-[#625b50]">
+                    <Text className="flex-1 text-justify text-xs leading-5 text-[#625b50]">
                       {bullet}
                     </Text>
                   </View>
                 ))}
                 {section.closing ? (
-                  <Text className="border-l-2 border-[#d6b66d] pl-3 text-xs leading-5 text-[#776747]">
+                  <Text className="border-l-2 border-[#d6b66d] pl-3 text-justify text-xs leading-5 text-[#776747]">
                     {section.closing}
                   </Text>
                 ) : null}
@@ -217,7 +217,7 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
             <Text className="text-sm font-bold text-white">
               Questions about your data?
             </Text>
-            <Text className="mt-1 text-xs leading-5 text-white/70">
+            <Text className="mt-1 text-justify text-xs leading-5 text-white/70">
               Contact our team about your privacy or information.
             </Text>
           </View>
