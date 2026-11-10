@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
+import { RefreshControl } from 'react-native';
 import { pick } from '@react-native-documents/picker';
 import api from '../src/api';
 import { createLoanRequestKey } from '../src/Admin/Loanmanegements/CreateLoan';
@@ -370,6 +371,13 @@ test('selects renewal date range from the calendar picker', async () => {
   await act(async () => {
     renderer.root.findByProps({ accessibilityLabel: 'Apply date' }).props.onPress();
   });
+  let resolveDateRefresh!: (response: { data: typeof loans }) => void;
+  (api.get as jest.Mock).mockImplementation((path: string, config?: { params?: { startDate?: string; endDate?: string } }) => {
+    if (path === '/loans' && config?.params?.startDate === startDateValue) {
+      return new Promise(resolve => { resolveDateRefresh = resolve; });
+    }
+    return Promise.resolve({ data: loans });
+  });
   await act(async () => {
     renderer.root.findByProps({ accessibilityLabel: 'Apply renewal date range' }).props.onPress();
   });
@@ -377,6 +385,11 @@ test('selects renewal date range from the calendar picker', async () => {
   expect(api.get).toHaveBeenCalledWith('/loans', {
     params: { startDate: startDateValue, endDate: endDateValue },
   });
+  expect(renderer.root.findByType(RefreshControl).props.refreshing).toBe(true);
+  await act(async () => {
+    resolveDateRefresh({ data: loans });
+  });
+  expect(renderer.root.findByType(RefreshControl).props.refreshing).toBe(false);
   act(() => renderer.unmount());
 }, 30000);
 

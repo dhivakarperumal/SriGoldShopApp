@@ -117,6 +117,7 @@ type Props = {
 type StatusFilter = 'All' | 'Active' | 'Suspended';
 type NoticeMethod = 'sms' | 'whatsapp' | 'call' | 'letter' | 'in_person' | 'other';
 type DatePickerTarget = 'startDate' | 'endDate';
+type DateRange = { startDate: string; endDate: string };
 
 const PAYMENT_METHODS = ['Cash', 'UPI', 'Card', 'Bank Transfer', 'Cheque', 'Other'];
 const NOTICE_METHODS: { value: NoticeMethod; label: string }[] = [
@@ -624,13 +625,13 @@ function LoanRenewal({ onBack }: Props) {
   const [savingReview, setSavingReview] = useState(false);
   const [paymentLoan, setPaymentLoan] = useState<Loan | null>(null);
 
-  const loadLoans = useCallback(async (refresh = false) => {
+  const loadLoans = useCallback(async (range: DateRange, refresh = false) => {
     if (refresh) setRefreshing(true);
     else setLoading(true);
     setError('');
     try {
       const { data } = await api.get('/loans', {
-        params: { startDate: dateRange.startDate, endDate: dateRange.endDate },
+        params: { startDate: range.startDate, endDate: range.endDate },
       });
       if (!Array.isArray(data)) throw new Error('The server returned an invalid loan list.');
       setLoans(
@@ -647,10 +648,10 @@ function LoanRenewal({ onBack }: Props) {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [dateRange]);
+  }, []);
 
   useEffect(() => {
-    loadLoans();
+    loadLoans({ startDate: '', endDate: '' });
   }, [loadLoans]);
 
   useEffect(() => {
@@ -713,6 +714,7 @@ function LoanRenewal({ onBack }: Props) {
     }
     setDateError('');
     setDateRange(dateDraft);
+    loadLoans(dateDraft, true);
   };
 
   const openDatePicker = (target: DatePickerTarget) => {
@@ -1048,7 +1050,7 @@ function LoanRenewal({ onBack }: Props) {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => { loadLoans(true); }}
+            onRefresh={() => { loadLoans(dateRange, true); }}
             tintColor="#004D40"
             colors={['#004D40']}
           />
@@ -1121,7 +1123,7 @@ function LoanRenewal({ onBack }: Props) {
         {error ? (
           <View className="gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4">
             <Text className="text-sm font-semibold text-rose-800">{error}</Text>
-            <Pressable onPress={() => { loadLoans(); }} className="items-center rounded-xl bg-primary px-4 py-3">
+            <Pressable onPress={() => { loadLoans(dateRange); }} className="items-center rounded-xl bg-primary px-4 py-3">
               <Text className="text-sm font-bold text-white">Retry</Text>
             </Pressable>
           </View>
