@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import {
   Image,
   Modal,
@@ -42,11 +42,12 @@ const styles = StyleSheet.create({
 });
 
 type UserHeaderProps = {
-  user: AuthenticatedUser;
+  user: AuthenticatedUser | null;
   favoritesCount: number;
   onLogout: () => void;
   onOpenProfile: () => void;
   onOpenFavorites: () => void;
+  onOpenLogin?: () => void;
 };
 
 function UserHeader({
@@ -55,13 +56,14 @@ function UserHeader({
   onLogout,
   onOpenProfile,
   onOpenFavorites,
+  onOpenLogin,
 }: UserHeaderProps) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [isLogoutConfirmationVisible, setIsLogoutConfirmationVisible] =
     useState(false);
-  const displayName = user.name?.trim() || 'Welcome';
+  const displayName = user?.name?.trim() || 'Welcome';
   const initial = displayName.charAt(0).toUpperCase() || 'U';
   const favoritesLabel = favoritesCount > 99 ? '99+' : String(favoritesCount);
 
@@ -106,7 +108,7 @@ function UserHeader({
               className="text-[8px] font-bold text-accent-light"
               numberOfLines={1}
             >
-              GOLD · JEWELLERY · LOANS
+              GOLD Â· JEWELLERY Â· LOANS
             </Text>
           </View>
         </View>
@@ -141,29 +143,48 @@ function UserHeader({
             ) : null}
           </Pressable>
 
-          <Pressable
-            className="h-11 w-11 items-center justify-center rounded-xl border-2 border-accent-light bg-primary-dark"
-            onPress={() => setIsAccountMenuOpen(true)}
-            accessibilityRole="button"
-            accessibilityLabel="Open account menu"
-            accessibilityState={{ expanded: isAccountMenuOpen }}
-          >
-            <Text
-              style={{
-                fontSize: 18,
-                fontWeight: '800',
-                color: '#F5C45E',
-                lineHeight: 22,
-                textAlign: 'center',
-              }}
+          {user ? (
+            <Pressable
+              className="h-11 w-11 items-center justify-center rounded-xl border-2 border-accent-light bg-primary-dark"
+              onPress={() => setIsAccountMenuOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Open account menu"
+              accessibilityState={{ expanded: isAccountMenuOpen }}
             >
-              {initial}
-            </Text>
-          </Pressable>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: '800',
+                  color: '#F5C45E',
+                  lineHeight: 22,
+                  textAlign: 'center',
+                }}
+              >
+                {initial}
+              </Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              className="h-11 items-center justify-center rounded-xl border border-accent-light bg-primary-dark px-4"
+              onPress={onOpenLogin}
+              accessibilityRole="button"
+              accessibilityLabel="Login"
+            >
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: '700',
+                  color: '#F5C45E',
+                }}
+              >
+                Login
+              </Text>
+            </Pressable>
+          )}
         </View>
       </View>
 
-      <Modal
+      {user ? <Modal
         visible={isAccountMenuOpen}
         transparent
         animationType="fade"
@@ -226,7 +247,7 @@ function UserHeader({
               <Text className="ml-4 flex-1 text-base font-semibold text-primary-dark">
                 My Profile
               </Text>
-              <Text className="text-2xl text-primary-dark">›</Text>
+              <Text className="text-2xl text-primary-dark">â€º</Text>
             </Pressable>
 
             <Pressable
@@ -250,7 +271,7 @@ function UserHeader({
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </Modal> : null}
     </>
   );
 }

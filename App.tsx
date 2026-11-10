@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Sample React Native App
  * https://github.com/facebook/react-native
  *
@@ -87,6 +87,7 @@ const ADMIN_BACK_ROUTES: Record<AdminRoute, AdminRoute | null> = {
 
 function App() {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [adminRoute, setAdminRoute] = useState<AdminRoute>('home');
   const [newCategoryId, setNewCategoryId] = useState('CAT001');
@@ -427,7 +428,7 @@ function App() {
       {isRestoringSession ? (
         <View className="flex-1 items-center justify-center bg-background">
           <ActivityIndicator size="large" color="#004D40" />
-          <Text className="mt-3 text-sm font-medium text-muted">Restoring your session…</Text>
+          <Text className="mt-3 text-sm font-medium text-muted">Restoring your sessionâ€¦</Text>
         </View>
       ) : user ? (
         isAdmin ? (
@@ -446,10 +447,18 @@ function App() {
             user={user}
             onUserUpdated={setUser}
             onLogout={handleLogout}
+            onShowLogin={() => setShowLoginModal(true)}
           />
         )
+      ) : showLoginModal ? (
+        <Login onLoginSuccess={handleLoginSuccess} onCancel={() => setShowLoginModal(false)} />
       ) : (
-        <Login onLoginSuccess={handleLoginSuccess} />
+        <UserLayout
+          user={null}
+          onUserUpdated={setUser}
+          onLogout={handleLogout}
+          onShowLogin={() => setShowLoginModal(true)}
+        />
       )}
     </SafeAreaProvider>
   );

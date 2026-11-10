@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+﻿import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -33,13 +33,14 @@ export type AuthenticatedUser = {
 
 type LoginProps = {
   onLoginSuccess: (user: AuthenticatedUser) => void;
+  onCancel?: () => void;
 };
 
 type ScrollViewHandle = {
   scrollToEnd: (options?: { animated?: boolean }) => void;
 };
 
-function Login({ onLoginSuccess }: LoginProps) {
+function Login({ onLoginSuccess, onCancel }: LoginProps) {
   const scrollViewRef = useRef<ScrollViewHandle | null>(null);
   const isPasswordFocused = useRef(false);
   const [identifier, setIdentifier] = useState('');
@@ -156,7 +157,7 @@ function Login({ onLoginSuccess }: LoginProps) {
                   <View className="-mt-2 flex-row items-center">
                     <View className="mr-2 h-0.5 w-6 bg-accent" />
                     <Text className="text-sm font-medium text-slate-800">
-                      Gold · Jewellery · Loans
+                      Gold Â· Jewellery Â· Loans
                     </Text>
                     <View className="ml-2 h-0.5 w-6 bg-accent" />
                   </View>
@@ -257,7 +258,7 @@ function Login({ onLoginSuccess }: LoginProps) {
               >
                 <View className="flex-row items-center">
                   <View className="mr-2.5 h-5 w-5 items-center justify-center rounded border-2 border-primary bg-primary/10">
-                    <Text className="-mt-1 text-base font-bold text-primary">✓</Text>
+                    <Text className="-mt-1 text-base font-bold text-primary">âœ“</Text>
                   </View>
                   <Text className="text-sm font-medium text-slate-800">
                     Stay signed in
@@ -293,12 +294,24 @@ function Login({ onLoginSuccess }: LoginProps) {
                 ) : (
                   <>
                     <Text className="mr-3 text-2xl font-semibold text-white">
-                      ↪
+                      â†ª
                     </Text>
                     <Text className="text-lg font-bold text-white">Login</Text>
                   </>
                 )}
               </Pressable>
+              {onCancel ? (
+                <Pressable
+                  className="mt-3 h-12 items-center justify-center rounded-full border border-slate-200"
+                  onPress={onCancel}
+                  accessibilityRole="button"
+                  accessibilityLabel="Browse without login"
+                >
+                  <Text className="text-sm font-semibold text-slate-500">
+                    Browse without login
+                  </Text>
+                </Pressable>
+              ) : null}
             </View>
           </ScrollView>
         </KeyboardAvoidingView>

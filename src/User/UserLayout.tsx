@@ -1,4 +1,4 @@
-import {
+﻿import {
   useCallback,
   useEffect,
   useState,
@@ -27,6 +27,7 @@ import UserProfile from './Profile/UserProfile';
 import UserProductDetails from './ProductDetails/UserProductDetails';
 import UserFavorites, { type WishlistItem } from './Favorites/UserFavorites';
 import UserEnquiry from './Enquiry/UserEnquiry';
+import LoginPromptModal from './components/LoginPromptModal';
 
 function mediaPath(value: unknown): string | undefined {
   if (typeof value === 'string' && value.trim()) {
@@ -121,12 +122,13 @@ function getErrorMessage(error: unknown): string {
 }
 
 type UserLayoutProps = {
-  user: AuthenticatedUser;
+  user: AuthenticatedUser | null;
   onUserUpdated: (user: AuthenticatedUser) => void;
   onLogout: () => void;
+  onShowLogin: () => void;
 };
 
-function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
+function UserLayout({ user, onUserUpdated, onLogout, onShowLogin }: UserLayoutProps) {
   const [activeTab, setActiveTab] = useState<UserTab>('home');
   const [visitedTabs, setVisitedTabs] = useState<Set<UserTab>>(
     () => new Set(['home']),
@@ -158,13 +160,17 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
   const [updatingFavoriteIds, setUpdatingFavoriteIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [loginPromptReason, setLoginPromptReason] = useState('');
+
+  const showLoginPrompt = (reason: string) => {
+    setLoginPromptReason(reason);
+  };
 
   useEffect(() => {
     const controller = new AbortController();
     const loadFavorites = async () => {
-      if (!user.user_id) {
+      if (!user || !user.user_id) {
         setFavorites([]);
-        setFavoritesError('Your account could not be identified.');
         setIsLoadingFavorites(false);
         setIsRefreshingFavorites(false);
         return;
@@ -247,10 +253,14 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
     });
 
     return () => controller.abort();
-  }, [user.user_id, favoritesRequestVersion]);
+  }, [user?.user_id, favoritesRequestVersion]);
 
   const toggleFavorite = useCallback(
     async (product: ProductCardData) => {
+      if (!user) {
+        showLoginPrompt('Please log in to save your favourite items.');
+        return;
+      }
       const productId = product.product_id ?? product.productId ?? product.id;
       if (
         productId == null ||
@@ -284,12 +294,12 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
         } else {
           const image = getFirstImage(product);
           await api.post('/wishlist', {
-            user_id: user.user_id,
+            user_id: user?.user_id,
             product_id: Number(productId),
             variant_color: '',
             variant_size: '',
             image,
-            email: user.email || '',
+            email: user?.email || '',
             price: Number(
               product.offer_price ??
                 product.final_selling_price ??
@@ -324,7 +334,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
         });
       }
     },
-    [favorites, updatingFavoriteIds, user.email, user.user_id],
+    [favorites, updatingFavoriteIds, user, user?.email, user?.user_id],
   );
 
   const isFavorite = useCallback(
@@ -349,6 +359,10 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
   };
 
   const selectTab = (tab: UserTab) => {
+    if (!user && tab === 'favorites') {
+      showLoginPrompt('Please log in to view your saved favourites.');
+      return;
+    }
     if (tab !== 'enquiry') setEnquiryProduct(null);
     setActiveTab(tab);
     setVisitedTabs(current => new Set(current).add(tab));
@@ -440,12 +454,14 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
           onLogout={onLogout}
           onOpenFavorites={() => selectTab('favorites')}
           onOpenProfile={() => {
+            if (!user) { showLoginPrompt('Please log in to view your profile.'); return; }
             setActiveTab('more');
             setVisitedTabs(current => new Set(current).add('more'));
             setHasVisitedProfile(true);
             setSelectedProductId(null);
             setMorePage('profile');
           }}
+          onOpenLogin={onShowLogin}
         />
       ) : null}
       <SafeAreaView
@@ -538,7 +554,7 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
             ) : morePage === 'profile' ? null : (
               <MoreMenu onSelect={selectMorePage} />
             )}
-            {hasVisitedProfile ? (
+            {hasVisitedProfile && user ? (
               <View className={morePage === 'profile' ? 'flex-1' : 'hidden'}>
                 <UserProfile
                   user={user}
@@ -569,6 +585,12 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
           ) : null}
         </View>
       </SafeAreaView>
+      <LoginPromptModal
+        visible={Boolean(loginPromptReason)}
+        reason={loginPromptReason}
+        onLogin={() => { setLoginPromptReason(''); onShowLogin(); }}
+        onDismiss={() => setLoginPromptReason('')}
+      />
     </SafeAreaView>
   );
 }

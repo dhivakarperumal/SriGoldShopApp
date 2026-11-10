@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, View } from 'react-native';
 import api from '../../api';
 import type { ProductCardData } from '../../Components/ProductCard';
@@ -121,7 +121,7 @@ function UserHome({
   onExploreMetal,
   onExploreCategory,
 }: {
-  user: AuthenticatedUser;
+  user: AuthenticatedUser | null;
   onSelectProduct: (productId: string) => void;
   onEnquireProduct: (product: ProductCardData) => void;
   isFavorite: (productId: string) => boolean;

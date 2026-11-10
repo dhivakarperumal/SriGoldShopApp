@@ -1,10 +1,10 @@
-import { View } from 'react-native';
+﻿import { View } from 'react-native';
 import type { AuthenticatedUser } from '../../Admin/Auth/Login';
 import type { ProductCardData } from '../../Components/ProductCard';
 import { EnquiryForm } from './EnquiryForm';
 
 type UserEnquiryProps = {
-  user: AuthenticatedUser;
+  user: AuthenticatedUser | null;
   /** When set, the form is pre-filled with this product's details */
   product?: ProductCardData | null;
   /** Called after a successful submission (e.g. to clear the product) */
@@ -14,7 +14,7 @@ type UserEnquiryProps = {
 function UserEnquiry({ user, product, onSuccess }: UserEnquiryProps) {
   return (
     <View className="flex-1 bg-slate-50">
-      {/* Shared form — pre-filled with product when available */}
+      {/* Shared form â€” pre-filled with product when available */}
       <EnquiryForm
         key={
           product
