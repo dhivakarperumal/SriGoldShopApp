@@ -2,7 +2,9 @@ import { useState } from 'react';
 import {
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
@@ -79,6 +81,22 @@ const POLICY_SECTIONS = [
     ],
   },
 ];
+
+const styles = StyleSheet.create({
+  sectionHeader: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  sectionHeaderExpanded: {
+    backgroundColor: '#f5f8f3',
+  },
+  sectionHeaderCollapsed: {
+    backgroundColor: '#ffffff',
+  },
+});
 
 function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
   const [expandedSection, setExpandedSection] = useState<number | null>(0);
@@ -170,11 +188,14 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
                   : 'border-[#eee5d7]'
               }`}
             >
-              <Pressable
-                className={`w-full flex-row items-center px-4 py-4 ${
-                  expandedSection === index ? 'bg-[#f5f8f3]' : 'bg-white'
-                }`}
-                hitSlop={8}
+              <TouchableOpacity
+                style={[
+                  styles.sectionHeader,
+                  expandedSection === index
+                    ? styles.sectionHeaderExpanded
+                    : styles.sectionHeaderCollapsed,
+                ]}
+                activeOpacity={0.75}
                 onPress={() => toggleSection(index)}
                 accessibilityRole="button"
                 accessibilityLabel={section.title}
@@ -210,7 +231,7 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
                     color="#08796a"
                   />
                 </View>
-              </Pressable>
+              </TouchableOpacity>
               {expandedSection === index ? (
                 <View className="gap-3 border-t border-[#edf0e9] p-4">
                   {section.paragraphs.map(paragraph => (
