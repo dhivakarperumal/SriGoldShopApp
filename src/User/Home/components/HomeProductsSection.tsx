@@ -153,7 +153,7 @@ function HomeProductsSection({
           {[0, 1].map(index => (
             <View
               key={index}
-              className="mb-2.5 h-[320px] overflow-hidden rounded-[14px] border border-[#eadfc8] bg-white"
+              className="mb-2.5 h-[336px] overflow-hidden rounded-[14px] border border-[#eadfc8] bg-white"
               style={{ width: cardWidth }}
             >
               <HomeSkeleton className="h-[148px] w-full rounded-none bg-[#eee8dc]" />

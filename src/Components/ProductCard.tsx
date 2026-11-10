@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   carouselCard: {
     overflow: 'hidden',
     marginBottom: 0,
-    height: 320,
+    height: 336,
   },
   imageBox: {
     width: '100%',
