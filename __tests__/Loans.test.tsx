@@ -286,6 +286,13 @@ test('opens renewal payment details and posts the supplied renewal payload', asy
   });
   expect(api.get).toHaveBeenCalledWith('/loans/1/renewal');
   expect(api.get).toHaveBeenCalledWith('/funds/accounts');
+  const paymentSheet = renderer.root.findByProps({ className: 'max-h-[92%] rounded-t-3xl bg-white' });
+  expect(paymentSheet.props.style.paddingBottom).toBeGreaterThanOrEqual(16);
+  const paymentForm = renderer.root.findByProps({
+    className: 'px-4',
+    contentContainerClassName: 'gap-4 pb-8 pt-4',
+  });
+  expect(paymentForm.props.contentContainerStyle.paddingBottom).toBeGreaterThanOrEqual(32);
 
   await act(async () => {
     renderer.root.findByProps({ placeholder: 'Enter amount received' }).props.onChangeText('500');

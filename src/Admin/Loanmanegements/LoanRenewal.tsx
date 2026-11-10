@@ -340,6 +340,7 @@ export function LoanPaymentModal({
   onClose: () => void;
   onLoanUpdated: (loan: Loan) => void;
 }) {
+  const insets = useSafeAreaInsets();
   const [renewalData, setRenewalData] = useState<RenewalData | null>(null);
   const [fundAccounts, setFundAccounts] = useState<FundAccount[]>([]);
   const [accountId, setAccountId] = useState('');
@@ -429,7 +430,10 @@ export function LoanPaymentModal({
   return (
     <Modal visible transparent animationType="slide" onRequestClose={() => { if (!saving) onClose(); }}>
       <View className="flex-1 justify-end bg-black/60">
-        <View className="max-h-[92%] rounded-t-3xl bg-white">
+        <View
+          className="max-h-[92%] rounded-t-3xl bg-white"
+          style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+        >
           <View className="flex-row items-center justify-between border-b border-slate-100 px-4 py-4">
             <View className="min-w-0 flex-1">
               <Text className="text-[10px] font-bold uppercase tracking-widest text-emerald-700">
@@ -464,6 +468,7 @@ export function LoanPaymentModal({
             <ScrollView
               className="px-4"
               contentContainerClassName="gap-4 pb-8 pt-4"
+              contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 16 }}
               keyboardShouldPersistTaps="handled"
             >
               <View className="gap-3 rounded-2xl bg-slate-50 p-4">
