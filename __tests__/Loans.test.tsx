@@ -2,6 +2,7 @@ import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
 import { pick } from '@react-native-documents/picker';
 import api from '../src/api';
+import { createLoanRequestKey } from '../src/Admin/Loanmanegements/CreateLoan';
 import Loans from '../src/Admin/Screens/Loans';
 import OverdueLoans from '../src/Admin/Loanmanegements/OverdueLoans';
 import LoanRenewal from '../src/Admin/Loanmanegements/LoanRenewal';
@@ -68,6 +69,13 @@ const loans = [
 beforeEach(() => {
   jest.clearAllMocks();
   (api.get as jest.Mock).mockResolvedValue({ data: loans });
+});
+
+test('creates UUID-formatted idempotency keys for loan requests', () => {
+  const requestKey = createLoanRequestKey();
+  expect(requestKey).toMatch(
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+  );
 });
 
 test('loads loan summaries and searchable loan cards', async () => {

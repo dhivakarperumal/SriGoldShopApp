@@ -286,6 +286,13 @@ const calculateInterest = (form: LoanForm, principal: number): number | null => 
 const currency = (amount: number) =>
   `₹${amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 
+export const createLoanRequestKey = () =>
+  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, character => {
+    const randomNibble = Math.floor(Math.random() * 16);
+    const value = character === 'x' ? randomNibble : (randomNibble % 4) + 8;
+    return value.toString(16);
+  });
+
 const errorMessage = (error: unknown, fallback: string) =>
   typeof error === 'object' &&
   error !== null &&
@@ -567,7 +574,7 @@ function CreateLoan({ onCancel, onCreated }: Props) {
         loan_amount_mode: manualAmount ? 'manual' : 'auto',
         idempotency_key:
           requestKey.current ||
-          (requestKey.current = `loan-${Date.now()}-${Math.random().toString(36).slice(2)}`),
+          (requestKey.current = createLoanRequestKey()),
       };
       if (image?.uri) {
         const body = new FormData();
@@ -590,7 +597,11 @@ function CreateLoan({ onCancel, onCreated }: Props) {
       onCreated();
     } catch (error) {
       console.error('Failed to create loan:', error);
-      Alert.alert('Save failed', errorMessage(error, 'Could not create this loan.'));
+      const message = errorMessage(error, 'Could not create this loan.');
+      if (message.toLowerCase().includes('loan request key is invalid')) {
+        requestKey.current = null;
+      }
+      Alert.alert('Save failed', message);
     } finally {
       setSaving(false);
     }
