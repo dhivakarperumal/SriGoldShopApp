@@ -1166,7 +1166,7 @@ function AddProducts({ onCancel, onSaved, productId }: Props) {
 
         <View className="mb-3 flex-row gap-3">
           <Pressable onPress={onCancel} className="flex-1 items-center rounded-xl border border-border bg-surface px-4 py-3.5" accessibilityRole="button">
-            <Text className="text-sm font-bold text-slate-600">Cancel</Text>
+            <Text className="text-sm font-bold text-slate-600">Close</Text>
           </Pressable>
           <Pressable onPress={save} disabled={isSaving || isUploading} className="flex-1 flex-row items-center justify-center rounded-xl bg-primary px-4 py-3.5" accessibilityRole="button">
             {isSaving ? <ActivityIndicator color="#FFFFFF" /> : <FormIcon name="check" color="#FFFFFF" />}

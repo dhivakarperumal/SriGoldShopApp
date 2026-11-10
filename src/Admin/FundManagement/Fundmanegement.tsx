@@ -584,10 +584,10 @@ function FundManagement({ onBack }: Props) {
               <Pressable
                 onPress={() => setDatePickerTarget(null)}
                 accessibilityRole="button"
-                accessibilityLabel="Cancel date selection"
+                accessibilityLabel="Close date selection"
                 className="px-2 py-1"
               >
-                <Text className="text-sm font-bold text-slate-500">Cancel</Text>
+                <Text className="text-sm font-bold text-slate-500">Close</Text>
               </Pressable>
             </View>
             <View className="mb-3 flex-row items-center justify-between">
@@ -765,7 +765,7 @@ function FundManagement({ onBack }: Props) {
                 className="rounded-xl border border-slate-200 px-4 py-3"
                 accessibilityRole="button"
               >
-                <Text className="text-sm font-bold text-slate-600">Cancel</Text>
+                <Text className="text-sm font-bold text-slate-600">Close</Text>
               </Pressable>
               <Pressable
                 onPress={() => saveEntry()}

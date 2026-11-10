@@ -628,7 +628,7 @@ function UserProfile({ user, onUserUpdated, onBack, onLogout }: UserProfileProps
                 disabled={isSaving}
                 accessibilityRole="button"
               >
-                <Text className="text-xs font-bold text-slate-700">Cancel</Text>
+                <Text className="text-xs font-bold text-slate-700">Close</Text>
               </Pressable>
               <Pressable
                 className={`min-w-28 items-center rounded-xl bg-primary px-5 py-3 ${

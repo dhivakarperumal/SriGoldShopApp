@@ -584,7 +584,7 @@ function DealerFormModal({
 
           <View className="flex-row gap-3">
             <Pressable onPress={onClose} disabled={isSaving} className="flex-1 items-center rounded-xl border border-slate-200 bg-white py-3" accessibilityRole="button">
-              <Text className="text-sm font-bold text-slate-700">Cancel</Text>
+              <Text className="text-sm font-bold text-slate-700">Close</Text>
             </Pressable>
             <Pressable onPress={onSave} disabled={isSaving || categories.length === 0} className="flex-1 items-center rounded-xl bg-primary py-3 disabled:opacity-50" accessibilityRole="button" accessibilityLabel={isEditing ? 'Save dealer profile' : 'Create dealer'}>
               {isSaving ? <ActivityIndicator color="#FFFFFF" /> : <Text className="text-sm font-bold text-white">{isEditing ? 'Save profile' : 'Create dealer'}</Text>}

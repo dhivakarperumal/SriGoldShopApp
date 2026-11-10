@@ -1005,7 +1005,7 @@ function CreateLoan({ onCancel, onCreated }: Props) {
           </FormSection>
         </ScrollView>
         <View className="flex-row gap-3 border-t border-slate-200 bg-white px-4 py-3">
-          <ActionButton label="Cancel" onPress={onCancel} secondary disabled={saving} />
+          <ActionButton label="Close" onPress={onCancel} secondary disabled={saving} />
           <ActionButton
             label={saving ? 'Saving loan…' : 'Create loan'}
             onPress={submitLoan}
@@ -1092,10 +1092,10 @@ function CreateLoan({ onCancel, onCreated }: Props) {
               <Pressable
                 onPress={() => setDatePickerTarget(null)}
                 accessibilityRole="button"
-                accessibilityLabel="Cancel date selection"
+                accessibilityLabel="Close date selection"
                 className="px-2 py-1"
               >
-                <Text className="text-sm font-bold text-slate-500">Cancel</Text>
+                <Text className="text-sm font-bold text-slate-500">Close</Text>
               </Pressable>
             </View>
             <View className="mb-3 flex-row items-center justify-between">
@@ -1198,35 +1198,37 @@ function LoanHeader({
   disabled?: boolean;
 }) {
   return (
-    <View className="h-14 flex-row items-center border-b border-[#00382E] bg-primary px-3">
-      <Pressable
-        onPress={onCancel}
-        disabled={disabled}
-        className="mr-2 h-9 w-9 items-center justify-center rounded-xl border border-emerald-700/60 bg-emerald-900/40 active:bg-emerald-900/70"
-        accessibilityRole="button"
-        accessibilityLabel="Back to loans"
-      >
-        <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-          <Path
-            d="m15 18-6-6 6-6"
-            stroke="#FFFFFF"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
-      </Pressable>
-      <View className="flex-1">
-        <Text className="text-base font-extrabold tracking-wide text-white" numberOfLines={1}>
-          Create Loan
-        </Text>
-        <View className="flex-row items-center">
-          <Text className="text-[10px] font-medium text-emerald-200" numberOfLines={1}>
-            Sri Golds Jewellery
+    <View className="h-16 flex-row items-center justify-between border-b border-[#00382E] bg-primary px-4">
+      <View className="flex-1 flex-row items-center pr-3">
+        <Pressable
+          onPress={onCancel}
+          disabled={disabled}
+          className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-emerald-700/60 bg-emerald-900/40 active:bg-emerald-900/70"
+          accessibilityRole="button"
+          accessibilityLabel="Back to loans"
+        >
+          <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+            <Path
+              d="m15 18-6-6 6-6"
+              stroke="#FFFFFF"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
+        </Pressable>
+        <View className="flex-1">
+          <Text className="text-base font-extrabold tracking-wide text-white" numberOfLines={1}>
+            Create Loan
           </Text>
-          <Text className="mx-1.5 text-[8px] text-emerald-400">◆</Text>
-          <View className="rounded bg-emerald-950/60 px-1.5 py-0.5">
-            <Text className="text-[9px] font-bold tracking-wider text-accent-light">NEW LOAN</Text>
+          <View className="mt-0.5 flex-row items-center">
+            <Text className="text-[10px] font-medium text-emerald-200" numberOfLines={1}>
+              Sri Golds Jewellery
+            </Text>
+            <Text className="mx-1.5 text-[8px] text-emerald-400">◆</Text>
+            <View className="rounded bg-emerald-950/60 px-1.5 py-0.5">
+              <Text className="text-[9px] font-bold tracking-wider text-accent-light">NEW LOAN</Text>
+            </View>
           </View>
         </View>
       </View>

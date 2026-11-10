@@ -682,7 +682,7 @@ function AddEnquries({ enquiry, onClose, onSaved }: Props) {
                 className="rounded-xl border border-slate-200 bg-white px-5 py-3"
                 accessibilityRole="button"
               >
-                <Text className="text-sm font-bold text-slate-600">Cancel</Text>
+                <Text className="text-sm font-bold text-slate-600">Close</Text>
               </Pressable>
               <Pressable
                 onPress={() => save()}

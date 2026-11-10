@@ -335,7 +335,7 @@ function StockDetails({ onBack }: Props) {
                 className="rounded-xl border border-slate-200 px-4 py-3"
                 accessibilityRole="button"
               >
-                <Text className="text-sm font-bold text-slate-600">Cancel</Text>
+                <Text className="text-sm font-bold text-slate-600">Close</Text>
               </Pressable>
               <Pressable
                 onPress={() => saveStock()}
