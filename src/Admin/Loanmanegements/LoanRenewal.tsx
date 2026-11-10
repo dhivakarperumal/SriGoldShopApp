@@ -717,6 +717,14 @@ function LoanRenewal({ onBack }: Props) {
     loadLoans(dateDraft, true);
   };
 
+  const resetDateRange = () => {
+    const emptyRange = { startDate: '', endDate: '' };
+    setDateDraft(emptyRange);
+    setDateError('');
+    setDateRange(emptyRange);
+    loadLoans(emptyRange, true);
+  };
+
   const openDatePicker = (target: DatePickerTarget) => {
     const date = parseLocalDate(dateDraft[target]);
     setSelectedCalendarDate(date);
@@ -1093,11 +1101,19 @@ function LoanRenewal({ onBack }: Props) {
             </Pressable>
             <Pressable
               onPress={applyDateRange}
-              className="min-h-12 w-[84px] items-center justify-center rounded-xl bg-primary px-3"
+              className="min-h-12 flex-1 items-center justify-center rounded-xl bg-primary px-2"
               accessibilityRole="button"
               accessibilityLabel="Apply renewal date range"
             >
               <Text className="text-xs font-bold text-white">Apply</Text>
+            </Pressable>
+            <Pressable
+              onPress={resetDateRange}
+              className="min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-2"
+              accessibilityRole="button"
+              accessibilityLabel="Reset renewal date range"
+            >
+              <Text className="text-xs font-bold text-slate-700">Reset</Text>
             </Pressable>
           </View>
           {dateError ? <Text className="text-xs font-medium text-rose-700">{dateError}</Text> : null}

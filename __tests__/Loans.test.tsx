@@ -390,6 +390,15 @@ test('selects renewal date range from the calendar picker', async () => {
     resolveDateRefresh({ data: loans });
   });
   expect(renderer.root.findByType(RefreshControl).props.refreshing).toBe(false);
+
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Reset renewal date range' }).props.onPress();
+  });
+  expect(renderer.root.findByProps({ accessibilityLabel: 'Renewal start date' }).props.children.props.children).toBe('Start YYYY-MM-DD');
+  expect(renderer.root.findByProps({ accessibilityLabel: 'Renewal end date' }).props.children.props.children).toBe('End YYYY-MM-DD');
+  expect(api.get).toHaveBeenLastCalledWith('/loans', {
+    params: { startDate: '', endDate: '' },
+  });
   act(() => renderer.unmount());
 }, 30000);
 
