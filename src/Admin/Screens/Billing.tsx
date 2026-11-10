@@ -14,6 +14,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Alert } from '../../Components/AppAlert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api, { API_BASE_URL } from '../../api';
@@ -1900,7 +1901,8 @@ export default function Billing({
                   </View>
                   <View className="flex-row flex-wrap justify-end gap-2">
                     <SmallAction
-                      label={printingBillId === String(bill.id) ? 'Printing…' : 'Print'}
+                      label={printingBillId === String(bill.id) ? 'Printing bill' : 'Print bill'}
+                      icon="print-outline"
                       onPress={() => {
                         printBill(bill).catch(printError => {
                           console.error('Failed to start bill printing:', printError);
@@ -1910,19 +1912,35 @@ export default function Billing({
                       disabled={printingBillId === String(bill.id)}
                     />
                     {getNumber(bill.balance_due) > 0 ? (
-                      <SmallAction label="Collect" onPress={() => openPayment(bill)} color="emerald" />
+                      <SmallAction
+                        label="Collect payment"
+                        icon="cash-outline"
+                        onPress={() => openPayment(bill)}
+                        color="emerald"
+                      />
                     ) : null}
                     {getNumber(bill.paid_amount) > 0 ? (
                       <SmallAction
-                        label="Refund"
+                        label="Refund payment"
+                        icon="return-up-back-outline"
                         onPress={() => openPayment(bill, 'REFUND')}
                         color="rose"
                       />
                     ) : null}
                     {getNumber(bill.paid_amount) === 0 ? (
-                      <SmallAction label="Edit" onPress={() => openEditBill(bill)} color="amber" />
+                      <SmallAction
+                        label="Edit bill"
+                        icon="create-outline"
+                        onPress={() => openEditBill(bill)}
+                        color="amber"
+                      />
                     ) : null}
-                    <SmallAction label="Delete" onPress={() => deleteBill(bill)} color="rose" />
+                    <SmallAction
+                      label="Delete bill"
+                      icon="trash-outline"
+                      onPress={() => deleteBill(bill)}
+                      color="rose"
+                    />
                   </View>
                 </View>
               );
@@ -1966,30 +1984,48 @@ function SummaryRow({
 
 function SmallAction({
   label,
+  icon,
   onPress,
   color,
   disabled = false,
 }: {
   label: string;
+  icon:
+    | 'print-outline'
+    | 'cash-outline'
+    | 'return-up-back-outline'
+    | 'create-outline'
+    | 'trash-outline';
   onPress: () => void;
   color: 'emerald' | 'amber' | 'rose' | 'blue';
   disabled?: boolean;
 }) {
   const colorClass = {
-    emerald: 'bg-emerald-50 text-emerald-800',
-    amber: 'bg-amber-50 text-amber-800',
-    rose: 'bg-rose-50 text-rose-700',
-    blue: 'bg-sky-50 text-sky-800',
+    emerald: 'bg-emerald-50',
+    amber: 'bg-amber-50',
+    rose: 'bg-rose-50',
+    blue: 'bg-sky-50',
   }[color];
-  const [background, foreground] = colorClass.split(' ');
+  const iconColor = {
+    emerald: '#166534',
+    amber: '#92400E',
+    rose: '#BE123C',
+    blue: '#075985',
+  }[color];
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      className={`rounded-lg px-3 py-2 ${background} ${disabled ? 'opacity-50' : ''}`}
+      className={`h-10 w-10 items-center justify-center rounded-lg ${colorClass} ${disabled ? 'opacity-50' : ''}`}
       accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityHint={disabled ? 'Please wait for the current action to finish.' : undefined}
     >
-      <Text className={`text-xs font-bold ${foreground}`}>{label}</Text>
+      {disabled ? (
+        <ActivityIndicator size="small" color={iconColor} />
+      ) : (
+        <Ionicons name={icon} size={19} color={iconColor} />
+      )}
     </Pressable>
   );
 }
