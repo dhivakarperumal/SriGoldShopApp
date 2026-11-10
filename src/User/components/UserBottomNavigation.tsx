@@ -13,7 +13,7 @@ const TABS: { id: UserTab; label: string; path: string }[] = [
   {
     id: 'explore',
     label: 'Explore',
-    path: 'M3 5h2l2.2 9.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 7H7.2M9 18.5a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2ZM17 18.5a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2Z',
+    path: 'M3 10h18l-1.5-6h-15L3 10Zm1 0v10h16V10M8 20v-6h8v6M3 10a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0',
   },
   {
     id: 'favorites',
