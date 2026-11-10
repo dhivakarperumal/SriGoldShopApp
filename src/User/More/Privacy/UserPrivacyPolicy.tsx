@@ -3,7 +3,6 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
@@ -171,11 +170,11 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
                   : 'border-[#eee5d7]'
               }`}
             >
-              <TouchableOpacity
+              <Pressable
                 className={`w-full flex-row items-center px-4 py-4 ${
                   expandedSection === index ? 'bg-[#f5f8f3]' : 'bg-white'
                 }`}
-                activeOpacity={0.75}
+                hitSlop={8}
                 onPress={() => toggleSection(index)}
                 accessibilityRole="button"
                 accessibilityLabel={section.title}
@@ -211,7 +210,7 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
                     color="#08796a"
                   />
                 </View>
-              </TouchableOpacity>
+              </Pressable>
               {expandedSection === index ? (
                 <View className="gap-3 border-t border-[#edf0e9] p-4">
                   {section.paragraphs.map(paragraph => (
