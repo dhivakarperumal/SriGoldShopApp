@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import {
-  Pressable,
   ScrollView,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
@@ -33,7 +33,7 @@ const POLICY_SECTIONS = [
     paragraphs: [
       'We use information to operate the website and shop services, respond to enquiries, manage customer accounts and profiles, provide customer support, and administer jewellery and gold-loan services.',
       'We may also use it to review KYC submissions, keep appropriate business records, protect accounts and services, address misuse, and meet applicable legal obligations.',
-      'When you sign in, the site keeps account details and an authentication token in your browser’s local storage so your account can remain signed in. Sign out to remove the active sign-in from that browser.',
+      'When you sign in, the site keeps account details and an authentication token in your browser\u2019s local storage so your account can remain signed in. Sign out to remove the active sign-in from that browser.',
     ],
   },
   {
@@ -157,97 +157,96 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
         </View>
 
         <View className="gap-3 px-4">
-          {POLICY_SECTIONS.map((section, index) => (
-            <View
-              key={section.title}
-              className={`overflow-hidden rounded-2xl border bg-white ${
-                expandedSection === index
-                  ? 'border-[#c6d9cd] shadow-sm'
-                  : 'border-[#eee5d7]'
-              }`}
-            >
-              <Pressable
-                className={`min-h-16 flex-row items-center px-4 py-4 ${
-                  expandedSection === index
-                    ? 'bg-[#f5f8f3]'
-                    : 'bg-white'
+          {POLICY_SECTIONS.map((section, index) => {
+            const isExpanded = expandedSection === index;
+            return (
+              <View
+                key={section.title}
+                className={`rounded-2xl border bg-white ${
+                  isExpanded
+                    ? 'border-[#c6d9cd] shadow-sm'
+                    : 'border-[#eee5d7]'
                 }`}
-                onPress={() =>
-                  setExpandedSection(current =>
-                    current === index ? null : index,
-                  )
-                }
-                accessibilityRole="button"
-                accessibilityLabel={`Toggle ${section.title}`}
-                accessibilityState={{
-                  expanded: expandedSection === index,
-                }}
               >
-                <View className="h-10 w-10 items-center justify-center rounded-xl bg-[#e8f1eb]">
-                  <Text className="text-xs font-extrabold text-[#08796a]">
-                    {String(index + 1).padStart(2, '0')}
-                  </Text>
-                </View>
-                <View className="ml-3 flex-1">
-                  <Text className="text-[9px] font-bold uppercase tracking-[1.5px] text-[#a87418]">
-                    Privacy section
-                  </Text>
-                  <Text className="mt-1 text-base font-bold text-[#153b2e]">
-                    {section.title}
-                  </Text>
-                </View>
-                <View
-                  className={`ml-3 h-8 w-8 items-center justify-center rounded-full ${
-                    expandedSection === index
-                      ? 'bg-[#e2eee7]'
-                      : 'bg-[#f7f4ed]'
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  className={`min-h-16 flex-row items-center rounded-t-2xl px-4 py-4 ${
+                    isExpanded ? 'bg-[#f5f8f3]' : 'bg-white'
                   }`}
+                  onPress={() =>
+                    setExpandedSection(current =>
+                      current === index ? null : index,
+                    )
+                  }
+                  accessibilityRole="button"
+                  accessibilityLabel={`Toggle ${section.title}`}
+                  accessibilityState={{
+                    expanded: isExpanded,
+                  }}
                 >
-                  <Ionicons
-                    name={
-                      expandedSection === index
-                        ? 'chevron-up'
-                        : 'chevron-down'
-                    }
-                    size={17}
-                    color="#08796a"
-                  />
-                </View>
-              </Pressable>
-              {expandedSection === index ? (
-                <View className="gap-3 border-t border-[#edf0e9] p-4">
-                  {section.paragraphs.map(paragraph => (
-                    <Text
-                      key={paragraph}
-                      className="text-justify text-[13px] leading-[22px] text-[#625b50]"
-                    >
-                      {paragraph}
+                  <View className="h-10 w-10 items-center justify-center rounded-xl bg-[#e8f1eb]">
+                    <Text className="text-xs font-extrabold text-[#08796a]">
+                      {String(index + 1).padStart(2, '0')}
                     </Text>
-                  ))}
-                  {section.bullets?.map(bullet => (
-                    <View
-                      key={bullet}
-                      className="flex-row rounded-xl bg-[#faf9f5] px-3 py-2.5"
-                    >
-                      <View className="mr-3 mt-1.5 h-1.5 w-1.5 rounded-full bg-[#c39543]" />
-                      <Text className="flex-1 text-justify text-xs leading-5 text-[#625b50]">
-                        {bullet}
+                  </View>
+                  <View className="ml-3 flex-1">
+                    <Text className="text-[9px] font-bold uppercase tracking-[1.5px] text-[#a87418]">
+                      Privacy section
+                    </Text>
+                    <Text className="mt-1 text-base font-bold text-[#153b2e]">
+                      {section.title}
+                    </Text>
+                  </View>
+                  <View
+                    className={`ml-3 h-8 w-8 items-center justify-center rounded-full ${
+                      isExpanded
+                        ? 'bg-[#e2eee7]'
+                        : 'bg-[#f7f4ed]'
+                    }`}
+                  >
+                    <Ionicons
+                      name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                      size={17}
+                      color="#08796a"
+                    />
+                  </View>
+                </TouchableOpacity>
+                {isExpanded ? (
+                  <View className="gap-3 border-t border-[#edf0e9] p-4">
+                    {section.paragraphs.map(paragraph => (
+                      <Text
+                        key={paragraph}
+                        className="text-justify text-[13px] leading-[22px] text-[#625b50]"
+                      >
+                        {paragraph}
                       </Text>
-                    </View>
-                  ))}
-                  {section.closing ? (
-                    <Text className="border-l-2 border-[#d6b66d] pl-3 text-justify text-xs leading-5 text-[#776747]">
-                      {section.closing}
-                    </Text>
-                  ) : null}
-                </View>
-              ) : null}
-            </View>
-          ))}
+                    ))}
+                    {section.bullets?.map(bullet => (
+                      <View
+                        key={bullet}
+                        className="flex-row rounded-xl bg-[#faf9f5] px-3 py-2.5"
+                      >
+                        <View className="mr-3 mt-1.5 h-1.5 w-1.5 rounded-full bg-[#c39543]" />
+                        <Text className="flex-1 text-justify text-xs leading-5 text-[#625b50]">
+                          {bullet}
+                        </Text>
+                      </View>
+                    ))}
+                    {section.closing ? (
+                      <Text className="border-l-2 border-[#d6b66d] pl-3 text-justify text-xs leading-5 text-[#776747]">
+                        {section.closing}
+                      </Text>
+                    ) : null}
+                  </View>
+                ) : null}
+              </View>
+            );
+          })}
         </View>
 
-        <Pressable
-          className="mx-4 mt-4 flex-row items-center rounded-2xl bg-[#073b2f] p-4 active:opacity-90"
+        <TouchableOpacity
+          activeOpacity={0.9}
+          className="mx-4 mt-4 flex-row items-center rounded-2xl bg-[#073b2f] p-4"
           onPress={onContact}
           accessibilityRole="button"
           accessibilityLabel="Contact us about your privacy"
@@ -266,7 +265,7 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
           <View className="ml-2 h-8 w-8 items-center justify-center rounded-full bg-[#f2d58a]">
             <Ionicons name="arrow-forward" size={16} color="#073b2f" />
           </View>
-        </Pressable>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
