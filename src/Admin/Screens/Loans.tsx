@@ -338,6 +338,7 @@ function Loans({
     loanRow: Loan,
     language: LoanPrintLanguage,
   ) => {
+    const printJobName = `Loan-${String(loanRow.loan_number || loanRow.id)}-${language === 'ta' ? 'Tamil' : 'English'}`;
     setPrintingLoanId(loanRow.id);
     try {
       const { data } = await api.get(`/loans/${loanRow.id}`);
@@ -384,7 +385,7 @@ function Loans({
                 onPress: () => {
                   printHtmlDocument(
                     createLoanPrintHtml(fullLoan, undefined, language),
-                    `Loan-${String(fullLoan.loan_number || fullLoan.id)}`,
+                    printJobName,
                   ).catch(printError => {
                     console.error('Failed to print loan agreement:', printError);
                     Alert.alert(
@@ -402,7 +403,7 @@ function Loans({
 
       await printHtmlDocument(
         createLoanPrintHtml(fullLoan, pledgedImageDataUri, language),
-        `Loan-${String(fullLoan.loan_number || fullLoan.id)}`,
+        printJobName,
       );
     } catch (printError) {
       console.error('Failed to prepare loan agreement:', printError);
@@ -413,7 +414,10 @@ function Loans({
   }, []);
 
   const printLoan = useCallback((loan: Loan) => {
-    Alert.alert('Choose print language', 'Select the language for the loan agreement.', [
+    Alert.alert(
+      'Print or save loan agreement',
+      'Choose a language. The next screen lets you select an available printer or “Save as PDF”.',
+      [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'English',
@@ -431,7 +435,8 @@ function Loans({
           });
         },
       },
-    ]);
+      ],
+    );
   }, [printLoanInLanguage]);
 
   const statusClass = (status: string): string => {
@@ -712,7 +717,7 @@ function Loans({
                       className="h-9 w-9 items-center justify-center rounded-lg border border-sky-200 bg-sky-50"
                       accessibilityRole="button"
                       accessibilityLabel={`Print loan agreement for ${loan.loan_number || loan.id}`}
-                      accessibilityHint="Opens the print dialog, where you can also save as PDF."
+                      accessibilityHint="Choose English or Tamil, then select an available printer or Save as PDF."
                     >
                       {printingLoanId === loan.id ? (
                         <ActivityIndicator size="small" color="#075985" />
