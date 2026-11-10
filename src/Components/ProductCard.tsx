@@ -88,6 +88,7 @@ const styles = StyleSheet.create({
   carouselCard: {
     overflow: 'hidden',
     marginBottom: 0,
+    height: 320,
   },
   imageBox: {
     width: '100%',
@@ -284,9 +285,8 @@ const styles = StyleSheet.create({
     right: 0,
   },
   carouselEnquireBtn: {
-    marginHorizontal: 0,
-    marginBottom: 0,
-    borderRadius: 8,
+    marginHorizontal: 10,
+    marginBottom: 10,
   },
   enquireBtnText: {
     fontSize: 12,
