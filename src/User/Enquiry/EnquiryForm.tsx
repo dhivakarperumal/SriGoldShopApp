@@ -4,6 +4,7 @@
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -144,6 +145,7 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
     buildInitialForm(user, product),
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEnquiryTypePickerOpen, setIsEnquiryTypePickerOpen] = useState(false);
 
   const updateField = <K extends keyof EnquiryFormData>(
     key: K,
@@ -294,35 +296,22 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
             }
           />
 
-          {/* Enquiry type chips */}
-          <Text className="mb-2 text-[11px] font-semibold text-slate-700">
-            Enquiry Type
-          </Text>
-          <View className="mb-4 flex-row flex-wrap gap-2">
-            {ENQUIRY_TYPES.map(type => {
-              const selected = form.enquiry_type === type;
-              return (
-                <Pressable
-                  key={type}
-                  className={`rounded-lg border px-3 py-2 ${
-                    selected
-                      ? 'border-amber-500 bg-amber-50'
-                      : 'border-slate-200 bg-white'
-                  }`}
-                  onPress={() => updateField('enquiry_type', type)}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected }}
-                >
-                  <Text
-                    className={`text-[11px] font-bold ${
-                      selected ? 'text-amber-800' : 'text-slate-600'
-                    }`}
-                  >
-                    {type}
-                  </Text>
-                </Pressable>
-              );
-            })}
+          <View className="mb-4">
+            <Text className="mb-1.5 text-[11px] font-semibold text-slate-700">
+              Enquiry Type
+            </Text>
+            <Pressable
+              onPress={() => setIsEnquiryTypePickerOpen(true)}
+              className="min-h-11 flex-row items-center justify-between rounded-lg border border-slate-200 bg-white px-3"
+              accessibilityRole="button"
+              accessibilityLabel={`Enquiry type: ${form.enquiry_type}`}
+              accessibilityHint="Opens the enquiry type options."
+            >
+              <Text className="text-sm font-medium text-slate-800">
+                {form.enquiry_type}
+              </Text>
+              <Text className="text-base font-bold text-slate-500">⌄</Text>
+            </Pressable>
           </View>
 
           <View className="gap-3">
@@ -410,6 +399,64 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
           </Text>
         </Pressable>
       </ScrollView>
+      <Modal
+        visible={isEnquiryTypePickerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsEnquiryTypePickerOpen(false)}
+      >
+        <View className="flex-1 justify-end bg-black/50 px-4">
+          <Pressable
+            className="absolute inset-0"
+            onPress={() => setIsEnquiryTypePickerOpen(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Close enquiry type options"
+          />
+          <View className="mb-4 overflow-hidden rounded-2xl bg-white">
+            <View className="border-b border-slate-100 px-4 py-4">
+              <Text className="text-base font-extrabold text-slate-900">
+                Select Enquiry Type
+              </Text>
+            </View>
+            {ENQUIRY_TYPES.map(type => {
+              const selected = form.enquiry_type === type;
+              return (
+                <Pressable
+                  key={type}
+                  onPress={() => {
+                    updateField('enquiry_type', type);
+                    setIsEnquiryTypePickerOpen(false);
+                  }}
+                  className="min-h-12 flex-row items-center justify-between border-b border-slate-100 px-4 py-3"
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: selected }}
+                >
+                  <Text
+                    className={`text-sm ${
+                      selected
+                        ? 'font-bold text-primary'
+                        : 'font-medium text-slate-700'
+                    }`}
+                  >
+                    {type}
+                  </Text>
+                  {selected ? (
+                    <Text className="text-sm font-bold text-primary">Selected</Text>
+                  ) : null}
+                </Pressable>
+              );
+            })}
+            <Pressable
+              onPress={() => setIsEnquiryTypePickerOpen(false)}
+              className="items-center px-4 py-3.5"
+              accessibilityRole="button"
+              accessibilityLabel="Close enquiry type selector"
+            >
+              <Text className="text-sm font-bold text-slate-600">Close</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
