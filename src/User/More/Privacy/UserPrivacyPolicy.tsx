@@ -89,30 +89,49 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
         contentContainerClassName="pb-8"
         showsVerticalScrollIndicator={false}
       >
-        <View className="m-4 rounded-2xl bg-[#003b2d] p-5">
-          <View className="flex-row items-center">
-            <Ionicons name="shield-checkmark-outline" size={21} color="#f2d58a" />
-            <Text className="ml-2 text-xs font-bold uppercase tracking-wider text-[#f2d58a]">
-              Privacy at Sri Golds
-            </Text>
+        <View className="mx-4 mt-4 overflow-hidden rounded-3xl bg-[#073b2f] p-5">
+          <View className="absolute -right-8 -top-10 h-40 w-40 rounded-full border border-white/10" />
+          <View className="absolute -right-1 -top-2 h-24 w-24 rounded-full border border-[#f2d58a]/20" />
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center rounded-full border border-white/15 bg-white/10 px-3 py-2">
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={17}
+                color="#f2d58a"
+              />
+              <Text className="ml-2 text-[10px] font-bold uppercase tracking-wider text-[#f2d58a]">
+                Privacy at Sri Golds
+              </Text>
+            </View>
+            <View className="h-11 w-11 items-center justify-center rounded-2xl bg-white/10">
+              <Ionicons name="lock-closed-outline" size={21} color="#f2d58a" />
+            </View>
           </View>
-          <Text className="mt-3 text-sm leading-6 text-white/85">
+          <Text className="mt-5 text-2xl font-bold leading-8 text-white">
+            Your privacy matters.
+          </Text>
+          <Text className="mt-2 text-sm leading-6 text-white/75">
             Learn what information Sri Golds collects, why we use it, and the
             choices available to you when using our website, jewellery and
             gold-loan services.
           </Text>
-          <Text className="mt-4 text-xs leading-5 text-white/65">
-            Last updated: 10 November 2026
-          </Text>
+          <View className="mt-5 flex-row items-center border-t border-white/15 pt-4">
+            <Ionicons name="time-outline" size={16} color="#f2d58a" />
+            <Text className="ml-2 text-xs font-medium text-white/75">
+              Last updated  ·  10 November 2026
+            </Text>
+          </View>
         </View>
 
-        <View className="mx-4 mb-4 flex-row rounded-xl border border-[#ead8b6] bg-white p-4">
-          <Ionicons
-            name="information-circle-outline"
-            size={20}
-            color="#a66b00"
-          />
-          <Text className="ml-3 flex-1 text-xs leading-5 text-[#665842]">
+        <View className="mx-4 mt-4 flex-row rounded-2xl border border-[#ead8b6] bg-[#fff9eb] p-4">
+          <View className="h-9 w-9 items-center justify-center rounded-xl bg-[#fff0cf]">
+            <Ionicons
+              name="information-circle-outline"
+              size={20}
+              color="#a66b00"
+            />
+          </View>
+          <Text className="ml-3 flex-1 self-center text-xs leading-5 text-[#665842]">
             This policy applies to information handled through the Sri Golds
             website and related shop services. It explains our current
             practices in plain language; the information requested depends on
@@ -120,43 +139,63 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
           </Text>
         </View>
 
+        <View className="mb-3 mt-6 px-4">
+          <Text className="text-xl font-bold text-[#153b2e]">
+            Your information, explained
+          </Text>
+          <Text className="mt-1 text-sm leading-5 text-[#887c69]">
+            Browse the ways we handle and protect your information.
+          </Text>
+        </View>
+
         <View className="gap-3 px-4">
           {POLICY_SECTIONS.map((section, index) => (
             <View
               key={section.title}
-              className="rounded-2xl border border-[#eee3d0] bg-white p-4"
+              className="overflow-hidden rounded-2xl border border-[#eee5d7] bg-white"
             >
-              <View className="mb-3 flex-row items-center">
-                <View className="h-8 w-8 items-center justify-center rounded-full bg-[#fff4d9]">
-                  <Text className="text-xs font-bold text-[#a66b00]">
+              <View className="flex-row items-center bg-[#f8faf6] px-4 py-4">
+                <View className="h-10 w-10 items-center justify-center rounded-xl bg-[#e8f1eb]">
+                  <Text className="text-xs font-extrabold text-[#08796a]">
                     {String(index + 1).padStart(2, '0')}
                   </Text>
                 </View>
-                <Text className="ml-3 flex-1 text-lg font-bold text-[#153b2e]">
-                  {section.title}
-                </Text>
+                <View className="ml-3 flex-1">
+                  <Text className="text-[9px] font-bold uppercase tracking-[1.5px] text-[#a87418]">
+                    Privacy section
+                  </Text>
+                  <Text className="mt-1 text-base font-bold text-[#153b2e]">
+                    {section.title}
+                  </Text>
+                </View>
+                <Ionicons
+                  name="shield-checkmark-outline"
+                  size={18}
+                  color="#9caf9f"
+                />
               </View>
-              <View className="gap-3">
+              <View className="gap-3 p-4">
                 {section.paragraphs.map(paragraph => (
                   <Text
                     key={paragraph}
-                    className="text-sm leading-6 text-[#625b50]"
+                    className="text-[13px] leading-[22px] text-[#625b50]"
                   >
                     {paragraph}
                   </Text>
                 ))}
                 {section.bullets?.map(bullet => (
-                  <View key={bullet} className="flex-row pl-1">
-                    <Text className="mr-2 text-sm leading-6 text-[#c39543]">
-                      {'\u2022'}
-                    </Text>
-                    <Text className="flex-1 text-sm leading-6 text-[#625b50]">
+                  <View
+                    key={bullet}
+                    className="flex-row rounded-xl bg-[#faf9f5] px-3 py-2.5"
+                  >
+                    <View className="mr-3 mt-1.5 h-1.5 w-1.5 rounded-full bg-[#c39543]" />
+                    <Text className="flex-1 text-xs leading-5 text-[#625b50]">
                       {bullet}
                     </Text>
                   </View>
                 ))}
                 {section.closing ? (
-                  <Text className="text-sm leading-6 text-[#625b50]">
+                  <Text className="border-l-2 border-[#d6b66d] pl-3 text-xs leading-5 text-[#776747]">
                     {section.closing}
                   </Text>
                 ) : null}
@@ -166,16 +205,25 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
         </View>
 
         <Pressable
-          className="mx-4 mt-4 flex-row items-center rounded-2xl border border-[#dce7dc] bg-[#f2f7f1] p-4"
+          className="mx-4 mt-4 flex-row items-center rounded-2xl bg-[#073b2f] p-4 active:opacity-90"
           onPress={onContact}
           accessibilityRole="button"
           accessibilityLabel="Contact us about your privacy"
         >
-          <Text className="flex-1 text-sm leading-6 text-[#45594b]">
-            To ask a privacy question or make a request about your information,
-            contact our team.
-          </Text>
-          <Ionicons name="arrow-forward" size={19} color="#174a38" />
+          <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-white/10">
+            <Ionicons name="chatbubble-ellipses-outline" size={20} color="#f2d58a" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-sm font-bold text-white">
+              Questions about your data?
+            </Text>
+            <Text className="mt-1 text-xs leading-5 text-white/70">
+              Contact our team about your privacy or information.
+            </Text>
+          </View>
+          <View className="ml-2 h-8 w-8 items-center justify-center rounded-full bg-[#f2d58a]">
+            <Ionicons name="arrow-forward" size={16} color="#073b2f" />
+          </View>
         </Pressable>
       </ScrollView>
     </View>
