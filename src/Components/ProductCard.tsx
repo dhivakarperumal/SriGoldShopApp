@@ -85,10 +85,17 @@ const styles = StyleSheet.create({
     // Fixed height so every card in the grid is identical
     height: 310,
   },
+  carouselCard: {
+    overflow: 'hidden',
+    marginBottom: 0,
+  },
   imageBox: {
     width: '100%',
     height: 148,
     backgroundColor: '#1a1a1a',
+  },
+  carouselImageBox: {
+    height: 160,
   },
   image: {
     width: '100%',
@@ -140,11 +147,19 @@ const styles = StyleSheet.create({
     paddingTop: 5,
     paddingBottom: 2,
   },
+  carouselBody: {
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 14,
+  },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: 3,
+  },
+  carouselNameRow: {
+    marginBottom: 4,
   },
   productName: {
     flex: 1,
@@ -157,6 +172,9 @@ const styles = StyleSheet.create({
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  carouselRatingRow: {
+    marginBottom: 2,
   },
   ratingText: {
     fontSize: 10,
@@ -190,6 +208,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
     gap: 4,
   },
+  carouselPriceRow: {
+    marginTop: 5,
+  },
   priceText: {
     fontSize: 15,
     fontWeight: '800',
@@ -217,6 +238,13 @@ const styles = StyleSheet.create({
     marginTop: 7,
     marginBottom: 8,
     gap: 6,
+  },
+  carouselSpecsRow: {
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  carouselSpecsPlaceholder: {
+    height: 10,
   },
   specItem: {
     flex: 1,
@@ -254,6 +282,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+  },
+  carouselEnquireBtn: {
+    marginHorizontal: 0,
+    marginBottom: 0,
+    borderRadius: 8,
   },
   enquireBtnText: {
     fontSize: 12,

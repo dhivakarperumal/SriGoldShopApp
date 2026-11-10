@@ -35,8 +35,12 @@ type LoginProps = {
   onLoginSuccess: (user: AuthenticatedUser) => void;
 };
 
+type ScrollViewHandle = {
+  scrollToEnd: (options?: { animated?: boolean }) => void;
+};
+
 function Login({ onLoginSuccess }: LoginProps) {
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ScrollViewHandle | null>(null);
   const isPasswordFocused = useRef(false);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -125,7 +129,7 @@ function Login({ onLoginSuccess }: LoginProps) {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
-            ref={scrollViewRef}
+            ref={scrollViewRef as any}
             className="flex-1"
             contentContainerClassName={
               keyboardVisible
