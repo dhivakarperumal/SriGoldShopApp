@@ -190,9 +190,8 @@ function TabIcon({ name, active }: { name: TabIconName; active: boolean }) {
   if (name === 'products') {
     return (
       <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-        <Path d="M4 8h16l-1 13H5L4 8Z" stroke={stroke} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
-        <Path d="M9 8V6a3 3 0 0 1 6 0v2" stroke={stroke} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
-        <Path d="M2.5 8h19" stroke={stroke} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+        <Path d="m12 3 9 5-9 5-9-5 9-5Z" stroke={stroke} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+        <Path d="m3 8 9 5 9-5M3 8v9l9 5 9-5V8M12 13v9" stroke={stroke} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
       </Svg>
     );
   }

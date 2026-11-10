@@ -423,7 +423,7 @@ function AddDealers({ onBack, onCreated }: Props) {
 
           <View className="flex-row items-center justify-end gap-3 border-t border-slate-100 pt-4">
             <Pressable onPress={onBack} disabled={isSaving} className="rounded-xl px-5 py-3" accessibilityRole="button">
-              <Text className="text-xs font-extrabold uppercase tracking-wide text-slate-500">Cancel</Text>
+              <Text className="text-xs font-extrabold uppercase tracking-wide text-slate-500">Close</Text>
             </Pressable>
             <Pressable
               onPress={saveDealer}

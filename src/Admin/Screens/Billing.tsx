@@ -14,11 +14,18 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Alert } from '../../Components/AppAlert';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import api from '../../api';
+import api, { API_BASE_URL } from '../../api';
 import { getProductImageUrl } from '../../utils/productImage';
 import AdminStatCard from '../Components/AdminStatCard';
+import {
+  DEFAULT_RECEIPT_SETTINGS,
+  normalizeReceiptSettings,
+} from '../MorePages/receiptSettings';
+import { createBillPrintHtml } from './billPrint';
+import { printHtmlDocument } from './nativePrint';
 
 type RecordValue = Record<string, unknown>;
 type Product = RecordValue & {
@@ -213,6 +220,24 @@ const decodeArray = <T,>(value: unknown): T[] => {
   }
 };
 
+const getBillResponseRecord = (value: unknown): RecordValue => {
+  let record =
+    typeof value === 'object' && value !== null && !Array.isArray(value)
+      ? (value as RecordValue)
+      : {};
+  for (let depth = 0; depth < 3; depth += 1) {
+    const nested =
+      typeof record.bill === 'object' && record.bill !== null
+        ? record.bill
+        : typeof record.data === 'object' && record.data !== null
+          ? record.data
+          : null;
+    if (!nested || Array.isArray(nested)) return record;
+    record = nested as RecordValue;
+  }
+  return record;
+};
+
 const getProductPrice = (product: Product): number =>
   getNumber(product.final_selling_price || product.offer_price || product.mrp);
 
@@ -310,6 +335,7 @@ export default function Billing({
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [printingBillId, setPrintingBillId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'FULL_PAYMENT' | 'EXCHANGE_GOLD'>('ALL');
   const [showForm, setShowForm] = useState(true);
@@ -481,6 +507,50 @@ export default function Billing({
     loadExchangeMetals();
     loadSupportingData();
   }, [loadBills, loadCatalog, loadExchangeCategories, loadExchangeMetals, loadSupportingData]);
+
+  const printBill = useCallback(async (bill: Bill) => {
+    const printWithSettings = async (
+      settings: typeof DEFAULT_RECEIPT_SETTINGS,
+    ) => {
+      setPrintingBillId(String(bill.id));
+      try {
+        await printHtmlDocument(
+          createBillPrintHtml(bill, settings, API_BASE_URL),
+          String(bill.invoice_no || `Bill-${bill.id}`),
+        );
+      } catch (error) {
+        console.error('Failed to print bill:', error);
+        Alert.alert(
+          'Could not print bill',
+          getErrorMessage(error, 'Please try again.'),
+        );
+      } finally {
+        setPrintingBillId(null);
+      }
+    };
+
+    try {
+      const { data } = await api.get('/receipt-settings');
+      await printWithSettings(normalizeReceiptSettings(data));
+    } catch (error) {
+      console.error('Failed to load receipt settings for printing:', error);
+      Alert.alert(
+        'Receipt settings unavailable',
+        'Print this bill with the default receipt details?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Print with defaults',
+            onPress: () => {
+              printWithSettings(DEFAULT_RECEIPT_SETTINGS).catch(printError => {
+                console.error('Failed to print bill with default receipt details:', printError);
+              });
+            },
+          },
+        ],
+      );
+    }
+  }, []);
 
   const filteredBills = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -713,11 +783,20 @@ export default function Billing({
         );
       }
       return [...current, {
+        ...product,
         product_id: String(product.id),
         product_name: product.name,
         category: product.category,
         purity: product.purity,
         metal_type: product.metal_type || 'Gold',
+        weight: product.gross_weight ?? product.weight,
+        wastage_weight: product.wastage_weight,
+        net_weight: product.net_gold_weight ?? product.net_weight,
+        making_charge: product.making_charge,
+        making_charges: product.making_charges,
+        making_charge_percentage: product.making_charge_percentage,
+        making_percentage: product.making_percentage,
+        stone_weight: product.stone_weight,
         image_url: getProductImageUrl(product),
         images: product.images,
         rate_per_gram: product.gold_rate_per_gram,
@@ -843,16 +922,75 @@ export default function Billing({
         gst_rate: gstRateNumber,
         discount_amount: discountAmount,
       };
-      if (editingBill) {
-        await api.put(`/billings/${editingBill.id}`, payload);
-        Alert.alert('Bill updated', 'The bill has been updated successfully.');
-      } else {
-        await api.post('/billings', payload);
-        Alert.alert('Bill saved', 'The new bill has been created successfully.');
-      }
+      const response = editingBill
+        ? await api.put(`/billings/${editingBill.id}`, payload)
+        : await api.post('/billings', payload);
+      const returnedBill = getBillResponseRecord(response.data);
+      const returnedId = returnedBill.id;
+      const returnedInvoice = returnedBill.invoice_no ?? returnedBill.invoice_number;
+      const savedBill: Bill = {
+        ...(editingBill ?? {}),
+        ...returnedBill,
+        id:
+          typeof returnedId === 'string' || typeof returnedId === 'number'
+            ? returnedId
+          : editingBill?.id ?? String(Date.now()),
+        invoice_no:
+          typeof returnedInvoice === 'string'
+            ? returnedInvoice
+            : editingBill?.invoice_no,
+        customers: returnedBill.customers ?? [customer],
+        products: returnedBill.products ?? products,
+        exchanges: returnedBill.exchanges ?? payload.exchanges,
+        payment_type:
+          typeof returnedBill.payment_type === 'string'
+            ? returnedBill.payment_type
+            : paymentType,
+        sub_total:
+          typeof returnedBill.sub_total === 'number' ||
+          typeof returnedBill.sub_total === 'string'
+            ? returnedBill.sub_total
+            : subtotal,
+        discount_amount:
+          typeof returnedBill.discount_amount === 'number' ||
+          typeof returnedBill.discount_amount === 'string'
+            ? returnedBill.discount_amount
+            : discountAmount,
+        gst_amount:
+          typeof returnedBill.gst_amount === 'number' ||
+          typeof returnedBill.gst_amount === 'string'
+            ? returnedBill.gst_amount
+            : gst,
+        total_amount:
+          typeof returnedBill.total_amount === 'number' ||
+          typeof returnedBill.total_amount === 'string'
+            ? returnedBill.total_amount
+            : total,
+        created_at:
+          (typeof returnedBill.created_at === 'string'
+            ? returnedBill.created_at
+            : editingBill?.created_at) ?? new Date().toISOString(),
+      };
       setShowForm(false);
       resetForm();
       await loadBills();
+      Alert.alert(
+        editingBill ? 'Bill updated' : 'Bill saved',
+        editingBill
+          ? 'The bill has been updated successfully.'
+          : 'The new bill has been created successfully.',
+        [
+          {
+            text: 'Print bill',
+            onPress: () => {
+              printBill(savedBill).catch(printError => {
+                console.error('Failed to start bill printing:', printError);
+              });
+            },
+          },
+          { text: 'Done', style: 'cancel' },
+        ],
+      );
     } catch (error) {
       console.error('Failed to save bill:', error);
       Alert.alert('Could not save bill', getErrorMessage(error, 'Please try again.'));
@@ -1072,9 +1210,18 @@ export default function Billing({
             </View>
           </View>
 
-          <View className="flex-row items-center rounded-xl bg-white px-2 py-3">
+          <View className="relative flex-row items-center rounded-xl bg-white px-2 py-3">
+            <View
+              className="absolute h-1 rounded-full bg-slate-200"
+              style={{ top: 25, left: '16.67%', right: '16.67%' }}
+            >
+              <View
+                className="h-full rounded-full bg-primary"
+                style={{ width: `${((billStep - 1) / 2) * 100}%` }}
+              />
+            </View>
             {[1, 2, 3].map(step => (
-              <View key={step} className="flex-1 items-center">
+              <View key={step} className="z-10 flex-1 items-center">
                 <View className={`h-7 w-7 items-center justify-center rounded-full ${
                   billStep >= step ? 'bg-primary' : 'bg-slate-200'
                 }`}>
@@ -1755,20 +1902,47 @@ export default function Billing({
                     </Text>
                   </View>
                   <View className="flex-row flex-wrap justify-end gap-2">
+                    <SmallAction
+                      label={printingBillId === String(bill.id) ? 'Printing bill' : 'Print bill'}
+                      icon="print-outline"
+                      onPress={() => {
+                        printBill(bill).catch(printError => {
+                          console.error('Failed to start bill printing:', printError);
+                        });
+                      }}
+                      color="blue"
+                      disabled={printingBillId === String(bill.id)}
+                    />
                     {getNumber(bill.balance_due) > 0 ? (
-                      <SmallAction label="Collect" onPress={() => openPayment(bill)} color="emerald" />
+                      <SmallAction
+                        label="Collect payment"
+                        icon="cash-outline"
+                        onPress={() => openPayment(bill)}
+                        color="emerald"
+                      />
                     ) : null}
                     {getNumber(bill.paid_amount) > 0 ? (
                       <SmallAction
-                        label="Refund"
+                        label="Refund payment"
+                        icon="return-up-back-outline"
                         onPress={() => openPayment(bill, 'REFUND')}
                         color="rose"
                       />
                     ) : null}
                     {getNumber(bill.paid_amount) === 0 ? (
-                      <SmallAction label="Edit" onPress={() => openEditBill(bill)} color="amber" />
+                      <SmallAction
+                        label="Edit bill"
+                        icon="create-outline"
+                        onPress={() => openEditBill(bill)}
+                        color="amber"
+                      />
                     ) : null}
-                    <SmallAction label="Delete" onPress={() => deleteBill(bill)} color="rose" />
+                    <SmallAction
+                      label="Delete bill"
+                      icon="trash-outline"
+                      onPress={() => deleteBill(bill)}
+                      color="rose"
+                    />
                   </View>
                 </View>
               );
@@ -1812,26 +1986,48 @@ function SummaryRow({
 
 function SmallAction({
   label,
+  icon,
   onPress,
   color,
+  disabled = false,
 }: {
   label: string;
+  icon:
+    | 'print-outline'
+    | 'cash-outline'
+    | 'return-up-back-outline'
+    | 'create-outline'
+    | 'trash-outline';
   onPress: () => void;
-  color: 'emerald' | 'amber' | 'rose';
+  color: 'emerald' | 'amber' | 'rose' | 'blue';
+  disabled?: boolean;
 }) {
   const colorClass = {
-    emerald: 'bg-emerald-50 text-emerald-800',
-    amber: 'bg-amber-50 text-amber-800',
-    rose: 'bg-rose-50 text-rose-700',
+    emerald: 'bg-emerald-50',
+    amber: 'bg-amber-50',
+    rose: 'bg-rose-50',
+    blue: 'bg-sky-50',
   }[color];
-  const [background, foreground] = colorClass.split(' ');
+  const iconColor = {
+    emerald: '#166534',
+    amber: '#92400E',
+    rose: '#BE123C',
+    blue: '#075985',
+  }[color];
   return (
     <Pressable
       onPress={onPress}
-      className={`rounded-lg px-3 py-2 ${background}`}
+      disabled={disabled}
+      className={`h-10 w-10 items-center justify-center rounded-lg ${colorClass} ${disabled ? 'opacity-50' : ''}`}
       accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityHint={disabled ? 'Please wait for the current action to finish.' : undefined}
     >
-      <Text className={`text-xs font-bold ${foreground}`}>{label}</Text>
+      {disabled ? (
+        <ActivityIndicator size="small" color={iconColor} />
+      ) : (
+        <Ionicons name={icon} size={19} color={iconColor} />
+      )}
     </Pressable>
   );
 }

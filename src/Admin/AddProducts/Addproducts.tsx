@@ -190,7 +190,11 @@ const FALLBACK_PURITY: Record<string, string[]> = {
   diamond: ['D-F / VVS', 'G-H / VS', 'I-J / SI'],
 };
 
-type Props = { onCancel: () => void; onSaved: () => void };
+type Props = {
+  onCancel: () => void;
+  onSaved: () => void;
+  productId?: string;
+};
 
 const amount = (value: string) => {
   const parsed = Number(value);
@@ -242,8 +246,97 @@ function numericValue(value: number | string | undefined): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-function AddProducts({ onCancel, onSaved }: Props) {
+const getProductText = (value: unknown, fallback = ''): string =>
+  typeof value === 'string' || typeof value === 'number' ? String(value) : fallback;
+
+const getProductList = (value: unknown): unknown[] => {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== 'string' || !value.trim()) return [];
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const productToDraft = (product: Record<string, unknown>): Draft => {
+  const variants = getProductList(product.variants);
+  const firstVariant = variants[0];
+  const variantImages =
+    typeof firstVariant === 'object' && firstVariant !== null && 'images' in firstVariant
+      ? getProductList(firstVariant.images)
+      : [];
+  const images = [...getProductList(product.images), ...variantImages]
+    .map(image => {
+      if (typeof image === 'string') return image;
+      if (typeof image !== 'object' || image === null) return '';
+      return getProductText(
+        'url' in image ? image.url : 'path' in image ? image.path : 'src' in image ? image.src : '',
+      );
+    })
+    .filter(Boolean);
+  const highlights = getProductList(product.highlights);
+  const availableSizes = getProductList(product.available_sizes);
+
+  return {
+    ...EMPTY,
+    name: getProductText(product.name),
+    product_code: getProductText(product.product_code),
+    brand: getProductText(product.brand, EMPTY.brand),
+    category: getProductText(product.category),
+    subcategory: getProductText(product.subcategory),
+    metal_type: getProductText(product.metal_type),
+    product_type: getProductText(product.product_type, EMPTY.product_type),
+    purity: getProductText(product.purity),
+    gross_weight: getProductText(product.gross_weight),
+    net_gold_weight: getProductText(product.net_gold_weight),
+    gold_rate_per_gram: getProductText(product.gold_rate_per_gram),
+    making_charge_type: getProductText(product.making_charge_type, EMPTY.making_charge_type),
+    making_charge: getProductText(product.making_charge),
+    wastage_type: getProductText(product.wastage_type, EMPTY.wastage_type),
+    wastage: getProductText(product.wastage),
+    stone_weight: getProductText(product.stone_weight, EMPTY.stone_weight),
+    stone_charges: getProductText(product.stone_charges, EMPTY.stone_charges),
+    other_charges: getProductText(product.other_charges, EMPTY.other_charges),
+    stone_type: getProductText(product.stone_type, EMPTY.stone_type),
+    huid: getProductText(product.huid),
+    available_sizes: availableSizes.map(String).join(', '),
+    product_size: getProductText(product.product_size),
+    length: getProductText(product.length),
+    width: getProductText(product.width),
+    height: getProductText(product.height),
+    ring_size: getProductText(product.ring_size),
+    bangle_size: getProductText(product.bangle_size),
+    chain_length: getProductText(product.chain_length),
+    mrp: getProductText(product.mrp),
+    offer: getProductText(product.offer, EMPTY.offer),
+    offer_type: getProductText(product.offer_type, EMPTY.offer_type),
+    fixed_discount_amount: getProductText(product.fixed_discount_amount, EMPTY.fixed_discount_amount),
+    gst_rate: getProductText(product.gst_rate),
+    price_includes_gst: product.price_includes_gst !== false,
+    description: getProductText(product.description),
+    highlights: highlights.map(String).join('\n'),
+    specifications: getProductText(product.specifications),
+    care_instructions: getProductText(product.care_instructions),
+    warranty: getProductText(product.warranty),
+    total_stock: getProductText(product.total_stock, EMPTY.total_stock),
+    warehouse: getProductText(product.warehouse, EMPTY.warehouse),
+    status: getProductText(product.status, EMPTY.status),
+    featured: product.featured === true,
+    new_arrival: product.new_arrival === true,
+    best_seller: product.best_seller === true,
+    images,
+    size_guide_chart: getProductText(product.size_guide_chart),
+    video: getProductText(product.video),
+    certificate: getProductText(product.certificate),
+    rating: getProductText(product.rating, EMPTY.rating),
+  };
+};
+
+function AddProducts({ onCancel, onSaved, productId }: Props) {
   const [form, setForm] = useState<Draft>(EMPTY);
+  const [originalProduct, setOriginalProduct] = useState<Record<string, unknown> | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [metals, setMetals] = useState<Metal[]>([]);
   const [currentGoldRates, setCurrentGoldRates] = useState<CurrentGoldRates | null>(null);
@@ -265,10 +358,11 @@ function AddProducts({ onCancel, onSaved }: Props) {
     let active = true;
     const loadOptions = async () => {
       try {
-        const [categoryResponse, metalResponse, codeResponse] = await Promise.all([
+        const [categoryResponse, metalResponse, codeResponse, productResponse] = await Promise.all([
           api.get('/categories'),
           api.get('/metals'),
-          api.get('/products/latest-code'),
+          productId ? Promise.resolve(null) : api.get('/products/latest-code'),
+          productId ? api.get(`/products/${productId}`) : Promise.resolve(null),
         ]);
         if (!active) return;
         const categoryItems: Category[] = Array.isArray(categoryResponse.data)
@@ -283,6 +377,23 @@ function AddProducts({ onCancel, onSaved }: Props) {
           metalItems.find(item => item.name.toLowerCase() === 'gold') ?? metalItems[0];
         setCategories(categoryItems);
         setMetals(metalItems);
+        const productPayload = productResponse?.data;
+        const product =
+          typeof productPayload === 'object' && productPayload !== null
+            ? 'product' in productPayload &&
+              typeof productPayload.product === 'object' &&
+              productPayload.product !== null
+              ? productPayload.product as Record<string, unknown>
+              : productPayload as Record<string, unknown>
+            : null;
+        if (productId && !product) {
+          throw new Error('The server returned invalid product details.');
+        }
+        if (product) {
+          setOriginalProduct(product);
+          setForm(productToDraft(product));
+          return;
+        }
         setForm(current => ({
           ...current,
           category: initialCategory?.name ?? '',
@@ -290,8 +401,8 @@ function AddProducts({ onCancel, onSaved }: Props) {
           metal_type: initialMetal?.name ?? '',
           purity: getPurityOptions(initialMetal)[0] ?? '',
           product_code:
-            typeof codeResponse.data?.latestCode === 'string' ||
-            typeof codeResponse.data?.latestCode === 'number'
+            typeof codeResponse?.data?.latestCode === 'string' ||
+            typeof codeResponse?.data?.latestCode === 'number'
               ? String(codeResponse.data.latestCode)
               : '',
         }));
@@ -306,7 +417,7 @@ function AddProducts({ onCancel, onSaved }: Props) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [productId]);
 
   useEffect(() => {
     let active = true;
@@ -702,10 +813,21 @@ function AddProducts({ onCancel, onSaved }: Props) {
     };
     setIsSaving(true);
     try {
-      await api.post('/products', payload);
-      Alert.alert('Product added', 'The product was added to inventory.', [
+      if (productId) {
+        if (!originalProduct) {
+          throw new Error('Product details are not loaded. Please try again.');
+        }
+        await api.put(`/products/${productId}`, { ...originalProduct, ...payload });
+      } else {
+        await api.post('/products', payload);
+      }
+      Alert.alert(
+        productId ? 'Product updated' : 'Product added',
+        productId ? 'The product details were updated.' : 'The product was added to inventory.',
+        [
         { text: 'OK', onPress: onSaved },
-      ]);
+        ],
+      );
     } catch (error) {
       console.error('Product save failed:', error);
       Alert.alert('Could not save product', getErrorMessage(error, 'Please try again.'));
@@ -728,7 +850,9 @@ function AddProducts({ onCancel, onSaved }: Props) {
             <FormIcon name="back" color="#FFFFFF" />
           </Pressable>
           <View className="flex-1">
-            <Text className="text-base font-extrabold tracking-wide text-white">Add Product</Text>
+            <Text className="text-base font-extrabold tracking-wide text-white">
+              {productId ? 'Edit Product' : 'Add Product'}
+            </Text>
             <View className="mt-0.5 flex-row items-center">
               <Text className="text-[10px] font-medium text-emerald-200">
                 Sri Golds Jewellery
@@ -736,7 +860,7 @@ function AddProducts({ onCancel, onSaved }: Props) {
               <Text className="mx-1.5 text-[8px] text-emerald-400">◆</Text>
               <View className="rounded bg-emerald-950/60 px-1.5 py-0.5">
                 <Text className="text-[9px] font-bold tracking-wider text-accent-light">
-                  NEW PRODUCT
+                  {productId ? 'EDIT PRODUCT' : 'NEW PRODUCT'}
                 </Text>
               </View>
             </View>
@@ -770,7 +894,7 @@ function AddProducts({ onCancel, onSaved }: Props) {
 
           <View className="flex-1">
             <Text className="text-base font-extrabold tracking-wide text-white" numberOfLines={1}>
-              Add Product
+              {productId ? 'Edit Product' : 'Add Product'}
             </Text>
             <View className="mt-0.5 flex-row items-center">
               <Text className="text-[10px] font-medium text-emerald-200" numberOfLines={1}>
@@ -779,7 +903,7 @@ function AddProducts({ onCancel, onSaved }: Props) {
               <Text className="mx-1.5 text-[8px] text-emerald-400">◆</Text>
               <View className="rounded bg-emerald-950/60 px-1.5 py-0.5">
                 <Text className="text-[9px] font-bold tracking-wider text-accent-light">
-                  {form.product_code || 'NEW PRODUCT'}
+                  {productId ? 'EDIT PRODUCT' : form.product_code || 'NEW PRODUCT'}
                 </Text>
               </View>
             </View>
@@ -1042,7 +1166,7 @@ function AddProducts({ onCancel, onSaved }: Props) {
 
         <View className="mb-3 flex-row gap-3">
           <Pressable onPress={onCancel} className="flex-1 items-center rounded-xl border border-border bg-surface px-4 py-3.5" accessibilityRole="button">
-            <Text className="text-sm font-bold text-slate-600">Cancel</Text>
+            <Text className="text-sm font-bold text-slate-600">Close</Text>
           </Pressable>
           <Pressable onPress={save} disabled={isSaving || isUploading} className="flex-1 flex-row items-center justify-center rounded-xl bg-primary px-4 py-3.5" accessibilityRole="button">
             {isSaving ? <ActivityIndicator color="#FFFFFF" /> : <FormIcon name="check" color="#FFFFFF" />}

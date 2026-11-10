@@ -1307,10 +1307,10 @@ function LoanRenewal({ onBack }: Props) {
               <Pressable
                 onPress={() => setDatePickerTarget(null)}
                 accessibilityRole="button"
-                accessibilityLabel="Cancel date selection"
+                accessibilityLabel="Close date selection"
                 className="px-2 py-1"
               >
-                <Text className="text-sm font-bold text-slate-500">Cancel</Text>
+                <Text className="text-sm font-bold text-slate-500">Close</Text>
               </Pressable>
             </View>
             <View className="mb-3 flex-row items-center justify-between">

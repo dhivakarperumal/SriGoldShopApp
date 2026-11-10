@@ -481,7 +481,7 @@ function CreateCustomers({ customer, onCancel, onSaved }: Props) {
             </FormSection>
           </ScrollView>
           <View className="flex-row gap-3 border-t border-slate-200 bg-white px-4 py-3">
-            <ActionButton label="Cancel" onPress={onCancel} secondary disabled={saving || uploadingPhoto} />
+            <ActionButton label="Close" onPress={onCancel} secondary disabled={saving || uploadingPhoto} />
             <ActionButton label={saving ? 'Saving…' : customer ? 'Save changes' : 'Create customer'} onPress={submit} disabled={saving || uploadingPhoto} />
           </View>
         </KeyboardAvoidingView>
@@ -499,10 +499,10 @@ function CreateCustomers({ customer, onCancel, onSaved }: Props) {
               <Pressable
                 onPress={() => setDatePickerTarget(null)}
                 accessibilityRole="button"
-                accessibilityLabel="Cancel date selection"
+                accessibilityLabel="Close date selection"
                 className="px-2 py-1"
               >
-                <Text className="text-sm font-bold text-slate-500">Cancel</Text>
+                <Text className="text-sm font-bold text-slate-500">Close</Text>
               </Pressable>
             </View>
             <View className="mb-3 flex-row items-center justify-between">

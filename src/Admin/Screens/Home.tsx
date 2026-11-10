@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AppState,
   ActivityIndicator,
@@ -16,6 +16,7 @@ import ProductCard from '../../Components/ProductCard';
 import { getProductImageUrl } from '../../utils/productImage';
 import type { AuthenticatedUser } from '../Auth/Login';
 import type { AdminRoute } from '../Navigations/TopHeader';
+import { getDashboardDateFilterParams } from './dashboardDateFilters';
 
 type DashboardStat = {
   id?: string;
@@ -151,6 +152,7 @@ type HomeGoldRateSet = {
 type HomeProps = {
   user: AuthenticatedUser;
   onNavigate?: (route: AdminRoute) => void;
+  isActive?: boolean;
 };
 
 const STAT_CARDS = [
@@ -266,7 +268,7 @@ const getDisplayName = (record: DashboardRecord, keys: string[], fallback: strin
   return fallback;
 };
 
-function Home({ user, onNavigate }: HomeProps) {
+function Home({ user, onNavigate, isActive = false }: HomeProps) {
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
   const [products, setProducts] = useState<DashboardRecord[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<(typeof FILTERS)[number]['value']>('all');
@@ -277,8 +279,12 @@ function Home({ user, onNavigate }: HomeProps) {
   const [goldRateSet, setGoldRateSet] = useState<HomeGoldRateSet | null>(null);
   const [isLoadingGoldRates, setIsLoadingGoldRates] = useState(true);
   const [goldRateError, setGoldRateError] = useState(false);
+  const hasLoadedDashboard = useRef(false);
+  const hasLoadedGoldRates = useRef(false);
 
   useEffect(() => {
+    if (isActive === false) return undefined;
+
     const refreshInterval = setInterval(() => {
       if (AppState.currentState === 'active') {
         setRefreshVersion(version => version + 1);
@@ -294,13 +300,13 @@ function Home({ user, onNavigate }: HomeProps) {
       clearInterval(refreshInterval);
       appStateSubscription.remove();
     };
-  }, []);
+  }, [isActive]);
 
   useEffect(() => {
     const controller = new AbortController();
     let isCurrentRequest = true;
 
-    setIsLoading(true);
+    if (!hasLoadedDashboard.current) setIsLoading(true);
     setLoadError(false);
     api
       .get('/products', {
@@ -328,7 +334,7 @@ function Home({ user, onNavigate }: HomeProps) {
     api
       .get('/dashboard', {
         params: {
-          datePreset: selectedFilter,
+          ...getDashboardDateFilterParams(selectedFilter),
         },
         signal: controller.signal,
       })
@@ -341,6 +347,7 @@ function Home({ user, onNavigate }: HomeProps) {
           throw new Error('Dashboard API returned no metrics');
         }
         setDashboard(dashboardData);
+        hasLoadedDashboard.current = true;
       })
       .catch(error => {
         if (!isCurrentRequest || error?.name === 'CanceledError') {
@@ -356,7 +363,7 @@ function Home({ user, onNavigate }: HomeProps) {
         }
       });
 
-    setIsLoadingGoldRates(true);
+    if (!hasLoadedGoldRates.current) setIsLoadingGoldRates(true);
     setGoldRateError(false);
     api
       .get<HomeGoldRateSet>('/gold-rates/current', { signal: controller.signal })
@@ -371,6 +378,7 @@ function Home({ user, onNavigate }: HomeProps) {
             rate => typeof rate?.metal_type === 'string' && typeof rate?.purity === 'string',
           ),
         });
+        hasLoadedGoldRates.current = true;
       })
       .catch(error => {
         if (!isCurrentRequest || error?.name === 'CanceledError') return;
@@ -451,30 +459,7 @@ function Home({ user, onNavigate }: HomeProps) {
         ) : null}
       </View>
 
-      <View className="mb-4 flex-row rounded-xl bg-slate-200/70 p-1">
-        {FILTERS.map(filter => {
-          const isSelected = selectedFilter === filter.value;
-          return (
-            <Pressable
-              key={filter.value}
-              onPress={() => setSelectedFilter(filter.value)}
-              className={`flex-1 items-center rounded-lg px-2 py-2 ${
-                isSelected ? 'bg-white shadow-sm' : ''
-              }`}
-              accessibilityRole="button"
-              accessibilityState={{ selected: isSelected }}
-            >
-              <Text
-                className={`text-xs font-semibold ${
-                  isSelected ? 'text-primary-dark' : 'text-slate-500'
-                }`}
-              >
-                {filter.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      
 
       {loadError ? (
         <View className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3">

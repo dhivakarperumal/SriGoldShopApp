@@ -88,14 +88,13 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState('');
-  const [stockProduct, setStockProduct] = useState<Product | null>(null);
-  const [newStock, setNewStock] = useState('');
-  const [isUpdatingStock, setIsUpdatingStock] = useState(false);
   const [isAddProductFormVisible, setIsAddProductFormVisible] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [isFabMenuOpen, setIsFabMenuOpen] = useState(false);
   const addButtonPulse = useRef(new Animated.Value(0)).current;
+  const hasLoadedProducts = useRef(false);
 
   useEffect(() => {
     const pulseAnimation = Animated.loop(
@@ -124,7 +123,9 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
   }, [search]);
 
   const fetchProducts = useCallback(async (showRefreshIndicator = false) => {
-    setIsLoading(true);
+    if (!hasLoadedProducts.current && !showRefreshIndicator) {
+      setIsLoading(true);
+    }
     setLoadError('');
     if (showRefreshIndicator) {
       setIsRefreshing(true);
@@ -223,6 +224,7 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
         inactive: inactiveCount,
         outOfStock: outOfStockCount,
       });
+      hasLoadedProducts.current = true;
       setCategories(Array.isArray(payload.filters?.categories) ? payload.filters.categories : []);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -284,31 +286,6 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
       ],
     );
   };
-
-  const updateStock = async () => {
-    const quantity = Number(newStock);
-    if (!stockProduct || !Number.isInteger(quantity) || quantity < 0) {
-      Alert.alert('Invalid stock', 'Enter a whole number of zero or more.');
-      return;
-    }
-
-    setIsUpdatingStock(true);
-    try {
-      await api.put(`/products/${stockProduct.id}`, {
-        ...stockProduct,
-        total_stock: quantity,
-      });
-      setStockProduct(null);
-      setRefreshVersion(version => version + 1);
-    } catch (error) {
-      console.error('Error updating product stock:', error);
-      Alert.alert('Stock update failed', getErrorMessage(error, 'Could not update stock.'));
-    } finally {
-      setIsUpdatingStock(false);
-    }
-  };
-
-
 
   return (
     <View className="flex-1 bg-background">
@@ -448,9 +425,9 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
                 key={String(product.id)}
                 product={product}
                 onPressDetails={() => setSelectedProductId(String(product.id))}
-                onUpdateStock={() => {
-                  setStockProduct(product);
-                  setNewStock(String(product.total_stock ?? 0));
+                onEditProduct={() => {
+                  setEditingProductId(String(product.id));
+                  setIsAddProductFormVisible(true);
                 }}
                 onDelete={() => handleDelete(product)}
               />
@@ -497,6 +474,7 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
               icon="box"
               onPress={() => {
                 setIsFabMenuOpen(false);
+                setEditingProductId(null);
                 setIsAddProductFormVisible(true);
               }}
             />
@@ -581,35 +559,6 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
       </Modal>
 
       <Modal
-        visible={Boolean(stockProduct)}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setStockProduct(null)}
-      >
-        <ModalBackdrop onClose={() => setStockProduct(null)}>
-          <Text className="text-lg font-bold text-slate-900">Update stock</Text>
-          <Text className="mt-1 text-xs text-muted" numberOfLines={1}>
-            {String(stockProduct?.name || 'Product')}
-          </Text>
-          <TextInput
-            value={newStock}
-            onChangeText={setNewStock}
-            keyboardType="number-pad"
-            placeholder="Enter quantity"
-            className="mt-5 rounded-xl border border-border bg-slate-50 px-4 py-3 text-base text-slate-900"
-            accessibilityLabel="New stock quantity"
-          />
-          <ModalActions
-            cancelLabel="Cancel"
-            confirmLabel={isUpdatingStock ? 'Saving…' : 'Save stock'}
-            onCancel={() => setStockProduct(null)}
-            onConfirm={updateStock}
-            disabled={isUpdatingStock}
-          />
-        </ModalBackdrop>
-      </Modal>
-
-      <Modal
         visible={isStockPickerVisible}
         transparent
         animationType="fade"
@@ -661,9 +610,14 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
         statusBarTranslucent
       >
         <AddProducts
-          onCancel={() => setIsAddProductFormVisible(false)}
+          productId={editingProductId ?? undefined}
+          onCancel={() => {
+            setIsAddProductFormVisible(false);
+            setEditingProductId(null);
+          }}
           onSaved={() => {
             setIsAddProductFormVisible(false);
+            setEditingProductId(null);
             setRefreshVersion(version => version + 1);
           }}
         />
@@ -866,12 +820,12 @@ function StatCard({
 function InventoryProductCard({
   product,
   onPressDetails,
-  onUpdateStock,
+  onEditProduct,
   onDelete,
 }: {
   product: Product;
   onPressDetails: () => void;
-  onUpdateStock: () => void;
+  onEditProduct: () => void;
   onDelete: () => void;
 }) {
   const stock = getNumber(product.total_stock);
@@ -898,13 +852,20 @@ function InventoryProductCard({
           </View>
           <View className="flex-row items-center">
             <Pressable
-              onPress={onUpdateStock}
-              className="mr-2 flex-row items-center rounded-lg border border-primary/15 bg-primary/10 px-3 py-2"
+              onPress={onPressDetails}
+              className="mr-2 h-9 w-9 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50"
               accessibilityRole="button"
-              accessibilityLabel={`Update stock for ${product.name || 'product'}`}
+              accessibilityLabel={`View ${product.name || 'product'} details`}
             >
-              <ProductIcon name="edit" color="#004D40" size={14} />
-              <Text className="ml-1.5 text-[10px] font-bold text-primary">Stock</Text>
+              <ProductIcon name="eye" color="#004D40" size={16} />
+            </Pressable>
+            <Pressable
+              onPress={onEditProduct}
+              className="mr-2 h-9 w-9 items-center justify-center rounded-lg border border-primary/15 bg-primary/10"
+              accessibilityRole="button"
+              accessibilityLabel={`Edit ${product.name || 'product'}`}
+            >
+              <ProductIcon name="edit" color="#004D40" size={16} />
             </Pressable>
             <Pressable
               onPress={onDelete}
@@ -934,46 +895,12 @@ function ModalBackdrop({ children, onClose }: { children: React.ReactNode; onClo
   );
 }
 
-function ModalActions({
-  cancelLabel,
-  confirmLabel,
-  onCancel,
-  onConfirm,
-  disabled,
-}: {
-  cancelLabel: string;
-  confirmLabel: string;
-  onCancel: () => void;
-  onConfirm: () => void;
-  disabled: boolean;
-}) {
-  return (
-    <View className="mt-5 flex-row">
-      <Pressable
-        onPress={onCancel}
-        disabled={disabled}
-        className="mr-2 flex-1 items-center rounded-xl border border-border px-3 py-3"
-        accessibilityRole="button"
-      >
-        <Text className="text-xs font-bold text-slate-600">{cancelLabel}</Text>
-      </Pressable>
-      <Pressable
-        onPress={onConfirm}
-        disabled={disabled}
-        className="ml-2 flex-1 items-center rounded-xl bg-primary px-3 py-3"
-        accessibilityRole="button"
-      >
-        <Text className="text-xs font-bold text-white">{confirmLabel}</Text>
-      </Pressable>
-    </View>
-  );
-}
-
 type ProductIconName =
   | 'plus'
   | 'search'
   | 'refresh'
   | 'box'
+  | 'eye'
   | 'edit'
   | 'trash'
   | 'chevron'
@@ -999,6 +926,7 @@ function ProductIcon({
     search: ['M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z', 'm21 21-4.35-4.35'],
     refresh: ['M20 7v5h-5', 'M4 17v-5h5', 'M5.6 9a7 7 0 0 1 11.6-2L20 12', 'M4 12l2.8 5a7 7 0 0 0 11.6-2'],
     box: ['m21 8-9 5-9-5', 'm3 8 9-5 9 5v10l-9 5-9-5V8Z', 'M12 13v10'],
+    eye: ['M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z', 'M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z'],
     edit: ['M12 20h9', 'M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z'],
     trash: ['M3 6h18', 'M8 6V4h8v2', 'm19 6-1 14H6L5 6', 'M10 11v5', 'M14 11v5'],
     chevron: ['m9 18 6-6-6-6'],

@@ -394,7 +394,7 @@ function Customer({ onBack, openCreateOnMount = false, onCreateOpened }: Props) 
                 disabled={isSaving}
                 accessibilityRole="button"
               >
-                <Text className="font-bold text-slate-700">Cancel</Text>
+                <Text className="font-bold text-slate-700">Close</Text>
               </Pressable>
               <Pressable
                 className="flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5"

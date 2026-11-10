@@ -376,9 +376,9 @@ function AddMetaltype({
               disabled={saving}
               className="flex-1 items-center justify-center rounded-xl border border-border bg-slate-100 py-3.5 active:bg-slate-200"
               accessibilityRole="button"
-              accessibilityLabel="Cancel"
+              accessibilityLabel="Close form"
             >
-              <Text className="text-sm font-bold text-slate-700">Cancel</Text>
+              <Text className="text-sm font-bold text-slate-700">Close</Text>
             </Pressable>
 
             <Pressable

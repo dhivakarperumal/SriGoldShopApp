@@ -13,11 +13,13 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StatusBar,
   Text,
   TextInput,
   View,
 } from 'react-native';
 import { Alert } from '../../Components/AppAlert';
+import Svg, { Path } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { launchImageLibrary, type Asset } from 'react-native-image-picker';
 import api from '../../api';
@@ -609,24 +611,32 @@ function CreateLoan({ onCancel, onCreated }: Props) {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-background px-6">
-        <ActivityIndicator size="large" color={PRIMARY} />
-        <Text className="mt-3 text-sm font-semibold text-slate-600">Loading loan form…</Text>
-      </View>
+      <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
+        <StatusBar barStyle="light-content" />
+        <LoanHeader onCancel={onCancel} />
+        <View className="flex-1 items-center justify-center bg-background px-6">
+          <ActivityIndicator size="large" color={PRIMARY} />
+          <Text className="mt-3 text-sm font-semibold text-slate-600">Loading loan form…</Text>
+        </View>
+      </SafeAreaView>
     );
   }
   if (loadError) {
     return (
-      <View className="flex-1 items-center justify-center bg-background px-6">
-        <View className="w-full rounded-2xl border border-rose-200 bg-rose-50 p-5">
-          <Text className="text-base font-extrabold text-rose-900">Could not load loan options</Text>
-          <Text className="mt-2 text-sm leading-5 text-rose-800">{loadError}</Text>
-          <View className="mt-4 flex-row gap-3">
-            <ActionButton label="Back" onPress={onCancel} secondary />
-            <ActionButton label="Try again" onPress={loadOptions} />
+      <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
+        <StatusBar barStyle="light-content" />
+        <LoanHeader onCancel={onCancel} />
+        <View className="flex-1 items-center justify-center bg-background px-6">
+          <View className="w-full rounded-2xl border border-rose-200 bg-rose-50 p-5">
+            <Text className="text-base font-extrabold text-rose-900">Could not load loan options</Text>
+            <Text className="mt-2 text-sm leading-5 text-rose-800">{loadError}</Text>
+            <View className="mt-4 flex-row gap-3">
+              <ActionButton label="Back" onPress={onCancel} secondary />
+              <ActionButton label="Try again" onPress={loadOptions} />
+            </View>
           </View>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -639,20 +649,14 @@ function CreateLoan({ onCancel, onCreated }: Props) {
     openPicker(title, options, field);
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['bottom', 'left', 'right']}>
+    <SafeAreaView className="flex-1 bg-primary" edges={['top']}>
+      <StatusBar barStyle="light-content" />
+      <LoanHeader onCancel={onCancel} disabled={saving} />
+      <SafeAreaView className="flex-1 bg-background" edges={['bottom', 'left', 'right']}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View className="flex-row items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
-          <View className="flex-1">
-            <Text className="text-lg font-extrabold text-slate-900">Create loan</Text>
-            <Text className="mt-0.5 text-xs text-slate-500">Gold-backed loan · New application</Text>
-          </View>
-          <Pressable onPress={onCancel} disabled={saving} className="rounded-xl border border-slate-200 px-4 py-2.5">
-            <Text className="text-xs font-bold text-slate-700">Close</Text>
-          </Pressable>
-        </View>
         <ScrollView
           className="flex-1"
           contentContainerClassName="gap-4 px-4 py-4"
@@ -1001,7 +1005,7 @@ function CreateLoan({ onCancel, onCreated }: Props) {
           </FormSection>
         </ScrollView>
         <View className="flex-row gap-3 border-t border-slate-200 bg-white px-4 py-3">
-          <ActionButton label="Cancel" onPress={onCancel} secondary disabled={saving} />
+          <ActionButton label="Close" onPress={onCancel} secondary disabled={saving} />
           <ActionButton
             label={saving ? 'Saving loan…' : 'Create loan'}
             onPress={submitLoan}
@@ -1010,6 +1014,7 @@ function CreateLoan({ onCancel, onCreated }: Props) {
           />
         </View>
       </KeyboardAvoidingView>
+      </SafeAreaView>
 
       <Modal visible={customerModal} transparent animationType="slide" onRequestClose={() => setCustomerModal(false)}>
         <View className="flex-1 justify-end bg-black/40">
@@ -1087,10 +1092,10 @@ function CreateLoan({ onCancel, onCreated }: Props) {
               <Pressable
                 onPress={() => setDatePickerTarget(null)}
                 accessibilityRole="button"
-                accessibilityLabel="Cancel date selection"
+                accessibilityLabel="Close date selection"
                 className="px-2 py-1"
               >
-                <Text className="text-sm font-bold text-slate-500">Cancel</Text>
+                <Text className="text-sm font-bold text-slate-500">Close</Text>
               </Pressable>
             </View>
             <View className="mb-3 flex-row items-center justify-between">
@@ -1182,6 +1187,52 @@ function CreateLoan({ onCancel, onCreated }: Props) {
         </View>
       </Modal>
     </SafeAreaView>
+  );
+}
+
+function LoanHeader({
+  onCancel,
+  disabled = false,
+}: {
+  onCancel: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <View className="h-16 flex-row items-center justify-between border-b border-[#00382E] bg-primary px-4">
+      <View className="flex-1 flex-row items-center pr-3">
+        <Pressable
+          onPress={onCancel}
+          disabled={disabled}
+          className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-emerald-700/60 bg-emerald-900/40 active:bg-emerald-900/70"
+          accessibilityRole="button"
+          accessibilityLabel="Back to loans"
+        >
+          <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+            <Path
+              d="m15 18-6-6 6-6"
+              stroke="#FFFFFF"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
+        </Pressable>
+        <View className="flex-1">
+          <Text className="text-base font-extrabold tracking-wide text-white" numberOfLines={1}>
+            Create Loan
+          </Text>
+          <View className="mt-0.5 flex-row items-center">
+            <Text className="text-[10px] font-medium text-emerald-200" numberOfLines={1}>
+              Sri Golds Jewellery
+            </Text>
+            <Text className="mx-1.5 text-[8px] text-emerald-400">◆</Text>
+            <View className="rounded bg-emerald-950/60 px-1.5 py-0.5">
+              <Text className="text-[9px] font-bold tracking-wider text-accent-light">NEW LOAN</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
   );
 }
 
