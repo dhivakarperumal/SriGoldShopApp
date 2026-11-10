@@ -158,6 +158,7 @@ function CreateCustomers({ customer, onCancel, onSaved }: Props) {
   const [persistedCustomer, setPersistedCustomer] = useState(customer || null);
   const [uploadedDocumentKeys, setUploadedDocumentKeys] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [existingDocuments, setExistingDocuments] = useState<Array<Record<string, unknown>>>([]);
   const [datePickerTarget, setDatePickerTarget] = useState<DatePickerTarget | null>(null);
@@ -400,7 +401,15 @@ function CreateCustomers({ customer, onCancel, onSaved }: Props) {
               <Field label="Full name" value={form.full_name} onChangeText={value => update('full_name', value)} required />
               <Field label="Mobile" value={form.mobile} onChangeText={value => update('mobile', value)} keyboardType="phone-pad" required />
               {!customer ? (
-                <Field label="Account password" value={form.password} onChangeText={value => update('password', value)} secureTextEntry placeholder="Defaults to mobile number" />
+                <Field
+                  label="Account password"
+                  value={form.password}
+                  onChangeText={value => update('password', value)}
+                  secureTextEntry={!isPasswordVisible}
+                  secureTextEntryVisible={isPasswordVisible}
+                  onToggleSecureTextEntry={() => setIsPasswordVisible(visible => !visible)}
+                  placeholder="Defaults to mobile number"
+                />
               ) : null}
               <Field label="Alternate mobile" value={form.alternate_mobile || ''} onChangeText={value => update('alternate_mobile', value)} keyboardType="phone-pad" />
               <Field label="Email" value={form.email || ''} onChangeText={value => update('email', value)} keyboardType="email-address" />
@@ -602,6 +611,8 @@ function Field({
   onChangeText,
   keyboardType = 'default',
   secureTextEntry = false,
+  secureTextEntryVisible = false,
+  onToggleSecureTextEntry,
   multiline = false,
   placeholder,
   required = false,
@@ -611,6 +622,8 @@ function Field({
   onChangeText: (value: string) => void;
   keyboardType?: 'default' | 'phone-pad' | 'email-address' | 'number-pad';
   secureTextEntry?: boolean;
+  secureTextEntryVisible?: boolean;
+  onToggleSecureTextEntry?: () => void;
   multiline?: boolean;
   placeholder?: string;
   required?: boolean;
@@ -618,17 +631,53 @@ function Field({
   return (
     <View>
       <Text className="mb-1.5 text-xs font-semibold text-slate-700">{label}{required ? ' *' : ''}</Text>
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        keyboardType={keyboardType}
-        secureTextEntry={secureTextEntry}
-        multiline={multiline}
-        placeholder={placeholder || `Enter ${label.toLowerCase()}`}
-        placeholderTextColor="#94A3B8"
-        textAlignVertical={multiline ? 'top' : 'center'}
-        className={`rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 ${multiline ? 'min-h-20' : ''}`}
-      />
+      <View className="flex-row items-center rounded-xl border border-slate-200 bg-white px-3.5">
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          keyboardType={keyboardType}
+          secureTextEntry={secureTextEntry}
+          multiline={multiline}
+          placeholder={placeholder || `Enter ${label.toLowerCase()}`}
+          placeholderTextColor="#94A3B8"
+          textAlignVertical={multiline ? 'top' : 'center'}
+          className={`min-w-0 flex-1 py-3 text-sm text-slate-800 ${multiline ? 'min-h-20' : ''}`}
+        />
+        {onToggleSecureTextEntry ? (
+          <Pressable
+            onPress={onToggleSecureTextEntry}
+            accessibilityRole="button"
+            accessibilityLabel={secureTextEntryVisible ? 'Hide password' : 'Show password'}
+            accessibilityState={{ selected: secureTextEntryVisible }}
+            hitSlop={8}
+            className="ml-2 h-10 w-10 items-center justify-center"
+          >
+            <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"
+                stroke="#64748B"
+                strokeWidth={1.8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {secureTextEntryVisible ? (
+                <Path
+                  d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"
+                  stroke="#64748B"
+                  strokeWidth={1.8}
+                />
+              ) : (
+                <Path
+                  d="m3 3 18 18"
+                  stroke="#64748B"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                />
+              )}
+            </Svg>
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }

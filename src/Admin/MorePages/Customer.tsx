@@ -139,6 +139,7 @@ function Customer({ onBack, openCreateOnMount = false, onCreateOpened }: Props) 
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [form, setForm] = useState<CustomerForm>(EMPTY_FORM);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const fetchCustomers = useCallback(async (refresh = false) => {
     setLoadError('');
@@ -352,7 +353,9 @@ function Customer({ onBack, openCreateOnMount = false, onCreateOpened }: Props) 
                   label="Password *"
                   value={form.password}
                   onChangeText={value => setForm(current => ({ ...current, password: value }))}
-                  secureTextEntry
+                  secureTextEntry={!isPasswordVisible}
+                  onToggleSecureTextEntry={() => setIsPasswordVisible(visible => !visible)}
+                  secureTextEntryVisible={isPasswordVisible}
                   autoCapitalize="none"
                 />
               ) : null}
@@ -743,20 +746,58 @@ function CustomerInput({
   keyboardType?: 'default' | 'email-address' | 'phone-pad';
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   secureTextEntry?: boolean;
+  onToggleSecureTextEntry?: () => void;
+  secureTextEntryVisible?: boolean;
 }) {
   return (
     <View>
       <Text className="text-xs font-bold text-slate-700">{label}</Text>
-      <TextInput
-        className="mt-2 h-12 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900"
-        value={props.value}
-        onChangeText={props.onChangeText}
-        keyboardType={props.keyboardType}
-        autoCapitalize={props.autoCapitalize}
-        secureTextEntry={props.secureTextEntry}
-        placeholder={label.replace(' *', '')}
-        placeholderTextColor="#94A3B8"
-      />
+      <View className="mt-2 h-12 flex-row items-center rounded-xl border border-slate-200 bg-white px-3.5">
+        <TextInput
+          className="h-full min-w-0 flex-1 text-sm text-slate-900"
+          value={props.value}
+          onChangeText={props.onChangeText}
+          keyboardType={props.keyboardType}
+          autoCapitalize={props.autoCapitalize}
+          secureTextEntry={props.secureTextEntry}
+          placeholder={label.replace(' *', '')}
+          placeholderTextColor="#94A3B8"
+        />
+        {props.onToggleSecureTextEntry ? (
+          <Pressable
+            onPress={props.onToggleSecureTextEntry}
+            accessibilityRole="button"
+            accessibilityLabel={props.secureTextEntryVisible ? 'Hide password' : 'Show password'}
+            accessibilityState={{ selected: props.secureTextEntryVisible }}
+            hitSlop={8}
+            className="ml-2 h-10 w-10 items-center justify-center"
+          >
+            <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"
+                stroke="#64748B"
+                strokeWidth={1.8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {props.secureTextEntryVisible ? (
+                <Path
+                  d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"
+                  stroke="#64748B"
+                  strokeWidth={1.8}
+                />
+              ) : (
+                <Path
+                  d="m3 3 18 18"
+                  stroke="#64748B"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                />
+              )}
+            </Svg>
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }
