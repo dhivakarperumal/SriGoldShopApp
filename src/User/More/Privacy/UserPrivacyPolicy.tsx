@@ -1,6 +1,4 @@
-import { useState } from 'react';
 import {
-  Pressable,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -82,8 +80,6 @@ const POLICY_SECTIONS = [
 ];
 
 function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
-  const [expandedSection, setExpandedSection] = useState<number | null>(0);
-
   return (
     <View className="flex-1 bg-[#fffaf0]">
       <UserPageHeader
@@ -158,107 +154,57 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
         </View>
 
         <View className="gap-3 px-4">
-          {POLICY_SECTIONS.map((section, index) => {
-            const isExpanded = expandedSection === index;
-            return (
-              <View
-                key={section.title}
-                className={`rounded-2xl border bg-white ${
-                  isExpanded
-                    ? 'border-[#c6d9cd] shadow-sm'
-                    : 'border-[#eee5d7]'
-                }`}
-              >
-                <Pressable
-                  onPress={() =>
-                    setExpandedSection(current =>
-                      current === index ? null : index,
-                    )
-                  }
-                  accessibilityRole="button"
-                  accessibilityLabel={`Toggle ${section.title}`}
-                  accessibilityState={{ expanded: isExpanded }}
-                  style={({ pressed }) => ({
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    minHeight: 64,
-                    paddingHorizontal: 16,
-                    paddingVertical: 16,
-                    borderTopLeftRadius: 16,
-                    borderTopRightRadius: 16,
-                    backgroundColor: pressed
-                      ? '#d4ebe0'
-                      : isExpanded
-                        ? '#f5f8f3'
-                        : '#ffffff',
-                    transform: [{ scale: pressed ? 0.98 : 1 }],
-                  })}
-                >
-                  <View
-                    style={{
-                      height: 40,
-                      width: 40,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: 12,
-                      backgroundColor: '#e8f1eb',
-                    }}
+          {POLICY_SECTIONS.map((section, index) => (
+            <View
+              key={section.title}
+              className="rounded-2xl border border-[#c6d9cd] bg-white"
+            >
+              {/* Section header */}
+              <View className="flex-row items-center rounded-t-2xl bg-[#f5f8f3] px-4 py-4">
+                <View className="h-10 w-10 items-center justify-center rounded-xl bg-[#e8f1eb]">
+                  <Text className="text-xs font-extrabold text-[#08796a]">
+                    {String(index + 1).padStart(2, '0')}
+                  </Text>
+                </View>
+                <View className="ml-3 flex-1">
+                  <Text className="text-[9px] font-bold uppercase tracking-[1.5px] text-[#a87418]">
+                    Privacy section
+                  </Text>
+                  <Text className="mt-1 text-base font-bold text-[#153b2e]">
+                    {section.title}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Section content — always visible */}
+              <View className="gap-3 border-t border-[#edf0e9] p-4">
+                {section.paragraphs.map(paragraph => (
+                  <Text
+                    key={paragraph}
+                    className="text-justify text-[13px] leading-[22px] text-[#625b50]"
                   >
-                    <Text className="text-xs font-extrabold text-[#08796a]">
-                      {String(index + 1).padStart(2, '0')}
-                    </Text>
-                  </View>
-                  <View className="ml-3 flex-1">
-                    <Text className="text-[9px] font-bold uppercase tracking-[1.5px] text-[#a87418]">
-                      Privacy section
-                    </Text>
-                    <Text className="mt-1 text-base font-bold text-[#153b2e]">
-                      {section.title}
-                    </Text>
-                  </View>
+                    {paragraph}
+                  </Text>
+                ))}
+                {section.bullets?.map(bullet => (
                   <View
-                    className={`ml-3 h-8 w-8 items-center justify-center rounded-full ${
-                      isExpanded ? 'bg-[#e2eee7]' : 'bg-[#f7f4ed]'
-                    }`}
+                    key={bullet}
+                    className="flex-row rounded-xl bg-[#faf9f5] px-3 py-2.5"
                   >
-                    <Ionicons
-                      name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                      size={17}
-                      color="#08796a"
-                    />
+                    <View className="mr-3 mt-1.5 h-1.5 w-1.5 rounded-full bg-[#c39543]" />
+                    <Text className="flex-1 text-justify text-xs leading-5 text-[#625b50]">
+                      {bullet}
+                    </Text>
                   </View>
-                </Pressable>
-                {isExpanded ? (
-                  <View className="gap-3 border-t border-[#edf0e9] p-4">
-                    {section.paragraphs.map(paragraph => (
-                      <Text
-                        key={paragraph}
-                        className="text-justify text-[13px] leading-[22px] text-[#625b50]"
-                      >
-                        {paragraph}
-                      </Text>
-                    ))}
-                    {section.bullets?.map(bullet => (
-                      <View
-                        key={bullet}
-                        className="flex-row rounded-xl bg-[#faf9f5] px-3 py-2.5"
-                      >
-                        <View className="mr-3 mt-1.5 h-1.5 w-1.5 rounded-full bg-[#c39543]" />
-                        <Text className="flex-1 text-justify text-xs leading-5 text-[#625b50]">
-                          {bullet}
-                        </Text>
-                      </View>
-                    ))}
-                    {section.closing ? (
-                      <Text className="border-l-2 border-[#d6b66d] pl-3 text-justify text-xs leading-5 text-[#776747]">
-                        {section.closing}
-                      </Text>
-                    ) : null}
-                  </View>
+                ))}
+                {section.closing ? (
+                  <Text className="border-l-2 border-[#d6b66d] pl-3 text-justify text-xs leading-5 text-[#776747]">
+                    {section.closing}
+                  </Text>
                 ) : null}
               </View>
-            );
-          })}
+            </View>
+          ))}
         </View>
 
         <TouchableOpacity
