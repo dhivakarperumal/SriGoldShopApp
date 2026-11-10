@@ -1101,19 +1101,19 @@ function LoanRenewal({ onBack }: Props) {
             </Pressable>
             <Pressable
               onPress={applyDateRange}
-              className="min-h-12 flex-1 items-center justify-center rounded-xl bg-primary px-2"
+              className="h-10 w-[60px] items-center justify-center rounded-lg bg-primary px-2"
               accessibilityRole="button"
               accessibilityLabel="Apply renewal date range"
             >
-              <Text className="text-xs font-bold text-white">Apply</Text>
+              <Text className="text-[11px] font-bold text-white">Apply</Text>
             </Pressable>
             <Pressable
               onPress={resetDateRange}
-              className="min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-2"
+              className="h-10 w-[60px] items-center justify-center rounded-lg border border-slate-200 bg-white px-2"
               accessibilityRole="button"
               accessibilityLabel="Reset renewal date range"
             >
-              <Text className="text-xs font-bold text-slate-700">Reset</Text>
+              <Text className="text-[11px] font-bold text-slate-700">Reset</Text>
             </Pressable>
           </View>
           {dateError ? <Text className="text-xs font-medium text-rose-700">{dateError}</Text> : null}
