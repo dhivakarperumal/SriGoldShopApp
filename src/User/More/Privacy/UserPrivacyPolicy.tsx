@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  Pressable,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -168,11 +169,7 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
                     : 'border-[#eee5d7]'
                 }`}
               >
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  className={`min-h-16 flex-row items-center rounded-t-2xl px-4 py-4 ${
-                    isExpanded ? 'bg-[#f5f8f3]' : 'bg-white'
-                  }`}
+                <Pressable
                   onPress={() =>
                     setExpandedSection(current =>
                       current === index ? null : index,
@@ -180,11 +177,33 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
                   }
                   accessibilityRole="button"
                   accessibilityLabel={`Toggle ${section.title}`}
-                  accessibilityState={{
-                    expanded: isExpanded,
-                  }}
+                  accessibilityState={{ expanded: isExpanded }}
+                  style={({ pressed }) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    minHeight: 64,
+                    paddingHorizontal: 16,
+                    paddingVertical: 16,
+                    borderTopLeftRadius: 16,
+                    borderTopRightRadius: 16,
+                    backgroundColor: pressed
+                      ? '#d4ebe0'
+                      : isExpanded
+                        ? '#f5f8f3'
+                        : '#ffffff',
+                    transform: [{ scale: pressed ? 0.98 : 1 }],
+                  })}
                 >
-                  <View className="h-10 w-10 items-center justify-center rounded-xl bg-[#e8f1eb]">
+                  <View
+                    style={{
+                      height: 40,
+                      width: 40,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 12,
+                      backgroundColor: '#e8f1eb',
+                    }}
+                  >
                     <Text className="text-xs font-extrabold text-[#08796a]">
                       {String(index + 1).padStart(2, '0')}
                     </Text>
@@ -199,9 +218,7 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
                   </View>
                   <View
                     className={`ml-3 h-8 w-8 items-center justify-center rounded-full ${
-                      isExpanded
-                        ? 'bg-[#e2eee7]'
-                        : 'bg-[#f7f4ed]'
+                      isExpanded ? 'bg-[#e2eee7]' : 'bg-[#f7f4ed]'
                     }`}
                   >
                     <Ionicons
@@ -210,7 +227,7 @@ function UserPrivacyPolicy({ onBack, onContact }: UserPrivacyPolicyProps) {
                       color="#08796a"
                     />
                   </View>
-                </TouchableOpacity>
+                </Pressable>
                 {isExpanded ? (
                   <View className="gap-3 border-t border-[#edf0e9] p-4">
                     {section.paragraphs.map(paragraph => (
