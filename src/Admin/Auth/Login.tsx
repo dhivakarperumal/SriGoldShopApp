@@ -301,17 +301,24 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
                 )}
               </Pressable>
               {onCancel ? (
-                <Pressable
-                  className="mt-4 flex-row items-center justify-center gap-1"
-                  onPress={onCancel}
-                  accessibilityRole="button"
-                  accessibilityLabel="Go to Home"
-                >
-                  <Text className="text-base text-primary font-bold">←</Text>
-                  <Text className="text-sm font-semibold text-primary">
-                    Go to Home
-                  </Text>
-                </Pressable>
+                <>
+                  <View className="mt-5 flex-row items-center gap-3">
+                    <View className="h-px flex-1 bg-slate-200" />
+                    <Text className="text-xs font-medium text-slate-400">or</Text>
+                    <View className="h-px flex-1 bg-slate-200" />
+                  </View>
+                  <Pressable
+                    className="mt-4 h-14 flex-row items-center justify-center rounded-full border-2 border-primary/30 bg-white/80 shadow-sm active:bg-primary/5"
+                    onPress={onCancel}
+                    accessibilityRole="button"
+                    accessibilityLabel="Go to Home"
+                  >
+                    <Ionicons name="home-outline" size={18} color="#004D40" />
+                    <Text className="ml-2 text-sm font-bold text-primary">
+                      Go to Home
+                    </Text>
+                  </Pressable>
+                </>
               ) : null}
             </View>
           </ScrollView>
