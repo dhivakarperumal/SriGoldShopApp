@@ -898,6 +898,14 @@ function InventoryProductCard({
           </View>
           <View className="flex-row items-center">
             <Pressable
+              onPress={onPressDetails}
+              className="mr-2 h-9 w-9 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50"
+              accessibilityRole="button"
+              accessibilityLabel={`View ${product.name || 'product'} details`}
+            >
+              <ProductIcon name="eye" color="#004D40" size={16} />
+            </Pressable>
+            <Pressable
               onPress={onUpdateStock}
               className="mr-2 flex-row items-center rounded-lg border border-primary/15 bg-primary/10 px-3 py-2"
               accessibilityRole="button"
@@ -974,6 +982,7 @@ type ProductIconName =
   | 'search'
   | 'refresh'
   | 'box'
+  | 'eye'
   | 'edit'
   | 'trash'
   | 'chevron'
@@ -999,6 +1008,7 @@ function ProductIcon({
     search: ['M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z', 'm21 21-4.35-4.35'],
     refresh: ['M20 7v5h-5', 'M4 17v-5h5', 'M5.6 9a7 7 0 0 1 11.6-2L20 12', 'M4 12l2.8 5a7 7 0 0 0 11.6-2'],
     box: ['m21 8-9 5-9-5', 'm3 8 9-5 9 5v10l-9 5-9-5V8Z', 'M12 13v10'],
+    eye: ['M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z', 'M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z'],
     edit: ['M12 20h9', 'M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z'],
     trash: ['M3 6h18', 'M8 6V4h8v2', 'm19 6-1 14H6L5 6', 'M10 11v5', 'M14 11v5'],
     chevron: ['m9 18 6-6-6-6'],
