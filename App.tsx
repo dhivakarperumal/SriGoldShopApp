@@ -201,6 +201,7 @@ function App() {
       clearTokenCache();
       setUser(null);
       setAdminRoute('home');
+      setShowLoginModal(false);
     } catch {
       Alert.alert('Sign out failed', 'Please try again.');
     } finally {

@@ -302,13 +302,14 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
               </Pressable>
               {onCancel ? (
                 <Pressable
-                  className="mt-3 h-12 items-center justify-center rounded-full border border-slate-200"
+                  className="mt-4 flex-row items-center justify-center gap-1"
                   onPress={onCancel}
                   accessibilityRole="button"
-                  accessibilityLabel="Browse without login"
+                  accessibilityLabel="Go to Home"
                 >
-                  <Text className="text-sm font-semibold text-slate-500">
-                    Browse without login
+                  <Text className="text-base text-primary font-bold">←</Text>
+                  <Text className="text-sm font-semibold text-primary">
+                    Go to Home
                   </Text>
                 </Pressable>
               ) : null}
