@@ -71,7 +71,7 @@ function BottomNavigation({ activeRoute, onSelect }: BottomNavigationProps) {
         viewBox={`0 0 ${W} ${totalHeight}`}
         style={StyleSheet.absoluteFill}
       >
-        <Path d={pathD} fill="#01371E" />
+        <Path d={pathD} fill="#004D40" />
       </Svg>
 
       {/* Tabs Row */}
