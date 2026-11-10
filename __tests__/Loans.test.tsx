@@ -312,6 +312,63 @@ test('opens renewal payment details and posts the supplied renewal payload', asy
   act(() => renderer.unmount());
 }, 30000);
 
+test('selects renewal date range from the calendar picker', async () => {
+  (api.get as jest.Mock).mockResolvedValue({ data: loans });
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<LoanRenewal onBack={jest.fn()} />);
+  });
+
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Renewal start date' }).props.onPress();
+  });
+  expect(renderer.root.findAll(node => node.props.children === 'Start date').length).toBeGreaterThan(0);
+
+  const selectedStartDate = new Date();
+  selectedStartDate.setDate(1);
+  const startDateValue = [
+    selectedStartDate.getFullYear(),
+    String(selectedStartDate.getMonth() + 1).padStart(2, '0'),
+    '05',
+  ].join('-');
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: startDateValue }).props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Apply date' }).props.onPress();
+  });
+  expect(renderer.root.findAll(node => node.props.children === startDateValue).length).toBeGreaterThan(0);
+
+  const selectedEndDate = new Date();
+  selectedEndDate.setDate(1);
+  selectedEndDate.setMonth(selectedEndDate.getMonth() + 1);
+  const endDateValue = [
+    selectedEndDate.getFullYear(),
+    String(selectedEndDate.getMonth() + 1).padStart(2, '0'),
+    '05',
+  ].join('-');
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Renewal end date' }).props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Next month' }).props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: endDateValue }).props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Apply date' }).props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Apply renewal date range' }).props.onPress();
+  });
+
+  expect(api.get).toHaveBeenCalledWith('/loans', {
+    params: { startDate: startDateValue, endDate: endDateValue },
+  });
+  act(() => renderer.unmount());
+}, 30000);
+
 test('loads eligible gold-release loans and records verified signed handover', async () => {
   const eligibleLoan = {
     ...loans[0],

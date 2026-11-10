@@ -114,6 +114,7 @@ type Props = {
 
 type StatusFilter = 'All' | 'Active' | 'Suspended';
 type NoticeMethod = 'sms' | 'whatsapp' | 'call' | 'letter' | 'in_person' | 'other';
+type DatePickerTarget = 'startDate' | 'endDate';
 
 const PAYMENT_METHODS = ['Cash', 'UPI', 'Card', 'Bank Transfer', 'Cheque', 'Other'];
 const NOTICE_METHODS: { value: NoticeMethod; label: string }[] = [
@@ -142,6 +143,34 @@ const formatDate = (value: unknown) => {
   return Number.isNaN(date.getTime())
     ? '—'
     : date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+const formatLocalDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const parseLocalDate = (value: string) => {
+  const [year, month, day] = value.split('-').map(Number);
+  return year && month && day ? new Date(year, month - 1, day) : new Date();
+};
+
+const getCalendarWeeks = (month: Date) => {
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const cells: (Date | null)[] = [
+    ...Array.from({ length: firstDay }, () => null),
+    ...Array.from(
+      { length: daysInMonth },
+      (_, index) => new Date(month.getFullYear(), month.getMonth(), index + 1),
+    ),
+  ];
+  while (cells.length % 7 !== 0) cells.push(null);
+  return Array.from({ length: cells.length / 7 }, (_, index) =>
+    cells.slice(index * 7, index * 7 + 7),
+  );
 };
 
 const getErrorMessage = (error: unknown, fallback: string) => {
@@ -578,6 +607,12 @@ function LoanRenewal({ onBack }: Props) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
   const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
   const [dateDraft, setDateDraft] = useState({ startDate: '', endDate: '' });
+  const [datePickerTarget, setDatePickerTarget] = useState<DatePickerTarget | null>(null);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(() => new Date());
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const date = new Date();
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+  });
   const [dateError, setDateError] = useState('');
   const [noticeMethod, setNoticeMethod] = useState<NoticeMethod>('sms');
   const [customerMessage, setCustomerMessage] = useState('');
@@ -679,6 +714,23 @@ function LoanRenewal({ onBack }: Props) {
     }
     setDateError('');
     setDateRange(dateDraft);
+  };
+
+  const openDatePicker = (target: DatePickerTarget) => {
+    const date = parseLocalDate(dateDraft[target]);
+    setSelectedCalendarDate(date);
+    setCalendarMonth(new Date(date.getFullYear(), date.getMonth(), 1));
+    setDatePickerTarget(target);
+  };
+
+  const applyDateSelection = () => {
+    if (!datePickerTarget) return;
+    setDateDraft(current => ({
+      ...current,
+      [datePickerTarget]: formatLocalDate(selectedCalendarDate),
+    }));
+    setDateError('');
+    setDatePickerTarget(null);
   };
 
   const handleReviewAction = async (action: 'notice_sent' | 'suspend' | 'reinstate') => {
@@ -1017,23 +1069,27 @@ function LoanRenewal({ onBack }: Props) {
             onChangeText={setSearch}
             placeholder="Search number, customer, mobile..."
           />
-          <View className="flex-row gap-2">
-            <TextInput
-              value={dateDraft.startDate}
-              onChangeText={value => setDateDraft(current => ({ ...current, startDate: value }))}
-              placeholder="Start YYYY-MM-DD"
-              placeholderTextColor="#94A3B8"
-              className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-xs text-slate-800"
+          <View className="flex-row items-center gap-2">
+            <Pressable
+              onPress={() => openDatePicker('startDate')}
+              className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3"
+              accessibilityRole="button"
               accessibilityLabel="Renewal start date"
-            />
-            <TextInput
-              value={dateDraft.endDate}
-              onChangeText={value => setDateDraft(current => ({ ...current, endDate: value }))}
-              placeholder="End YYYY-MM-DD"
-              placeholderTextColor="#94A3B8"
-              className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-xs text-slate-800"
+            >
+              <Text className={`text-xs ${dateDraft.startDate ? 'text-slate-800' : 'text-slate-400'}`}>
+                {dateDraft.startDate || 'Start YYYY-MM-DD'}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => openDatePicker('endDate')}
+              className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3"
+              accessibilityRole="button"
               accessibilityLabel="Renewal end date"
-            />
+            >
+              <Text className={`text-xs ${dateDraft.endDate ? 'text-slate-800' : 'text-slate-400'}`}>
+                {dateDraft.endDate || 'End YYYY-MM-DD'}
+              </Text>
+            </Pressable>
             <Pressable
               onPress={applyDateRange}
               className="items-center justify-center rounded-xl bg-primary px-3"
@@ -1145,6 +1201,101 @@ function LoanRenewal({ onBack }: Props) {
           </View>
         )}
       </ScrollView>
+      <Modal
+        visible={datePickerTarget !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDatePickerTarget(null)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="rounded-t-3xl bg-white px-5 pb-6 pt-5">
+            <View className="mb-4 flex-row items-center justify-between">
+              <Text className="text-base font-extrabold text-slate-900">
+                {datePickerTarget === 'startDate' ? 'Start date' : 'End date'}
+              </Text>
+              <Pressable
+                onPress={() => setDatePickerTarget(null)}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel date selection"
+                className="px-2 py-1"
+              >
+                <Text className="text-sm font-bold text-slate-500">Cancel</Text>
+              </Pressable>
+            </View>
+            <View className="mb-3 flex-row items-center justify-between">
+              <Pressable
+                onPress={() =>
+                  setCalendarMonth(current =>
+                    new Date(current.getFullYear(), current.getMonth() - 1, 1),
+                  )
+                }
+                accessibilityRole="button"
+                accessibilityLabel="Previous month"
+                className="h-10 w-10 items-center justify-center rounded-full bg-slate-100"
+              >
+                <Text className="text-lg font-bold text-slate-700">‹</Text>
+              </Pressable>
+              <Text className="text-sm font-bold text-slate-800">
+                {calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </Text>
+              <Pressable
+                onPress={() =>
+                  setCalendarMonth(current =>
+                    new Date(current.getFullYear(), current.getMonth() + 1, 1),
+                  )
+                }
+                accessibilityRole="button"
+                accessibilityLabel="Next month"
+                className="h-10 w-10 items-center justify-center rounded-full bg-slate-100"
+              >
+                <Text className="text-lg font-bold text-slate-700">›</Text>
+              </Pressable>
+            </View>
+            <View className="mb-1 flex-row">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                <Text key={day} className="flex-1 py-2 text-center text-xs font-semibold text-slate-400">
+                  {day}
+                </Text>
+              ))}
+            </View>
+            {getCalendarWeeks(calendarMonth).map((week, weekIndex) => (
+              <View key={`week-${weekIndex}`} className="flex-row">
+                {week.map((date, dayIndex) => {
+                  const dateValue = date ? formatLocalDate(date) : '';
+                  const selected = dateValue === formatLocalDate(selectedCalendarDate);
+                  return (
+                    <Pressable
+                      key={dateValue || `empty-${weekIndex}-${dayIndex}`}
+                      disabled={!date}
+                      onPress={() => date && setSelectedCalendarDate(date)}
+                      accessibilityRole="button"
+                      accessibilityLabel={date ? dateValue : undefined}
+                      accessibilityState={{ selected, disabled: !date }}
+                      className={`m-0.5 h-10 flex-1 items-center justify-center rounded-full ${
+                        selected ? 'bg-primary' : date ? 'active:bg-emerald-50' : ''
+                      }`}
+                    >
+                      {date ? (
+                        <Text className={`text-sm ${selected ? 'font-bold text-white' : 'text-slate-700'}`}>
+                          {date.getDate()}
+                        </Text>
+                      ) : null}
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ))}
+            <Pressable
+              onPress={applyDateSelection}
+              accessibilityRole="button"
+              accessibilityLabel="Apply date"
+              className="mt-4 items-center rounded-xl bg-primary px-4 py-3"
+            >
+              <Text className="text-sm font-bold text-white">Select date</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
       {paymentLoan ? (
         <LoanPaymentModal
           loan={paymentLoan}
