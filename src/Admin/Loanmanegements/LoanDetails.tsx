@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../api';
 
 type Loan = Record<string, unknown> & {
@@ -161,6 +162,7 @@ function DetailSection({ title, children }: { title: string; children: React.Rea
 }
 
 function LoanDetails({ loanId, onBack, onOpenRenewal, onOpenGoldRelease }: Props) {
+  const insets = useSafeAreaInsets();
   const [loan, setLoan] = useState<Loan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -208,8 +210,15 @@ function LoanDetails({ loanId, onBack, onOpenRenewal, onOpenGoldRelease }: Props
         setGoldImage(`data:${contentType};base64,${encodeBase64(new Uint8Array(data as ArrayBuffer))}`);
       })
       .catch(imageLoadError => {
-        console.error('Failed to load pledged gold image:', imageLoadError);
-        if (active) setImageError(getErrorMessage(imageLoadError));
+        if (!active) return;
+        const status = typeof imageLoadError === 'object' && imageLoadError !== null && 'response' in imageLoadError
+          ? (imageLoadError as { response?: { status?: number } }).response?.status
+          : undefined;
+        setImageError(
+          status === 404
+            ? 'Pledged gold image is unavailable.'
+            : getErrorMessage(imageLoadError),
+        );
       })
       .finally(() => {
         if (active) setImageLoading(false);
@@ -259,6 +268,7 @@ function LoanDetails({ loanId, onBack, onOpenRenewal, onOpenGoldRelease }: Props
         <ScrollView
           className="flex-1"
           contentContainerClassName="gap-4 px-4 pb-8 pt-4"
+          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 24) + 24 }}
           keyboardShouldPersistTaps="handled"
         >
           <View className="gap-4 rounded-2xl bg-[#003B3B] p-5 shadow-sm">

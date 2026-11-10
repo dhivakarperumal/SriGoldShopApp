@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
-import { RefreshControl } from 'react-native';
+import { RefreshControl, ScrollView } from 'react-native';
 import { pick } from '@react-native-documents/picker';
 import api from '../src/api';
 import { createLoanRequestKey } from '../src/Admin/Loanmanegements/CreateLoan';
@@ -508,6 +508,37 @@ test('loads full loan details and opens the correct follow-up action', async () 
   expect(onOpenGoldRelease).toHaveBeenCalledTimes(1);
   expect(onOpenRenewal).not.toHaveBeenCalled();
   act(() => renderer.unmount());
+});
+
+test('keeps loan details above the bottom safe area and handles missing gold images inline', async () => {
+  const loan = {
+    ...loans[0],
+    id: 53,
+    loan_number: 'LN-DETAIL-53',
+    gold_image_url: '/loans/53/gold-image',
+  };
+  (api.get as jest.Mock).mockImplementation((path: string) => {
+    if (path === '/loans/53') return Promise.resolve({ data: loan });
+    if (path === loan.gold_image_url) {
+      return Promise.reject({ response: { status: 404, data: { message: 'Server error' } } });
+    }
+    return Promise.reject(new Error(`Unexpected request: ${path}`));
+  });
+  const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  try {
+    await act(async () => {
+      renderer = ReactTestRenderer.create(<LoanDetails loanId={53} onBack={jest.fn()} />);
+    });
+
+    const detailsScroll = renderer.root.findByType(ScrollView);
+    expect(detailsScroll.props.contentContainerStyle.paddingBottom).toBeGreaterThanOrEqual(48);
+    expect(renderer.root.findAll(node => node.props.children === 'Pledged gold image is unavailable.').length).toBeGreaterThan(0);
+    expect(consoleError).not.toHaveBeenCalled();
+  } finally {
+    consoleError.mockRestore();
+    if (renderer) act(() => renderer.unmount());
+  }
 });
 
 test('shows an explicit retry state when the loan request fails', async () => {
