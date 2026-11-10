@@ -7,6 +7,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -89,6 +90,7 @@ function App() {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [adminRoute, setAdminRoute] = useState<AdminRoute>('home');
+  const [adminRouteHistory, setAdminRouteHistory] = useState<AdminRoute[]>([]);
   const [visitedAdminRoutes, setVisitedAdminRoutes] = useState<Set<AdminRoute>>(
     () => new Set(['home']),
   );
@@ -202,6 +204,7 @@ function App() {
       clearTokenCache();
       setUser(null);
       setAdminRoute('home');
+      setAdminRouteHistory([]);
       setVisitedAdminRoutes(new Set(['home']));
     } catch {
       Alert.alert('Sign out failed', 'Please try again.');
@@ -218,6 +221,9 @@ function App() {
   };
 
   const navigateAdmin = (route: AdminRoute) => {
+    if (route !== adminRoute) {
+      setAdminRouteHistory(history => [...history, adminRoute]);
+    }
     setVisitedAdminRoutes(current => {
       if (current.has(route)) return current;
       return new Set(current).add(route);
@@ -225,9 +231,21 @@ function App() {
     setAdminRoute(route);
   };
 
+  const goBackAdmin = useCallback(() => {
+    const previousRoute = adminRouteHistory[adminRouteHistory.length - 1];
+    if (!previousRoute) {
+      setAdminRoute(ADMIN_BACK_ROUTES[adminRoute] ?? 'home');
+      return;
+    }
+
+    setAdminRouteHistory(history => history.slice(0, -1));
+    setAdminRoute(previousRoute);
+  }, [adminRoute, adminRouteHistory]);
+
   const handleLoginSuccess = (authenticatedUser: AuthenticatedUser) => {
     setUser(authenticatedUser);
     setAdminRoute('home');
+    setAdminRouteHistory([]);
     setVisitedAdminRoutes(new Set(['home']));
   };
 
@@ -239,6 +257,10 @@ function App() {
     const subscription = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
+        if (adminRoute === 'loanCustomers') {
+          goBackAdmin();
+          return true;
+        }
         const backRoute = ADMIN_BACK_ROUTES[adminRoute];
         if (!backRoute) {
           Alert.alert('Exit app?', 'Do you want to close Sri Golds?', [
@@ -257,7 +279,7 @@ function App() {
     );
 
     return () => subscription.remove();
-  }, [adminRoute, isAdmin, user]);
+  }, [adminRoute, adminRouteHistory, goBackAdmin, isAdmin, user]);
 
   const renderAdminScreen = (route: AdminRoute) => {
     if (!user) return null;
@@ -402,7 +424,7 @@ function App() {
                       : route === 'loanCustomers'
                           ? (
                             <LoanCustomerManagement
-                              onBack={() => navigateAdmin('more')}
+                              onBack={goBackAdmin}
                               openCreateOnMount={isLoanCustomerCreateRequested}
                               onCreateOpened={() => setIsLoanCustomerCreateRequested(false)}
                             />

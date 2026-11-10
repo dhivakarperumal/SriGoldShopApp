@@ -1072,9 +1072,18 @@ export default function Billing({
             </View>
           </View>
 
-          <View className="flex-row items-center rounded-xl bg-white px-2 py-3">
+          <View className="relative flex-row items-center rounded-xl bg-white px-2 py-3">
+            <View
+              className="absolute h-1 rounded-full bg-slate-200"
+              style={{ top: 25, left: '16.67%', right: '16.67%' }}
+            >
+              <View
+                className="h-full rounded-full bg-primary"
+                style={{ width: `${((billStep - 1) / 2) * 100}%` }}
+              />
+            </View>
             {[1, 2, 3].map(step => (
-              <View key={step} className="flex-1 items-center">
+              <View key={step} className="z-10 flex-1 items-center">
                 <View className={`h-7 w-7 items-center justify-center rounded-full ${
                   billStep >= step ? 'bg-primary' : 'bg-slate-200'
                 }`}>
