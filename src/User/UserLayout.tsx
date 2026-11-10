@@ -21,6 +21,7 @@ import UserExplore from './Explore/UserExplore';
 import UserHome from './Home/UserHome';
 import UserAbout from './More/About/UserAbout';
 import UserContact from './More/Contact/UserContact';
+import UserPrivacyPolicy from './More/Privacy/UserPrivacyPolicy';
 import MoreMenu, { type MorePage } from './More/MoreMenu';
 import UserProfile from './Profile/UserProfile';
 import UserProductDetails from './ProductDetails/UserProductDetails';
@@ -529,6 +530,11 @@ function UserLayout({ user, onUserUpdated, onLogout }: UserLayoutProps) {
               <UserAbout onBack={() => setMorePage(null)} />
             ) : morePage === 'contact' ? (
               <UserContact onBack={() => setMorePage(null)} />
+            ) : morePage === 'privacy' ? (
+              <UserPrivacyPolicy
+                onBack={() => setMorePage(null)}
+                onContact={() => setMorePage('contact')}
+              />
             ) : morePage === 'profile' ? null : (
               <MoreMenu onSelect={selectMorePage} />
             )}
