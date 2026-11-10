@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   Modal,
   NativeModules,
@@ -126,18 +126,10 @@ function UserExplore({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [refreshVersion, setRefreshVersion] = useState(0);
+  const hasLoadedProducts = useRef(false);
 
   useEffect(() => {
     if (isActive) return;
-    setSearch('');
-    setSelectedCategory('');
-    setSelectedMetal('');
-    setOfferThreshold(0);
-    setMinimumPrice(undefined);
-    setMaximumPrice(undefined);
-    setMinimumRating(0);
-    setAvailability('');
-    setSortBy('newest');
     setFiltersVisible(false);
     setSortDropdownVisible(false);
   }, [isActive]);
@@ -196,7 +188,7 @@ function UserExplore({
     let active = true;
 
     const loadProducts = async () => {
-      setIsLoading(true);
+      if (!hasLoadedProducts.current) setIsLoading(true);
       setError('');
 
       try {
@@ -237,7 +229,10 @@ function UserExplore({
           return response.data.products as ExploreProduct[];
         });
 
-        if (active) setProducts(allProducts);
+        if (active) {
+          setProducts(allProducts);
+          hasLoadedProducts.current = true;
+        }
       } catch (requestError) {
         if (active && !controller.signal.aborted) {
           console.error('Failed to load explore products:', requestError);

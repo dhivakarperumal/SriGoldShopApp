@@ -469,7 +469,6 @@ function Loans({
                     }
                     setLoanListFilter(filter);
                     setCurrentPage(1);
-                    setExpandedLoanId(null);
                   }}
                   accessibilityRole="button"
                   accessibilityLabel={`Loan list filter ${filter}`}

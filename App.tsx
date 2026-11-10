@@ -89,10 +89,12 @@ function App() {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [adminRoute, setAdminRoute] = useState<AdminRoute>('home');
+  const [visitedAdminRoutes, setVisitedAdminRoutes] = useState<Set<AdminRoute>>(
+    () => new Set(['home']),
+  );
   const [newCategoryId, setNewCategoryId] = useState('CAT001');
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingGoldRateSet, setEditingGoldRateSet] = useState<CurrentRateSet | null>(null);
-  const [billingSession, setBillingSession] = useState(0);
   const [isBillingFormOpen, setIsBillingFormOpen] = useState(false);
   const [isLoanFormOpen, setIsLoanFormOpen] = useState(false);
   const [isLoanCustomerCreateRequested, setIsLoanCustomerCreateRequested] = useState(false);
@@ -200,6 +202,7 @@ function App() {
       clearTokenCache();
       setUser(null);
       setAdminRoute('home');
+      setVisitedAdminRoutes(new Set(['home']));
     } catch {
       Alert.alert('Sign out failed', 'Please try again.');
     } finally {
@@ -215,15 +218,17 @@ function App() {
   };
 
   const navigateAdmin = (route: AdminRoute) => {
-    if (route === 'billing') {
-      setBillingSession(current => current + 1);
-    }
+    setVisitedAdminRoutes(current => {
+      if (current.has(route)) return current;
+      return new Set(current).add(route);
+    });
     setAdminRoute(route);
   };
 
   const handleLoginSuccess = (authenticatedUser: AuthenticatedUser) => {
     setUser(authenticatedUser);
     setAdminRoute('home');
+    setVisitedAdminRoutes(new Set(['home']));
   };
 
   const isAdmin = user?.role.trim().toLowerCase() === 'admin';
@@ -254,8 +259,10 @@ function App() {
     return () => subscription.remove();
   }, [adminRoute, isAdmin, user]);
 
-  const adminContent = user
-    ? adminRoute === 'profile'
+  const renderAdminScreen = (route: AdminRoute) => {
+    if (!user) return null;
+
+    return route === 'profile'
       ? (
         <Profile
           user={user}
@@ -264,7 +271,7 @@ function App() {
           onBack={() => navigateAdmin('home')}
         />
       )
-      : adminRoute === 'loans'
+      : route === 'loans'
         ? (
           <Loans
             onFormVisibilityChange={setIsLoanFormOpen}
@@ -282,15 +289,15 @@ function App() {
             }}
           />
         )
-        : adminRoute === 'overdueLoans'
+        : route === 'overdueLoans'
           ? <OverdueLoans onBack={() => navigateAdmin('loans')} />
-        : adminRoute === 'loanRenewal'
+        : route === 'loanRenewal'
           ? <LoanRenewal onBack={() => navigateAdmin('loans')} />
-        : adminRoute === 'goldRelease'
+        : route === 'goldRelease'
           ? <GoldRelease onBack={() => navigateAdmin('loans')} />
-        : adminRoute === 'completeLoan'
+        : route === 'completeLoan'
           ? <GoldRelease completionPage onBack={() => navigateAdmin('loans')} />
-        : adminRoute === 'loanDetails' && selectedLoanDetailsId !== null
+        : route === 'loanDetails' && selectedLoanDetailsId !== null
           ? (
             <LoanDetails
               loanId={selectedLoanDetailsId}
@@ -299,11 +306,11 @@ function App() {
               onOpenGoldRelease={() => navigateAdmin('goldRelease')}
             />
           )
-        : adminRoute === 'billing'
-          ? <Billing key={billingSession} onFormVisibilityChange={setIsBillingFormOpen} />
-          : adminRoute === 'products'
+        : route === 'billing'
+          ? <Billing onFormVisibilityChange={setIsBillingFormOpen} />
+          : route === 'products'
             ? <Products onNavigate={navigateAdmin} />
-            : adminRoute === 'categories'
+            : route === 'categories'
               ? (
                 <CategoriesAll
                   onBack={() => navigateAdmin('products')}
@@ -318,7 +325,7 @@ function App() {
                   }}
                 />
               )
-              : adminRoute === 'addCategory'
+              : route === 'addCategory'
                 ? (
                   <AddCategories
                     categoryId={newCategoryId}
@@ -326,7 +333,7 @@ function App() {
                     onSaved={() => navigateAdmin('categories')}
                   />
                 )
-                : adminRoute === 'editCategory' && editingCategory
+                : route === 'editCategory' && editingCategory
                   ? (
                     <AddCategories
                       key={editingCategory.catId}
@@ -339,9 +346,9 @@ function App() {
                       }}
                     />
                   )
-              : adminRoute === 'metalTypes'
+              : route === 'metalTypes'
                 ? <MetalType onBack={() => navigateAdmin('more')} />
-                : adminRoute === 'dailyGoldRates'
+                : route === 'dailyGoldRates'
                   ? (
                     <AllGoldRate
                       onBack={() => navigateAdmin('more')}
@@ -355,7 +362,7 @@ function App() {
                       }}
                     />
                   )
-                  : adminRoute === 'addGoldrate'
+                  : route === 'addGoldrate'
                     ? (
                       <AddGoldrate
                         key={editingGoldRateSet?.updated_at ?? 'new-rate-set'}
@@ -370,29 +377,29 @@ function App() {
                         }}
                       />
                     )
-                    : adminRoute === 'more'
+                    : route === 'more'
                       ? <More onNavigate={navigateAdmin} />
-                      : adminRoute === 'customers'
+                      : route === 'customers'
                         ? (
                           <Customers
                             onBack={() => navigateAdmin('more')}
                           />
                         )
-                      : adminRoute === 'dealers'
+                      : route === 'dealers'
                         ? (
                           <Dealers
                             onBack={() => navigateAdmin('more')}
                             onAddDealer={() => navigateAdmin('addDealer')}
                           />
                         )
-                      : adminRoute === 'addDealer'
+                      : route === 'addDealer'
                         ? (
                           <AddDealers
                             onBack={() => navigateAdmin('dealers')}
                             onCreated={() => navigateAdmin('dealers')}
                           />
                         )
-                      : adminRoute === 'loanCustomers'
+                      : route === 'loanCustomers'
                           ? (
                             <LoanCustomerManagement
                               onBack={() => navigateAdmin('more')}
@@ -400,22 +407,39 @@ function App() {
                               onCreateOpened={() => setIsLoanCustomerCreateRequested(false)}
                             />
                           )
-                        : adminRoute === 'stockDetails'
+                        : route === 'stockDetails'
                           ? <StockDetails onBack={() => navigateAdmin('more')} />
-                        : adminRoute === 'enquiries'
+                        : route === 'enquiries'
                           ? <AllEnquries onBack={() => navigateAdmin('more')} />
-                        : adminRoute === 'fundManagement'
+                        : route === 'fundManagement'
                           ? <FundManagement onBack={() => navigateAdmin('more')} />
-                        : adminRoute === 'receipt'
+                        : route === 'receipt'
                           ? <Receipt onBack={() => navigateAdmin('more')} />
-                          : adminRoute === 'reports'
+                          : route === 'reports'
                             ? <Report onBack={() => navigateAdmin('more')} />
-                          : adminRoute === 'reviews'
+                          : route === 'reviews'
                             ? <AllReview onBack={() => navigateAdmin('more')} />
-                        : adminRoute === 'homeSections'
+                        : route === 'homeSections'
                           ? <HomeSections onBack={() => navigateAdmin('more')} />
-                    : <AdminHome user={user} onNavigate={navigateAdmin} />
-    : null;
+                    : <AdminHome
+                        user={user}
+                        onNavigate={navigateAdmin}
+                        isActive={adminRoute === 'home'}
+                      />
+  };
+
+  const adminContent = user ? (
+    <View className="flex-1">
+      {[...visitedAdminRoutes].map(route => (
+        <View
+          key={route}
+          className={adminRoute === route ? 'flex-1' : 'hidden'}
+        >
+          {renderAdminScreen(route)}
+        </View>
+      ))}
+    </View>
+  ) : null;
 
   return (
     <SafeAreaProvider>

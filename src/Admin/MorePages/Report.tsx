@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import {
@@ -10,12 +11,12 @@ import {
   RefreshControl,
   ScrollView,
   Share,
+  StatusBar,
   Text,
   View,
 } from 'react-native';
 import { Alert } from '../../Components/AppAlert';
 import type { ReactNode } from 'react';
-import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
 import AdminStatCard from '../Components/AdminStatCard';
 
@@ -100,13 +101,14 @@ function Report({ onBack }: Props) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [retryKey, setRetryKey] = useState(0);
+  const hasLoadedReports = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
     let isCurrentRequest = true;
 
     const fetchReports = async () => {
-      setIsLoading(true);
+      if (!hasLoadedReports.current) setIsLoading(true);
       setError('');
       try {
         const { data } = await api.get<DashboardResponse>('/dashboard', {
@@ -118,6 +120,7 @@ function Report({ onBack }: Props) {
         }
         if (isCurrentRequest) {
           setReportsData(data);
+          hasLoadedReports.current = true;
         }
       } catch (fetchError) {
         if (!isCurrentRequest || (fetchError instanceof Error && fetchError.name === 'CanceledError')) {
@@ -175,29 +178,28 @@ function Report({ onBack }: Props) {
 
   return (
     <View className="flex-1 bg-background">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-4 py-3">
+      <StatusBar barStyle="light-content" />
+      <View className="h-16 flex-row items-center border-b border-[#00382E] bg-primary px-4">
         <Pressable
           onPress={onBack}
-          className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-slate-100"
+          className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-emerald-700/60 bg-emerald-900/40 active:bg-emerald-900/70"
           accessibilityRole="button"
           accessibilityLabel="Back to More"
         >
-          <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-            <Path d="m15 18-6-6 6-6M9 12h12" stroke="#334155" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-          </Svg>
+          <Text className="text-xl font-bold text-white">‹</Text>
         </Pressable>
         <View className="min-w-0 flex-1">
-          <Text className="text-lg font-extrabold text-slate-900">Reports</Text>
-          <Text className="text-xs text-slate-500">Sales, inventory and loan activity</Text>
+          <Text className="text-base font-extrabold tracking-wide text-white">Reports</Text>
+          <Text className="text-[10px] font-medium text-emerald-200">Sales, inventory and loan activity</Text>
         </View>
         <Pressable
           onPress={handleShare}
           disabled={!reportsData || isLoading}
-          className="rounded-xl bg-primary px-4 py-2.5 disabled:opacity-50"
+          className="rounded-xl border border-accent/40 bg-accent/20 px-4 py-2.5 active:bg-accent/30 disabled:opacity-50"
           accessibilityRole="button"
           accessibilityLabel="Share report summary"
         >
-          <Text className="text-xs font-bold text-white">Share</Text>
+          <Text className="text-xs font-bold text-accent-light">Share</Text>
         </Pressable>
       </View>
 

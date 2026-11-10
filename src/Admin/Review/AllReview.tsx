@@ -145,7 +145,7 @@ function AllReview({ onBack }: Props) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [busyReviewId, setBusyReviewId] = useState<ReviewRecord['id'] | null>(null);
-  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [isAddPageVisible, setIsAddPageVisible] = useState(false);
   const [newReview, setNewReview] = useState<NewReview>(EMPTY_REVIEW);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -325,7 +325,7 @@ function AllReview({ onBack }: Props) {
         user_name: newReview.user_name.trim(),
         comment: newReview.comment.trim(),
       });
-      setIsAddModalVisible(false);
+      setIsAddPageVisible(false);
       setNewReview(EMPTY_REVIEW);
       await fetchReviews(true);
     } catch (error) {
@@ -347,23 +347,109 @@ function AllReview({ onBack }: Props) {
       <View className="h-16 flex-row items-center border-b border-[#00382E] bg-primary px-4">
         <Pressable
           className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-emerald-700/60 bg-emerald-900/40"
-          onPress={onBack}
+          onPress={isAddPageVisible ? () => setIsAddPageVisible(false) : onBack}
           accessibilityRole="button"
-          accessibilityLabel="Back to More"
+          accessibilityLabel={isAddPageVisible ? 'Back to reviews' : 'Back to More'}
         >
           <Text className="text-xl font-bold text-white">‹</Text>
         </Pressable>
         <View className="flex-1">
           <Text className="text-base font-extrabold tracking-wide text-white">
-            Customer Reviews
+            {isAddPageVisible ? 'Add manual review' : 'Customer Reviews'}
           </Text>
           <Text className="text-[10px] font-medium text-emerald-200">
-            Moderate feedback and reply to customers
+            {isAddPageVisible
+              ? 'Enter customer feedback'
+              : 'Moderate feedback and reply to customers'}
           </Text>
         </View>
       </View>
 
       <SafeAreaView className="flex-1 bg-background" edges={['bottom', 'left', 'right']}>
+        {isAddPageVisible ? (
+          <View className="flex-1">
+            <ScrollView
+              className="flex-1"
+              contentContainerClassName="gap-1 px-4 pb-6 pt-4"
+              keyboardShouldPersistTaps="handled"
+            >
+              <Text className="mb-1 text-xs font-bold text-slate-600">Customer name *</Text>
+              <TextInput
+                value={newReview.user_name}
+                onChangeText={value => setNewReview(current => ({ ...current, user_name: value }))}
+                placeholder="Customer name"
+                placeholderTextColor="#94A3B8"
+                accessibilityLabel="Customer name"
+                className="mb-4 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-800"
+              />
+
+              <Text className="mb-2 text-xs font-bold text-slate-600">Rating</Text>
+              <View className="mb-4 flex-row items-center gap-1">
+                {[1, 2, 3, 4, 5].map(rating => (
+                  <Pressable
+                    key={rating}
+                    onPress={() => setNewReview(current => ({ ...current, rating }))}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${rating} star rating`}
+                    accessibilityState={{ selected: newReview.rating === rating }}
+                    className="p-1"
+                  >
+                    <Text className={`text-3xl ${rating <= newReview.rating ? 'text-amber-500' : 'text-slate-300'}`}>
+                      ★
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              <Text className="mb-1 text-xs font-bold text-slate-600">Review comment *</Text>
+              <TextInput
+                value={newReview.comment}
+                onChangeText={value => setNewReview(current => ({ ...current, comment: value }))}
+                placeholder="Write the customer's feedback"
+                placeholderTextColor="#94A3B8"
+                accessibilityLabel="Review comment"
+                multiline
+                textAlignVertical="top"
+                className="mb-4 min-h-32 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-800"
+              />
+
+              <Text className="mb-2 text-xs font-bold text-slate-600">Photo (optional)</Text>
+              <Pressable
+                disabled={isUploadingImage}
+                onPress={() => uploadReviewImage()}
+                accessibilityRole="button"
+                accessibilityLabel="Choose review photo"
+                className="mb-4 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-4 py-4 disabled:opacity-50"
+              >
+                {newReviewImageUrl ? (
+                  <Image
+                    source={{ uri: newReviewImageUrl }}
+                    accessibilityLabel="Selected review photo"
+                    className="h-40 w-full rounded-lg"
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Text className="text-sm font-semibold text-slate-600">
+                    {isUploadingImage ? 'Uploading…' : 'Choose photo (max 5 MB)'}
+                  </Text>
+                )}
+              </Pressable>
+            </ScrollView>
+            <View className="border-t border-slate-200 bg-white px-4 py-3">
+              <Pressable
+                disabled={isSubmitting || isUploadingImage}
+                onPress={() => submitNewReview()}
+                accessibilityRole="button"
+                accessibilityLabel="Create review"
+                className="items-center rounded-xl bg-primary px-4 py-3 disabled:opacity-50"
+              >
+                <Text className="text-sm font-bold text-white">
+                  {isSubmitting ? 'Creating…' : 'Create review'}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : (
         <ScrollView
           className="flex-1"
           contentContainerClassName="px-4 pb-24 pt-4"
@@ -440,9 +526,10 @@ function AllReview({ onBack }: Props) {
             ))
           )}
         </ScrollView>
+        )}
       </SafeAreaView>
 
-      <View className="absolute bottom-5 right-5 items-end">
+      {!isAddPageVisible ? <View className="absolute bottom-5 right-5 items-end">
         <View className="h-14 w-14 items-center justify-center">
           <Animated.View
             pointerEvents="none"
@@ -463,7 +550,7 @@ function AllReview({ onBack }: Props) {
             }}
           />
           <Pressable
-            onPress={() => setIsAddModalVisible(true)}
+            onPress={() => setIsAddPageVisible(true)}
             className="h-14 w-14 items-center justify-center rounded-full border-2 border-accent-light bg-primary shadow-lg"
             accessibilityRole="button"
             accessibilityLabel="Add manual review"
@@ -471,110 +558,7 @@ function AllReview({ onBack }: Props) {
             <Text className="text-2xl font-bold text-white">+</Text>
           </Pressable>
         </View>
-      </View>
-
-      <Modal
-        visible={isAddModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setIsAddModalVisible(false)}
-      >
-        <View className="flex-1 justify-end bg-black/50">
-          <View
-            className="max-h-[90%] rounded-t-3xl bg-white px-5 pt-5"
-            style={{ paddingBottom: Math.max(insets.bottom, 16) }}
-          >
-            <View className="mb-4 flex-row items-center justify-between">
-              <View>
-                <Text className="text-lg font-extrabold text-slate-900">Add manual review</Text>
-                <Text className="mt-1 text-xs text-slate-500">Enter customer feedback</Text>
-              </View>
-              <Pressable
-                onPress={() => setIsAddModalVisible(false)}
-                accessibilityRole="button"
-                accessibilityLabel="Close add review form"
-                className="h-9 w-9 items-center justify-center rounded-full bg-slate-100"
-              >
-                <Text className="text-lg font-bold text-slate-600">×</Text>
-              </Pressable>
-            </View>
-
-            <ScrollView keyboardShouldPersistTaps="handled">
-              <Text className="mb-1 text-xs font-bold text-slate-600">Customer name *</Text>
-              <TextInput
-                value={newReview.user_name}
-                onChangeText={value => setNewReview(current => ({ ...current, user_name: value }))}
-                placeholder="Customer name"
-                placeholderTextColor="#94A3B8"
-                accessibilityLabel="Customer name"
-                className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-800"
-              />
-
-              <Text className="mb-2 text-xs font-bold text-slate-600">Rating</Text>
-              <View className="mb-4 flex-row items-center gap-1">
-                {[1, 2, 3, 4, 5].map(rating => (
-                  <Pressable
-                    key={rating}
-                    onPress={() => setNewReview(current => ({ ...current, rating }))}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${rating} star rating`}
-                    accessibilityState={{ selected: newReview.rating === rating }}
-                    className="p-1"
-                  >
-                    <Text className={`text-3xl ${rating <= newReview.rating ? 'text-amber-500' : 'text-slate-300'}`}>
-                      ★
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-
-              <Text className="mb-1 text-xs font-bold text-slate-600">Review comment *</Text>
-              <TextInput
-                value={newReview.comment}
-                onChangeText={value => setNewReview(current => ({ ...current, comment: value }))}
-                placeholder="Write the customer's feedback"
-                placeholderTextColor="#94A3B8"
-                accessibilityLabel="Review comment"
-                multiline
-                textAlignVertical="top"
-                className="mb-4 min-h-28 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-800"
-              />
-
-              <Text className="mb-2 text-xs font-bold text-slate-600">Photo (optional)</Text>
-              <Pressable
-                disabled={isUploadingImage}
-                onPress={() => uploadReviewImage()}
-                accessibilityRole="button"
-                className="mb-5 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 disabled:opacity-50"
-              >
-                {newReviewImageUrl ? (
-                  <Image
-                    source={{ uri: newReviewImageUrl }}
-                    accessibilityLabel="Selected review photo"
-                    className="h-32 w-full rounded-lg"
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <Text className="text-sm font-semibold text-slate-600">
-                    {isUploadingImage ? 'Uploading…' : 'Choose photo (max 5 MB)'}
-                  </Text>
-                )}
-              </Pressable>
-
-              <Pressable
-                disabled={isSubmitting || isUploadingImage}
-                onPress={() => submitNewReview()}
-                accessibilityRole="button"
-                className="items-center rounded-xl bg-primary px-4 py-3 disabled:opacity-50"
-              >
-                <Text className="text-sm font-bold text-white">
-                  {isSubmitting ? 'Creating…' : 'Create review'}
-                </Text>
-              </Pressable>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+      </View> : null}
 
       <Modal
         visible={activeFilterMenu !== null}

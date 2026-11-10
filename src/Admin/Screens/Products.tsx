@@ -88,14 +88,13 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState('');
-  const [stockProduct, setStockProduct] = useState<Product | null>(null);
-  const [newStock, setNewStock] = useState('');
-  const [isUpdatingStock, setIsUpdatingStock] = useState(false);
   const [isAddProductFormVisible, setIsAddProductFormVisible] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [isFabMenuOpen, setIsFabMenuOpen] = useState(false);
   const addButtonPulse = useRef(new Animated.Value(0)).current;
+  const hasLoadedProducts = useRef(false);
 
   useEffect(() => {
     const pulseAnimation = Animated.loop(
@@ -124,7 +123,9 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
   }, [search]);
 
   const fetchProducts = useCallback(async (showRefreshIndicator = false) => {
-    setIsLoading(true);
+    if (!hasLoadedProducts.current && !showRefreshIndicator) {
+      setIsLoading(true);
+    }
     setLoadError('');
     if (showRefreshIndicator) {
       setIsRefreshing(true);
@@ -223,6 +224,7 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
         inactive: inactiveCount,
         outOfStock: outOfStockCount,
       });
+      hasLoadedProducts.current = true;
       setCategories(Array.isArray(payload.filters?.categories) ? payload.filters.categories : []);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -284,31 +286,6 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
       ],
     );
   };
-
-  const updateStock = async () => {
-    const quantity = Number(newStock);
-    if (!stockProduct || !Number.isInteger(quantity) || quantity < 0) {
-      Alert.alert('Invalid stock', 'Enter a whole number of zero or more.');
-      return;
-    }
-
-    setIsUpdatingStock(true);
-    try {
-      await api.put(`/products/${stockProduct.id}`, {
-        ...stockProduct,
-        total_stock: quantity,
-      });
-      setStockProduct(null);
-      setRefreshVersion(version => version + 1);
-    } catch (error) {
-      console.error('Error updating product stock:', error);
-      Alert.alert('Stock update failed', getErrorMessage(error, 'Could not update stock.'));
-    } finally {
-      setIsUpdatingStock(false);
-    }
-  };
-
-
 
   return (
     <View className="flex-1 bg-background">
@@ -448,9 +425,9 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
                 key={String(product.id)}
                 product={product}
                 onPressDetails={() => setSelectedProductId(String(product.id))}
-                onUpdateStock={() => {
-                  setStockProduct(product);
-                  setNewStock(String(product.total_stock ?? 0));
+                onEditProduct={() => {
+                  setEditingProductId(String(product.id));
+                  setIsAddProductFormVisible(true);
                 }}
                 onDelete={() => handleDelete(product)}
               />
@@ -497,6 +474,7 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
               icon="box"
               onPress={() => {
                 setIsFabMenuOpen(false);
+                setEditingProductId(null);
                 setIsAddProductFormVisible(true);
               }}
             />
@@ -581,35 +559,6 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
       </Modal>
 
       <Modal
-        visible={Boolean(stockProduct)}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setStockProduct(null)}
-      >
-        <ModalBackdrop onClose={() => setStockProduct(null)}>
-          <Text className="text-lg font-bold text-slate-900">Update stock</Text>
-          <Text className="mt-1 text-xs text-muted" numberOfLines={1}>
-            {String(stockProduct?.name || 'Product')}
-          </Text>
-          <TextInput
-            value={newStock}
-            onChangeText={setNewStock}
-            keyboardType="number-pad"
-            placeholder="Enter quantity"
-            className="mt-5 rounded-xl border border-border bg-slate-50 px-4 py-3 text-base text-slate-900"
-            accessibilityLabel="New stock quantity"
-          />
-          <ModalActions
-            cancelLabel="Cancel"
-            confirmLabel={isUpdatingStock ? 'Saving…' : 'Save stock'}
-            onCancel={() => setStockProduct(null)}
-            onConfirm={updateStock}
-            disabled={isUpdatingStock}
-          />
-        </ModalBackdrop>
-      </Modal>
-
-      <Modal
         visible={isStockPickerVisible}
         transparent
         animationType="fade"
@@ -661,9 +610,14 @@ function Products({ onNavigate }: { onNavigate: (route: AdminRoute) => void }) {
         statusBarTranslucent
       >
         <AddProducts
-          onCancel={() => setIsAddProductFormVisible(false)}
+          productId={editingProductId ?? undefined}
+          onCancel={() => {
+            setIsAddProductFormVisible(false);
+            setEditingProductId(null);
+          }}
           onSaved={() => {
             setIsAddProductFormVisible(false);
+            setEditingProductId(null);
             setRefreshVersion(version => version + 1);
           }}
         />
@@ -866,12 +820,12 @@ function StatCard({
 function InventoryProductCard({
   product,
   onPressDetails,
-  onUpdateStock,
+  onEditProduct,
   onDelete,
 }: {
   product: Product;
   onPressDetails: () => void;
-  onUpdateStock: () => void;
+  onEditProduct: () => void;
   onDelete: () => void;
 }) {
   const stock = getNumber(product.total_stock);
@@ -906,13 +860,12 @@ function InventoryProductCard({
               <ProductIcon name="eye" color="#004D40" size={16} />
             </Pressable>
             <Pressable
-              onPress={onUpdateStock}
-              className="mr-2 flex-row items-center rounded-lg border border-primary/15 bg-primary/10 px-3 py-2"
+              onPress={onEditProduct}
+              className="mr-2 h-9 w-9 items-center justify-center rounded-lg border border-primary/15 bg-primary/10"
               accessibilityRole="button"
-              accessibilityLabel={`Update stock for ${product.name || 'product'}`}
+              accessibilityLabel={`Edit ${product.name || 'product'}`}
             >
-              <ProductIcon name="edit" color="#004D40" size={14} />
-              <Text className="ml-1.5 text-[10px] font-bold text-primary">Stock</Text>
+              <ProductIcon name="edit" color="#004D40" size={16} />
             </Pressable>
             <Pressable
               onPress={onDelete}
@@ -938,41 +891,6 @@ function ModalBackdrop({ children, onClose }: { children: React.ReactNode; onClo
         accessibilityLabel="Close dialog"
       />
       <View className="rounded-2xl bg-surface p-5">{children}</View>
-    </View>
-  );
-}
-
-function ModalActions({
-  cancelLabel,
-  confirmLabel,
-  onCancel,
-  onConfirm,
-  disabled,
-}: {
-  cancelLabel: string;
-  confirmLabel: string;
-  onCancel: () => void;
-  onConfirm: () => void;
-  disabled: boolean;
-}) {
-  return (
-    <View className="mt-5 flex-row">
-      <Pressable
-        onPress={onCancel}
-        disabled={disabled}
-        className="mr-2 flex-1 items-center rounded-xl border border-border px-3 py-3"
-        accessibilityRole="button"
-      >
-        <Text className="text-xs font-bold text-slate-600">{cancelLabel}</Text>
-      </Pressable>
-      <Pressable
-        onPress={onConfirm}
-        disabled={disabled}
-        className="ml-2 flex-1 items-center rounded-xl bg-primary px-3 py-3"
-        accessibilityRole="button"
-      >
-        <Text className="text-xs font-bold text-white">{confirmLabel}</Text>
-      </Pressable>
     </View>
   );
 }

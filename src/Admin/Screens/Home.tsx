@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AppState,
   ActivityIndicator,
@@ -152,6 +152,7 @@ type HomeGoldRateSet = {
 type HomeProps = {
   user: AuthenticatedUser;
   onNavigate?: (route: AdminRoute) => void;
+  isActive?: boolean;
 };
 
 const STAT_CARDS = [
@@ -267,7 +268,7 @@ const getDisplayName = (record: DashboardRecord, keys: string[], fallback: strin
   return fallback;
 };
 
-function Home({ user, onNavigate }: HomeProps) {
+function Home({ user, onNavigate, isActive = false }: HomeProps) {
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
   const [products, setProducts] = useState<DashboardRecord[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<(typeof FILTERS)[number]['value']>('all');
@@ -278,8 +279,12 @@ function Home({ user, onNavigate }: HomeProps) {
   const [goldRateSet, setGoldRateSet] = useState<HomeGoldRateSet | null>(null);
   const [isLoadingGoldRates, setIsLoadingGoldRates] = useState(true);
   const [goldRateError, setGoldRateError] = useState(false);
+  const hasLoadedDashboard = useRef(false);
+  const hasLoadedGoldRates = useRef(false);
 
   useEffect(() => {
+    if (isActive === false) return undefined;
+
     const refreshInterval = setInterval(() => {
       if (AppState.currentState === 'active') {
         setRefreshVersion(version => version + 1);
@@ -295,13 +300,13 @@ function Home({ user, onNavigate }: HomeProps) {
       clearInterval(refreshInterval);
       appStateSubscription.remove();
     };
-  }, []);
+  }, [isActive]);
 
   useEffect(() => {
     const controller = new AbortController();
     let isCurrentRequest = true;
 
-    setIsLoading(true);
+    if (!hasLoadedDashboard.current) setIsLoading(true);
     setLoadError(false);
     api
       .get('/products', {
@@ -342,6 +347,7 @@ function Home({ user, onNavigate }: HomeProps) {
           throw new Error('Dashboard API returned no metrics');
         }
         setDashboard(dashboardData);
+        hasLoadedDashboard.current = true;
       })
       .catch(error => {
         if (!isCurrentRequest || error?.name === 'CanceledError') {
@@ -357,7 +363,7 @@ function Home({ user, onNavigate }: HomeProps) {
         }
       });
 
-    setIsLoadingGoldRates(true);
+    if (!hasLoadedGoldRates.current) setIsLoadingGoldRates(true);
     setGoldRateError(false);
     api
       .get<HomeGoldRateSet>('/gold-rates/current', { signal: controller.signal })
@@ -372,6 +378,7 @@ function Home({ user, onNavigate }: HomeProps) {
             rate => typeof rate?.metal_type === 'string' && typeof rate?.purity === 'string',
           ),
         });
+        hasLoadedGoldRates.current = true;
       })
       .catch(error => {
         if (!isCurrentRequest || error?.name === 'CanceledError') return;
