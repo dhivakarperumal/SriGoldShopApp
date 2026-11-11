@@ -25,6 +25,20 @@ const styles = StyleSheet.create({
     shadowRadius: 11,
     elevation: 8,
   },
+  secondSlideArtwork: {
+    shadowColor: '#ffd84d',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.72,
+    shadowRadius: 18,
+    elevation: 12,
+  },
+  secondSlideButton: {
+    shadowColor: '#f4bb24',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.65,
+    shadowRadius: 14,
+    elevation: 10,
+  },
 });
 
 const WELCOME_SLIDES = [
@@ -36,11 +50,11 @@ const WELCOME_SLIDES = [
       'Explore thoughtful designs in gold, silver and platinum, made for every special moment.',
   },
   {
-    icon: 'trending-up-outline',
-    eyebrow: 'RATES AT A GLANCE',
-    title: 'Know the value\nbefore you choose',
+    icon: 'sparkles-outline',
+    eyebrow: 'CRAFTED TO LAST',
+    title: 'Find jewellery\nthat feels like you',
     description:
-      'Check the latest precious metal rates and product details while you explore our collection.',
+      'Explore thoughtful designs in gold, silver and platinum, made for every special moment.',
   },
   {
     icon: 'shield-checkmark-outline',
@@ -61,13 +75,27 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
   const slide = WELCOME_SLIDES[activeIndex];
   const isLastSlide = activeIndex === WELCOME_SLIDES.length - 1;
   const isFirstSlide = activeIndex === 0;
+  const isSecondSlide = activeIndex === 1;
+  const isArtworkSlide = isFirstSlide || isSecondSlide;
   const textColor = isFirstSlide ? 'text-[#073b2f]' : 'text-white';
 
   return (
-    <View className={`flex-1 ${isFirstSlide ? 'bg-[#f4eadb]' : 'bg-[#003b2d]'}`}>
-      {isFirstSlide ? (
+    <View
+      className={`flex-1 ${
+        isFirstSlide
+          ? 'bg-[#f4eadb]'
+          : isSecondSlide
+            ? 'bg-[#002f25]'
+            : 'bg-[#003b2d]'
+      }`}
+    >
+      {isArtworkSlide ? (
         <Image
-          source={require('../../Images/welcome1bg.png')}
+          source={
+            isFirstSlide
+              ? require('../../Images/welcome1bg.png')
+              : require('../../Images/welcomebg3.png')
+          }
           className="absolute inset-0 h-full w-full"
           resizeMode="cover"
           pointerEvents="none"
@@ -119,34 +147,76 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
 
         <View className="flex-1 justify-center">
           <View className="items-center">
-            {isFirstSlide ? (
+            {isArtworkSlide ? (
               <>
                 <Image
                   source={require('../../Images/welcome1.png')}
                   className="h-56 w-full"
                   resizeMode="contain"
                   accessibilityLabel="Gold wedding rings on a display stand"
-                  style={styles.firstSlideArtwork}
+                  style={
+                    isFirstSlide
+                      ? styles.firstSlideArtwork
+                      : styles.secondSlideArtwork
+                  }
                 />
                 <View className="mt-5 w-full items-center">
                   <View className="flex-row items-center">
-                    <View className="mr-3 h-px w-8 bg-[#d9a441]" />
-                    <Text className="text-xs font-extrabold tracking-[3px] text-[#073b2f]">
+                    <View
+                      className={`mr-3 h-px w-8 ${
+                        isFirstSlide ? 'bg-[#d9a441]' : 'bg-[#f2d58a]'
+                      }`}
+                    />
+                    <Text
+                      className={`text-xs font-extrabold tracking-[3px] ${
+                        isFirstSlide ? 'text-[#073b2f]' : 'text-[#f2d58a]'
+                      }`}
+                    >
                       {slide.eyebrow}
                     </Text>
-                    <View className="ml-3 h-px w-8 bg-[#d9a441]" />
+                    <View
+                      className={`ml-3 h-px w-8 ${
+                        isFirstSlide ? 'bg-[#d9a441]' : 'bg-[#f2d58a]'
+                      }`}
+                    />
                   </View>
-                  <Text className="mt-4 text-center font-serif text-[32px] font-bold leading-[38px] text-[#073b2f]">
+                  <Text
+                    className={`mt-4 text-center font-serif text-[32px] font-bold leading-[38px] ${
+                      isFirstSlide ? 'text-[#073b2f]' : 'text-white'
+                    }`}
+                  >
                     Find jewellery
                     {'\n'}that{' '}
-                    <Text className="italic text-[#c47e12]">feels like you</Text>
+                    <Text
+                      className={`italic ${
+                        isFirstSlide ? 'text-[#c47e12]' : 'text-[#f2d58a]'
+                      }`}
+                    >
+                      feels like you
+                    </Text>
                   </Text>
                   <View className="mt-3 flex-row items-center">
-                    <View className="mr-3 h-px w-12 bg-[#d9a441]" />
-                    <Ionicons name="diamond-outline" size={23} color="#c47e12" />
-                    <View className="ml-3 h-px w-12 bg-[#d9a441]" />
+                    <View
+                      className={`mr-3 h-px w-12 ${
+                        isFirstSlide ? 'bg-[#d9a441]' : 'bg-[#f2d58a]'
+                      }`}
+                    />
+                    <Ionicons
+                      name="diamond-outline"
+                      size={23}
+                      color={isFirstSlide ? '#c47e12' : '#f2d58a'}
+                    />
+                    <View
+                      className={`ml-3 h-px w-12 ${
+                        isFirstSlide ? 'bg-[#d9a441]' : 'bg-[#f2d58a]'
+                      }`}
+                    />
                   </View>
-                  <Text className="mt-3 max-w-[340px] text-center text-base leading-6 text-[#555555]">
+                  <Text
+                    className={`mt-3 max-w-[340px] text-center text-base leading-6 ${
+                      isFirstSlide ? 'text-[#555555]' : 'text-emerald-50/90'
+                    }`}
+                  >
                     {slide.description}
                   </Text>
                 </View>
@@ -193,7 +263,9 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
             className={`h-14 flex-row items-center justify-center rounded-full px-6 ${
               isFirstSlide
                 ? 'border border-[#e1a318] bg-[#004533]'
-                : 'bg-[#f2d58a]'
+                : isSecondSlide
+                  ? 'bg-[#f2c64b]'
+                  : 'bg-[#f2d58a]'
             }`}
             onPress={() =>
               isLastSlide
@@ -201,7 +273,13 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
                 : setActiveIndex(index => index + 1)
             }
             accessibilityRole="button"
-            style={isFirstSlide ? styles.firstSlideButton : undefined}
+            style={
+              isFirstSlide
+                ? styles.firstSlideButton
+                : isSecondSlide
+                  ? styles.secondSlideButton
+                  : undefined
+            }
           >
             <Text
               className={`text-base font-extrabold ${
