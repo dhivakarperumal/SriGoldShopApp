@@ -174,6 +174,13 @@ const styles = StyleSheet.create({
     shadowRadius: 7,
     elevation: 5,
   },
+  rateCardGlow: {
+    shadowColor: '#f5c45e',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.55,
+    shadowRadius: 5,
+    elevation: 4,
+  },
 });
 
 const FILTERS = [
@@ -665,8 +672,9 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
                 });
               if (!metalRates.length) return null;
               const rateRows: HomeGoldRate[][] = [];
-              for (let index = 0; index < metalRates.length; index += 3) {
-                rateRows.push(metalRates.slice(index, index + 3));
+              const ratesPerRow = metal === 'Platinum' ? 2 : 3;
+              for (let index = 0; index < metalRates.length; index += ratesPerRow) {
+                rateRows.push(metalRates.slice(index, index + ratesPerRow));
               }
               return (
                 <View
@@ -714,31 +722,60 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
                         {row.map(rate => (
                           <View
                             key={`${rate.metal_type}-${rate.purity}-${rate.rate_unit ?? ''}`}
-                            className="min-h-[58px] min-w-0 flex-1 items-center justify-center rounded-xl bg-[#003b2d] px-1.5 py-2.5"
+                            className={`min-h-[58px] min-w-0 flex-1 rounded-xl border border-[#d9a441] bg-[#003b2d] px-2 py-2.5 ${
+                              metal === 'Silver'
+                                ? 'flex-row items-center'
+                                : 'items-center justify-center'
+                            }`}
+                            style={styles.rateCardGlow}
                           >
-                            <Text
-                              className="text-center text-[10px] font-bold text-white"
-                              numberOfLines={1}
-                              adjustsFontSizeToFit
-                            >
-                              {getRatePurityLabel(rate)}
-                            </Text>
-                            <Text
-                              className="mt-1 text-center text-xs font-extrabold text-white"
-                              numberOfLines={1}
-                              adjustsFontSizeToFit
-                            >
-                              {formatGoldRate(rate.rate_per_unit ?? rate.rate_per_gram)}
-                              <Text className="text-[9px] font-semibold text-emerald-50">
-                                {rate.rate_unit?.toLowerCase() === 'carat' ||
-                                  rate.rate_unit?.toLowerCase() === 'ct'
-                                    ? ' /ct'
-                                    : ' /g'}
-                              </Text>
-                            </Text>
+                            {metal === 'Silver' ? (
+                              <>
+                                <Text className="flex-1 text-center text-sm font-bold text-[#f2d58a]">
+                                  {getRatePurityLabel(rate)}
+                                </Text>
+                                <View className="mx-2 h-8 w-px bg-[#d9a441]/70" />
+                                <Text
+                                  className="flex-[2] text-center text-lg font-extrabold text-white"
+                                  numberOfLines={1}
+                                  adjustsFontSizeToFit
+                                >
+                                  {formatGoldRate(rate.rate_per_unit ?? rate.rate_per_gram)}
+                                  <Text className="text-xs font-semibold text-emerald-50">
+                                    {rate.rate_unit?.toLowerCase() === 'carat' ||
+                                    rate.rate_unit?.toLowerCase() === 'ct'
+                                      ? ' /ct'
+                                      : ' /g'}
+                                  </Text>
+                                </Text>
+                              </>
+                            ) : (
+                              <>
+                                <Text
+                                  className="text-center text-[10px] font-bold text-[#f2d58a]"
+                                  numberOfLines={1}
+                                  adjustsFontSizeToFit
+                                >
+                                  {getRatePurityLabel(rate)}
+                                </Text>
+                                <Text
+                                  className="mt-1 text-center text-xs font-extrabold text-white"
+                                  numberOfLines={1}
+                                  adjustsFontSizeToFit
+                                >
+                                  {formatGoldRate(rate.rate_per_unit ?? rate.rate_per_gram)}
+                                  <Text className="text-[9px] font-semibold text-emerald-50">
+                                    {rate.rate_unit?.toLowerCase() === 'carat' ||
+                                      rate.rate_unit?.toLowerCase() === 'ct'
+                                      ? ' /ct'
+                                      : ' /g'}
+                                  </Text>
+                                </Text>
+                              </>
+                            )}
                           </View>
                         ))}
-                        {row.length === 1 ? (
+                        {metal !== 'Silver' && row.length < ratesPerRow ? (
                           <View className="min-w-0 flex-1" />
                         ) : null}
                       </View>
