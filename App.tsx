@@ -90,6 +90,7 @@ const ADMIN_BACK_ROUTES: Record<AdminRoute, AdminRoute | null> = {
 function App() {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showWelcomePreview, setShowWelcomePreview] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [shouldShowWelcome, setShouldShowWelcome] = useState(false);
   const [adminRoute, setAdminRoute] = useState<AdminRoute>('home');
@@ -524,8 +525,17 @@ function App() {
           onComplete={() => completeWelcome()}
           onSignIn={() => completeWelcome(true)}
         />
+      ) : showLoginModal && showWelcomePreview ? (
+        <WelcomeScreen
+          onComplete={() => setShowWelcomePreview(false)}
+          onSignIn={() => setShowWelcomePreview(false)}
+        />
       ) : showLoginModal ? (
-        <Login onLoginSuccess={handleLoginSuccess} onCancel={() => setShowLoginModal(false)} />
+        <Login
+          onLoginSuccess={handleLoginSuccess}
+          onCancel={() => setShowLoginModal(false)}
+          onShowWelcome={() => setShowWelcomePreview(true)}
+        />
       ) : (
         <UserLayout
           user={null}
