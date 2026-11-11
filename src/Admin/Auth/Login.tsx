@@ -135,7 +135,7 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
             contentContainerClassName={
               keyboardVisible
               ? 'grow justify-center px-6 pb-20'
-                : 'grow justify-center px-6 py-8'
+                : 'grow justify-center px-6 py-4'
             }
             keyboardShouldPersistTaps="handled"
             automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
@@ -143,12 +143,12 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
           >
             <View className="z-10 w-full self-center">
               <View
-                className={`items-center ${keyboardVisible ? 'mb-3' : 'mb-6'}`}
+                className={`items-center ${keyboardVisible ? 'mb-3' : 'mb-4'}`}
               >
                 <Image
                   source={require('../../Images/logo.png')}
                   className={`self-center ${
-                    keyboardVisible ? 'h-16 w-48' : 'mb-2 h-[100px] w-60'
+                    keyboardVisible ? 'h-16 w-48' : 'mb-2 h-20 w-52'
                   }`}
                   resizeMode="contain"
                   accessibilityLabel="Sri Golds"
@@ -164,7 +164,7 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
                 ) : null}
                 <Text
                   className={`text-2xl font-bold text-slate-950 ${
-                    keyboardVisible ? 'mt-2' : 'mt-5'
+                    keyboardVisible ? 'mt-2' : 'mt-3'
                   }`}
                 >
                   Login
@@ -253,7 +253,7 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
 
               <View
                 className={`flex-row items-center justify-between px-1 ${
-                  keyboardVisible ? 'my-3' : 'my-5'
+                  keyboardVisible ? 'my-3' : 'my-4'
                 }`}
               >
                 <View className="flex-row items-center">
@@ -305,13 +305,13 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
               </Pressable>
               {onCancel ? (
                 <>
-                  <View className="mt-5 flex-row items-center gap-3">
+                  <View className="mt-4 flex-row items-center gap-3">
                     <View className="h-px flex-1 bg-slate-200" />
                     <Text className="text-xs font-medium text-slate-400">or</Text>
                     <View className="h-px flex-1 bg-slate-200" />
                   </View>
                   <Pressable
-                    className="mt-4 h-14 flex-row items-center justify-center rounded-full border-2 border-primary/30 bg-white/80 shadow-sm active:bg-primary/5"
+                    className="mt-3 h-14 flex-row items-center justify-center rounded-full border-2 border-primary/30 bg-white/80 shadow-sm active:bg-primary/5"
                     onPress={onCancel}
                     accessibilityRole="button"
                     accessibilityLabel="Go to Home"
