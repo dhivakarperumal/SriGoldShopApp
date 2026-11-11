@@ -151,14 +151,18 @@ function Login({ onLoginSuccess, onCancel, onRegister }: LoginProps) {
               <View
                 className={`items-center ${keyboardVisible ? 'mb-3' : 'mb-4'}`}
               >
-                <Image
-                  source={require('../../Images/logo.png')}
-                  className={`self-center ${
-                    keyboardVisible ? 'h-16 w-48' : 'mb-2 h-20 w-52'
+                <View
+                  className={`self-center overflow-hidden rounded-full bg-white ${
+                    keyboardVisible ? 'h-20 w-20' : 'mb-2 h-20 w-52'
                   }`}
-                  resizeMode="contain"
-                  accessibilityLabel="Sri Golds"
-                />
+                >
+                  <Image
+                    source={require('../../Images/logo.png')}
+                    className="h-full w-full"
+                    resizeMode="contain"
+                    accessibilityLabel="Sri Golds"
+                  />
+                </View>
                 {!keyboardVisible ? (
                   <View className="-mt-2 flex-row items-center">
                     <View className="mr-2 h-0.5 w-6 bg-accent" />
