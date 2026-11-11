@@ -135,7 +135,7 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
             contentContainerClassName={
               keyboardVisible
               ? 'grow justify-center px-6 pb-20'
-                : 'grow justify-center px-6 py-4'
+                : 'grow justify-start px-6 pt-8 pb-4'
             }
             keyboardShouldPersistTaps="handled"
             automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
