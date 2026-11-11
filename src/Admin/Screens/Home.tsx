@@ -722,7 +722,7 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
                         {row.map(rate => (
                           <View
                             key={`${rate.metal_type}-${rate.purity}-${rate.rate_unit ?? ''}`}
-                            className={`min-h-[58px] min-w-0 flex-1 rounded-xl border border-[#d9a441] bg-[#003b2d] px-2 py-2.5 ${
+                            className={`min-h-[58px] min-w-0 flex-1 rounded-xl bg-[#003b2d] px-2 py-2.5 ${
                               metal === 'Silver'
                                 ? 'flex-row items-center'
                                 : 'items-center justify-center'
