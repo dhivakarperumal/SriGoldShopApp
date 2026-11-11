@@ -9,7 +9,6 @@ import {
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
@@ -277,9 +276,9 @@ const getDisplayName = (record: DashboardRecord, keys: string[], fallback: strin
 };
 
 function Home({ user, onNavigate, isActive = false }: HomeProps) {
-  const { width: screenWidth } = useWindowDimensions();
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
   const [products, setProducts] = useState<DashboardRecord[]>([]);
+  const [goldRateViewportWidth, setGoldRateViewportWidth] = useState(0);
   const [selectedFilter, setSelectedFilter] = useState<(typeof FILTERS)[number]['value']>('all');
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -674,7 +673,7 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
                 });
               if (!metalRates.length) return null;
               const rateRows: HomeGoldRate[][] = [];
-              const ratesPerRow = metal === 'Gold'
+              const ratesPerRow = metal === 'Gold' || metal === 'Diamond'
                 ? metalRates.length
                 : metal === 'Platinum'
                   ? 2
@@ -693,7 +692,9 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
                         <View
                           key={`${rate.metal_type}-${rate.purity}-${rate.rate_unit ?? ''}`}
                           className={`min-h-[58px] rounded-xl bg-[#003b2d] px-2 py-2.5 ${
-                            metal === 'Gold' ? 'flex-none' : 'min-w-0 flex-1'
+                            metal === 'Gold' || metal === 'Diamond'
+                              ? 'flex-none'
+                              : 'min-w-0 flex-1'
                           } ${
                             metal === 'Silver'
                               ? 'flex-row items-center'
@@ -701,8 +702,13 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
                           }`}
                           style={[
                             styles.rateCardGlow,
-                            metal === 'Gold'
-                              ? { width: Math.max(0, (screenWidth - 82) / 2) }
+                            metal === 'Gold' || metal === 'Diamond'
+                              ? {
+                                  width: Math.max(
+                                    1,
+                                    (goldRateViewportWidth - 6) / 2,
+                                  ),
+                                }
                               : undefined,
                           ]}
                         >
@@ -796,11 +802,14 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
                       {metal}
                     </Text>
                   </View>
-                  {metal === 'Gold' ? (
+                  {metal === 'Gold' || metal === 'Diamond' ? (
                     <ScrollView
                       horizontal
                       showsHorizontalScrollIndicator={false}
-                      accessibilityLabel="Swipe horizontally to see all gold purity rates"
+                      onLayout={event =>
+                        setGoldRateViewportWidth(event.nativeEvent.layout.width)
+                      }
+                      accessibilityLabel={`Swipe horizontally to see all ${metal.toLowerCase()} purity rates`}
                     >
                       {rateRowsContent}
                     </ScrollView>
