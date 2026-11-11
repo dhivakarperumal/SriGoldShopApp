@@ -134,7 +134,7 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
             className="flex-1"
             contentContainerClassName={
               keyboardVisible
-              ? 'grow justify-center px-6 pb-20'
+              ? 'grow justify-center px-6 pb-24'
                 : 'grow justify-start px-6 pt-[90px] pb-0'
             }
             keyboardShouldPersistTaps="handled"
