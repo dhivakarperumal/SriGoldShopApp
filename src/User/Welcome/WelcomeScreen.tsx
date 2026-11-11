@@ -3,11 +3,29 @@ import {
   Image,
   Pressable,
   StatusBar,
+  StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+const styles = StyleSheet.create({
+  firstSlideArtwork: {
+    shadowColor: '#f6b900',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.42,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  firstSlideButton: {
+    shadowColor: '#d99a00',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.5,
+    shadowRadius: 11,
+    elevation: 8,
+  },
+});
 
 const WELCOME_SLIDES = [
   {
@@ -99,6 +117,7 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
                   className="h-56 w-full"
                   resizeMode="contain"
                   accessibilityLabel="Gold wedding rings on a display stand"
+                  style={styles.firstSlideArtwork}
                 />
                 <View className="mt-5 w-full items-center">
                   <View className="flex-row items-center">
@@ -173,6 +192,7 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
                 : setActiveIndex(index => index + 1)
             }
             accessibilityRole="button"
+            style={isFirstSlide ? styles.firstSlideButton : undefined}
           >
             <Text
               className={`text-base font-extrabold ${
