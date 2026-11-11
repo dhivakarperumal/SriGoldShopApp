@@ -34,13 +34,14 @@ export type AuthenticatedUser = {
 type LoginProps = {
   onLoginSuccess: (user: AuthenticatedUser) => void;
   onCancel?: () => void;
+  onRegister?: () => void;
 };
 
 type ScrollViewHandle = {
   scrollToEnd: (options?: { animated?: boolean }) => void;
 };
 
-function Login({ onLoginSuccess, onCancel }: LoginProps) {
+function Login({ onLoginSuccess, onCancel, onRegister }: LoginProps) {
   const scrollViewRef = useRef<ScrollViewHandle | null>(null);
   const isPasswordFocused = useRef(false);
   const [identifier, setIdentifier] = useState('');
@@ -327,6 +328,22 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
                     </Text>
                   </Pressable>
                 </>
+              ) : null}
+              {onRegister ? (
+                <View className="mt-5 flex-row justify-center">
+                  <Text className="text-sm text-slate-500">
+                    New to Sri Golds?{' '}
+                  </Text>
+                  <Pressable
+                    onPress={onRegister}
+                    accessibilityRole="button"
+                    accessibilityLabel="Create an account"
+                  >
+                    <Text className="text-sm font-bold text-primary">
+                      Create account
+                    </Text>
+                  </Pressable>
+                </View>
               ) : null}
             </View>
             {keyboardVisible ? <View className="h-32" /> : null}
