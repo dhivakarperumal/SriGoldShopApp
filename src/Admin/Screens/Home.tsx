@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
@@ -276,6 +277,7 @@ const getDisplayName = (record: DashboardRecord, keys: string[], fallback: strin
 };
 
 function Home({ user, onNavigate, isActive = false }: HomeProps) {
+  const { width: screenWidth } = useWindowDimensions();
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
   const [products, setProducts] = useState<DashboardRecord[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<(typeof FILTERS)[number]['value']>('all');
@@ -691,15 +693,18 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
                         <View
                           key={`${rate.metal_type}-${rate.purity}-${rate.rate_unit ?? ''}`}
                           className={`min-h-[58px] rounded-xl bg-[#003b2d] px-2 py-2.5 ${
-                            metal === 'Gold'
-                              ? 'w-28 flex-none'
-                              : 'min-w-0 flex-1'
+                            metal === 'Gold' ? 'flex-none' : 'min-w-0 flex-1'
                           } ${
                             metal === 'Silver'
                               ? 'flex-row items-center'
                               : 'items-center justify-center'
                           }`}
-                          style={styles.rateCardGlow}
+                          style={[
+                            styles.rateCardGlow,
+                            metal === 'Gold'
+                              ? { width: Math.max(0, (screenWidth - 82) / 2) }
+                              : undefined,
+                          ]}
                         >
                           {metal === 'Silver' ? (
                             <>
