@@ -50,11 +50,11 @@ const WELCOME_SLIDES = [
       'Explore thoughtful designs in gold, silver and platinum, made for every special moment.',
   },
   {
-    icon: 'sparkles-outline',
-    eyebrow: 'CRAFTED TO LAST',
-    title: 'Find jewellery\nthat feels like you',
+    icon: 'trending-up-outline',
+    eyebrow: 'RATES AT A GLANCE',
+    title: 'Know the value\nbefore you choose',
     description:
-      'Explore thoughtful designs in gold, silver and platinum, made for every special moment.',
+      'Check the latest precious metal rates and product details while you explore our collection.',
   },
   {
     icon: 'shield-checkmark-outline',
@@ -76,23 +76,26 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
   const isLastSlide = activeIndex === WELCOME_SLIDES.length - 1;
   const isFirstSlide = activeIndex === 0;
   const isSecondSlide = activeIndex === 1;
-  const isArtworkSlide = isFirstSlide || isSecondSlide;
-  const textColor = isFirstSlide ? 'text-[#073b2f]' : 'text-white';
+  const isLightSlide = isFirstSlide || isLastSlide;
+  const slideArtwork = isFirstSlide
+    ? require('../../Images/welcome1.png')
+    : isSecondSlide
+      ? require('../../Images/welcome2.png')
+      : require('../../Images/welcome3.png');
+  const textColor = isLightSlide ? 'text-[#073b2f]' : 'text-white';
 
   return (
     <View
       className={`flex-1 ${
-        isFirstSlide
+        isLightSlide
           ? 'bg-[#f4eadb]'
-          : isSecondSlide
-            ? 'bg-[#002f25]'
-            : 'bg-[#003b2d]'
+          : 'bg-[#002f25]'
       }`}
     >
-      {isArtworkSlide ? (
+      {isLightSlide || isSecondSlide ? (
         <Image
           source={
-            isFirstSlide
+            isLightSlide
               ? require('../../Images/welcome1bg.png')
               : require('../../Images/welcomebg3.png')
           }
@@ -102,7 +105,7 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
           accessible={false}
         />
       ) : null}
-      <StatusBar barStyle={isFirstSlide ? 'dark-content' : 'light-content'} />
+      <StatusBar barStyle={isLightSlide ? 'dark-content' : 'light-content'} />
       <SafeAreaView className="flex-1 px-6 pb-5">
         <View className="flex-row items-center justify-between pt-2">
           <View className="flex-row items-center">
@@ -126,7 +129,7 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
           {!isLastSlide ? (
             <Pressable
               className={`rounded-full border px-4 py-2 ${
-                isFirstSlide
+                isLightSlide
                   ? 'border-[#315d50] bg-white/70'
                   : 'border-white/20'
               }`}
@@ -136,7 +139,7 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
             >
               <Text
                 className={`text-sm font-semibold ${
-                  isFirstSlide ? 'text-[#073b2f]' : 'text-white/85'
+                  isLightSlide ? 'text-[#073b2f]' : 'text-white/85'
                 }`}
               >
                 Skip
@@ -147,102 +150,80 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
 
         <View className="flex-1 justify-center">
           <View className="items-center">
-            {isArtworkSlide ? (
-              <>
-                <Image
-                  source={require('../../Images/welcome1.png')}
-                  className="h-56 w-full"
-                  resizeMode="contain"
-                  accessibilityLabel="Gold wedding rings on a display stand"
-                  style={
-                    isFirstSlide
-                      ? styles.firstSlideArtwork
-                      : styles.secondSlideArtwork
-                  }
+            <Image
+              source={slideArtwork}
+              className="h-56 w-full"
+              resizeMode="contain"
+              accessibilityLabel={
+                isFirstSlide
+                  ? 'Gold wedding rings on a display stand'
+                  : isSecondSlide
+                    ? 'Gold jewellery displayed in a presentation box'
+                    : 'Gold necklace and earrings on display'
+              }
+              style={
+                isSecondSlide
+                  ? styles.secondSlideArtwork
+                  : styles.firstSlideArtwork
+              }
+            />
+            <View className="mt-5 w-full items-center">
+              <View className="flex-row items-center">
+                <View
+                  className={`mr-3 h-px w-8 ${
+                    isLightSlide ? 'bg-[#d9a441]' : 'bg-[#f2d58a]'
+                  }`}
                 />
-                <View className="mt-5 w-full items-center">
-                  <View className="flex-row items-center">
-                    <View
-                      className={`mr-3 h-px w-8 ${
-                        isFirstSlide ? 'bg-[#d9a441]' : 'bg-[#f2d58a]'
-                      }`}
-                    />
-                    <Text
-                      className={`text-xs font-extrabold tracking-[3px] ${
-                        isFirstSlide ? 'text-[#073b2f]' : 'text-[#f2d58a]'
-                      }`}
-                    >
-                      {slide.eyebrow}
-                    </Text>
-                    <View
-                      className={`ml-3 h-px w-8 ${
-                        isFirstSlide ? 'bg-[#d9a441]' : 'bg-[#f2d58a]'
-                      }`}
-                    />
-                  </View>
-                  <Text
-                    className={`mt-4 text-center font-serif text-[32px] font-bold leading-[38px] ${
-                      isFirstSlide ? 'text-[#073b2f]' : 'text-white'
-                    }`}
-                  >
-                    Find jewellery
-                    {'\n'}that{' '}
-                    <Text
-                      className={`italic ${
-                        isFirstSlide ? 'text-[#c47e12]' : 'text-[#f2d58a]'
-                      }`}
-                    >
-                      feels like you
-                    </Text>
+                <Text
+                  className={`text-xs font-extrabold tracking-[3px] ${
+                    isLightSlide ? 'text-[#073b2f]' : 'text-[#f2d58a]'
+                  }`}
+                >
+                  {slide.eyebrow}
+                </Text>
+                <View
+                  className={`ml-3 h-px w-8 ${
+                    isLightSlide ? 'bg-[#d9a441]' : 'bg-[#f2d58a]'
+                  }`}
+                />
+              </View>
+              <Text
+                className={`mt-4 text-center font-serif text-[32px] font-bold leading-[38px] ${
+                  isLightSlide ? 'text-[#073b2f]' : 'text-white'
+                }`}
+              >
+                {slide.title.split('\n').map((line, index) => (
+                  <Text key={line}>
+                    {index > 0 ? '\n' : ''}
+                    {line}
                   </Text>
-                  <View className="mt-3 flex-row items-center">
-                    <View
-                      className={`mr-3 h-px w-12 ${
-                        isFirstSlide ? 'bg-[#d9a441]' : 'bg-[#f2d58a]'
-                      }`}
-                    />
-                    <Ionicons
-                      name="diamond-outline"
-                      size={23}
-                      color={isFirstSlide ? '#c47e12' : '#f2d58a'}
-                    />
-                    <View
-                      className={`ml-3 h-px w-12 ${
-                        isFirstSlide ? 'bg-[#d9a441]' : 'bg-[#f2d58a]'
-                      }`}
-                    />
-                  </View>
-                  <Text
-                    className={`mt-3 max-w-[340px] text-center text-base leading-6 ${
-                      isFirstSlide ? 'text-[#555555]' : 'text-emerald-50/90'
-                    }`}
-                  >
-                    {slide.description}
-                  </Text>
-                </View>
-              </>
-            ) : (
-              <>
-                <View className="h-60 w-60 items-center justify-center rounded-full border border-[#d9a441]/50 bg-[#064c3d]">
-                  <View className="h-44 w-44 items-center justify-center rounded-full border border-[#f2d58a]/40 bg-[#003b2d]">
-                    <Ionicons name={slide.icon} size={86} color="#f2d58a" />
-                  </View>
-                  <View className="absolute right-8 top-8 h-4 w-4 rounded-full bg-[#f2d58a]" />
-                  <View className="absolute bottom-10 left-5 h-2.5 w-2.5 rounded-full bg-[#d9a441]" />
-                </View>
-                <View className="mt-10 items-center">
-                  <Text className="text-xs font-extrabold tracking-[3px] text-[#f2d58a]">
-                    {slide.eyebrow}
-                  </Text>
-                  <Text className="mt-4 text-center text-3xl font-black leading-10 text-white">
-                    {slide.title}
-                  </Text>
-                  <Text className="mt-4 max-w-[320px] text-center text-base leading-7 text-emerald-50/80">
-                    {slide.description}
-                  </Text>
-                </View>
-              </>
-            )}
+                ))}
+              </Text>
+              <View className="mt-3 flex-row items-center">
+                <View
+                  className={`mr-3 h-px w-12 ${
+                    isLightSlide ? 'bg-[#d9a441]' : 'bg-[#f2d58a]'
+                  }`}
+                />
+                <Ionicons
+                  name="diamond-outline"
+                  size={23}
+                  color={isLightSlide ? '#c47e12' : '#f2d58a'}
+                />
+                <View
+                  className={`ml-3 h-px w-12 ${
+                    isLightSlide ? 'bg-[#d9a441]' : 'bg-[#f2d58a]'
+                  }`}
+                />
+              </View>
+              <Text
+                className={`mt-3 max-w-[340px] text-center text-base leading-6 ${
+                  isLightSlide ? 'text-[#555555]' : 'text-emerald-50/90'
+                }`}
+              >
+                {slide.description}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -253,19 +234,17 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
                 key={item.eyebrow}
                 className={`h-1.5 rounded-full ${
                   index === activeIndex
-                    ? `w-8 ${isFirstSlide ? 'bg-[#073b2f]' : 'bg-[#f2d58a]'}`
-                    : `w-1.5 ${isFirstSlide ? 'bg-[#e7cda0]' : 'bg-white/35'}`
+                    ? `w-8 ${isLightSlide ? 'bg-[#073b2f]' : 'bg-[#f2d58a]'}`
+                    : `w-1.5 ${isLightSlide ? 'bg-[#e7cda0]' : 'bg-white/35'}`
                 }`}
               />
             ))}
           </View>
           <Pressable
             className={`h-14 flex-row items-center justify-center rounded-full px-6 ${
-              isFirstSlide
+              isLightSlide
                 ? 'border border-[#e1a318] bg-[#004533]'
-                : isSecondSlide
-                  ? 'bg-[#f2c64b]'
-                  : 'bg-[#f2d58a]'
+                : 'bg-[#f2c64b]'
             }`}
             onPress={() =>
               isLastSlide
@@ -274,16 +253,14 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
             }
             accessibilityRole="button"
             style={
-              isFirstSlide
+              isLightSlide
                 ? styles.firstSlideButton
-                : isSecondSlide
-                  ? styles.secondSlideButton
-                  : undefined
+                : styles.secondSlideButton
             }
           >
             <Text
               className={`text-base font-extrabold ${
-                isFirstSlide ? 'text-white' : 'text-[#123c2d]'
+                isLightSlide ? 'text-white' : 'text-[#123c2d]'
               }`}
             >
               {isLastSlide ? 'Explore Sri Golds' : 'Continue'}
@@ -292,7 +269,7 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
               <Ionicons
                 name="arrow-forward"
                 size={18}
-                color={isFirstSlide ? '#FFFFFF' : '#123c2d'}
+                color={isLightSlide ? '#FFFFFF' : '#123c2d'}
               />
             </View>
           </Pressable>
