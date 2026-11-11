@@ -17,7 +17,11 @@ import {
   View,
 } from 'react-native';
 import { Alert } from '../../Components/AppAlert';
-import { launchImageLibrary } from 'react-native-image-picker';
+import {
+  launchCamera,
+  launchImageLibrary,
+  type Asset,
+} from 'react-native-image-picker';
 import api from '../../api';
 import { getProductImageUrl } from '../../utils/productImage';
 import AddMetaltype, {
@@ -160,6 +164,26 @@ function MetalType({ onBack }: { onBack: () => void }) {
     setSelectedImage(null);
   };
 
+  const setMetalImage = (asset: Asset | undefined) => {
+    if (!asset?.uri) return;
+    if (asset.type && !['image/png', 'image/jpeg'].includes(asset.type)) {
+      Alert.alert('Unsupported image', 'Choose a PNG or JPG image.');
+      return;
+    }
+    if (asset.fileSize !== undefined && asset.fileSize > 5 * 1024 * 1024) {
+      Alert.alert('Image too large', 'Image must be 5 MB or smaller.');
+      return;
+    }
+
+    setSelectedImage({
+      uri: asset.uri,
+      name: asset.fileName || `metal-${Date.now()}.jpg`,
+      type: asset.type || 'image/jpeg',
+      size: asset.fileSize,
+    });
+    setForm(current => ({ ...current, imagePath: '' }));
+  };
+
   const selectImage = async () => {
     try {
       const result = await launchImageLibrary({
@@ -176,30 +200,31 @@ function MetalType({ onBack }: { onBack: () => void }) {
         return;
       }
 
-      const asset = result.assets?.find(item => Boolean(item.uri));
-      if (!asset?.uri) return;
-      if (asset.type && !['image/png', 'image/jpeg'].includes(asset.type)) {
-        Alert.alert('Unsupported image', 'Choose a PNG or JPG image.');
-        return;
-      }
-      if (asset.fileSize !== undefined && asset.fileSize > 5 * 1024 * 1024) {
-        Alert.alert('Image too large', 'Image must be 5 MB or smaller.');
-        return;
-      }
-
-      setSelectedImage({
-        uri: asset.uri,
-        name: asset.fileName || `metal-${Date.now()}.jpg`,
-        type: asset.type || 'image/jpeg',
-        size: asset.fileSize,
-      });
-      setForm(current => ({ ...current, imagePath: '' }));
+      setMetalImage(result.assets?.find(item => Boolean(item.uri)));
     } catch (error) {
       console.error('Failed to select metal image:', error);
       Alert.alert(
         'Image selection failed',
         getErrorMessage(error, 'Could not select the metal image.'),
       );
+    }
+  };
+
+  const takeImage = async () => {
+    try {
+      const result = await launchCamera({
+        mediaType: 'photo',
+        quality: 0.8,
+      });
+      if (result.didCancel) return;
+      if (result.errorCode) {
+        Alert.alert('Camera failed', result.errorMessage || 'Could not take the metal image.');
+        return;
+      }
+      setMetalImage(result.assets?.find(item => Boolean(item.uri)));
+    } catch (error) {
+      console.error('Failed to capture metal image:', error);
+      Alert.alert('Camera failed', getErrorMessage(error, 'Could not take the metal image.'));
     }
   };
 
@@ -291,6 +316,7 @@ function MetalType({ onBack }: { onBack: () => void }) {
           setForm(current => ({ ...current, [field]: value }))
         }
         onSelectImage={selectImage}
+        onTakeImage={takeImage}
         onRemoveImage={() => {
           setSelectedImage(null);
           setForm(current => ({ ...current, imagePath: '' }));

@@ -15,7 +15,11 @@ import {
 } from 'react-native';
 import { Alert } from '../../Components/AppAlert';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { launchImageLibrary } from 'react-native-image-picker';
+import {
+  launchCamera,
+  launchImageLibrary,
+  type Asset,
+} from 'react-native-image-picker';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
 import { getProductImageUrl } from '../../utils/productImage';
@@ -98,6 +102,35 @@ function AddCategories({ categoryId, category, onCancel, onSaved }: Props) {
     setSubcategories(current => current.filter((_, index) => index !== indexToRemove));
   };
 
+  const addSelectedImages = (assets: Asset[]) => {
+    const selected = assets
+      .filter((asset): asset is Asset & { uri: string } => Boolean(asset.uri))
+      .map((asset, index) => ({
+        uri: asset.uri,
+        name: asset.fileName || `category-${Date.now()}-${index}.jpg`,
+        type: asset.type || 'image/jpeg',
+        size: asset.fileSize,
+      }));
+
+    const unsupported = selected.find(
+      image =>
+        !['image/png', 'image/jpeg', 'image/jpg'].includes(
+          (image.type || '').toLowerCase(),
+        ),
+    );
+    if (unsupported) {
+      Alert.alert('Unsupported image', 'Choose PNG or JPG images only.');
+      return;
+    }
+
+    if (selected.some(image => image.size !== undefined && image.size > 5 * 1024 * 1024)) {
+      Alert.alert('Image too large', 'Each image must be 5 MB or smaller.');
+      return;
+    }
+
+    setImages(current => [...current, ...selected].slice(0, 20));
+  };
+
   const selectImages = async () => {
     try {
       const remainingSlots = 20 - images.length;
@@ -117,38 +150,32 @@ function AddCategories({ categoryId, category, onCancel, onSaved }: Props) {
         return;
       }
 
-      const selected = (result.assets ?? [])
-        .filter(asset => Boolean(asset.uri))
-        .map((asset, index) => ({
-          uri: asset.uri!,
-          name: asset.fileName || `category-${Date.now()}-${index}.jpg`,
-          type: asset.type || 'image/jpeg',
-          size: asset.fileSize,
-        }));
-
-      const unsupported = selected.find(
-        image =>
-          !['image/png', 'image/jpeg', 'image/jpg'].includes(
-            (image.type || '').toLowerCase(),
-          ),
-      );
-      if (unsupported) {
-        Alert.alert('Unsupported image', 'Choose PNG or JPG images only.');
-        return;
-      }
-
-      if (selected.some(image => image.size !== undefined && image.size > 5 * 1024 * 1024)) {
-        Alert.alert('Image too large', 'Each image must be 5 MB or smaller.');
-        return;
-      }
-
-      setImages(current => [...current, ...selected].slice(0, 20));
+      addSelectedImages(result.assets ?? []);
     } catch (error) {
       console.error('Category image selection failed:', error);
       Alert.alert(
         'Image selection failed',
         getErrorMessage(error, 'Could not select category images.'),
       );
+    }
+  };
+
+  const takeImage = async () => {
+    try {
+      if (images.length >= 20) return;
+      const result = await launchCamera({
+        mediaType: 'photo',
+        quality: 0.8,
+      });
+      if (result.didCancel) return;
+      if (result.errorCode) {
+        Alert.alert('Camera failed', result.errorMessage || 'Could not take a category photo.');
+        return;
+      }
+      addSelectedImages(result.assets ?? []);
+    } catch (error) {
+      console.error('Category photo capture failed:', error);
+      Alert.alert('Camera failed', getErrorMessage(error, 'Could not take a category photo.'));
     }
   };
 
@@ -440,16 +467,12 @@ function AddCategories({ categoryId, category, onCancel, onSaved }: Props) {
               </View>
 
               {/* Upload Drop Zone */}
-              <Pressable
-                onPress={selectImages}
-                disabled={images.length >= 20}
+              <View
                 className={`items-center justify-center rounded-2xl border-2 border-dashed p-6 ${
                   images.length >= 20
                     ? 'border-slate-200 bg-slate-50 opacity-60'
-                    : 'border-emerald-200 bg-emerald-50/40 active:bg-emerald-50/70'
+                    : 'border-emerald-200 bg-emerald-50/40'
                 }`}
-                accessibilityRole="button"
-                accessibilityLabel="Upload category images"
               >
                 <View className="h-12 w-12 items-center justify-center rounded-2xl border border-emerald-200 bg-white shadow-xs">
                   <CategoryIcon name="image" color="#004D40" size={24} />
@@ -460,12 +483,27 @@ function AddCategories({ categoryId, category, onCancel, onSaved }: Props) {
                 <Text className="mt-1 text-center text-xs text-slate-500">
                   Choose PNG or JPG files • Up to 5 MB each
                 </Text>
-                {images.length < 20 ? (
-                  <View className="mt-3 rounded-lg bg-primary px-3.5 py-1.5 shadow-xs">
-                    <Text className="text-xs font-bold text-white">Browse Gallery</Text>
-                  </View>
-                ) : null}
-              </Pressable>
+                <View className="mt-3 w-full flex-row gap-2">
+                  <Pressable
+                    onPress={takeImage}
+                    disabled={images.length >= 20}
+                    className="min-h-11 flex-1 items-center justify-center rounded-lg bg-primary px-3 py-2 disabled:opacity-50"
+                    accessibilityRole="button"
+                    accessibilityLabel="Take category photo with camera"
+                  >
+                    <Text className="text-xs font-bold text-white">Take photo</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={selectImages}
+                    disabled={images.length >= 20}
+                    className="min-h-11 flex-1 items-center justify-center rounded-lg border border-primary px-3 py-2 disabled:opacity-50"
+                    accessibilityRole="button"
+                    accessibilityLabel="Choose category images from gallery"
+                  >
+                    <Text className="text-xs font-bold text-primary">Browse gallery</Text>
+                  </Pressable>
+                </View>
+              </View>
 
               {/* Selected Images Preview Grid */}
               {images.length > 0 ? (

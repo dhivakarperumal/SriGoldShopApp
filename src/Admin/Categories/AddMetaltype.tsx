@@ -36,6 +36,7 @@ type Props = {
   selectedImage: MetalImageSelection | null;
   onChange: (field: keyof MetalFormData, value: string) => void;
   onSelectImage: () => void;
+  onTakeImage: () => void;
   onRemoveImage: () => void;
   onCancel: () => void;
   onSave: () => void;
@@ -58,6 +59,7 @@ function AddMetaltype({
   selectedImage,
   onChange,
   onSelectImage,
+  onTakeImage,
   onRemoveImage,
   onCancel,
   onSave,
@@ -326,12 +328,20 @@ function AddMetaltype({
                     </View>
                     <View className="flex-row gap-2">
                       <Pressable
+                        onPress={onTakeImage}
+                        className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 active:bg-slate-50 shadow-xs"
+                        accessibilityRole="button"
+                        accessibilityLabel="Take metal photo with camera"
+                      >
+                        <Text className="text-xs font-bold text-slate-700">Camera</Text>
+                      </Pressable>
+                      <Pressable
                         onPress={onSelectImage}
                         className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 active:bg-slate-50 shadow-xs"
                         accessibilityRole="button"
-                        accessibilityLabel="Change metal image"
+                        accessibilityLabel="Choose metal image from gallery"
                       >
-                        <Text className="text-xs font-bold text-slate-700">Change</Text>
+                        <Text className="text-xs font-bold text-slate-700">Gallery</Text>
                       </Pressable>
                       <Pressable
                         onPress={onRemoveImage}
@@ -346,12 +356,7 @@ function AddMetaltype({
                   </View>
                 </View>
               ) : (
-                <Pressable
-                  onPress={onSelectImage}
-                  className="items-center justify-center rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/40 p-6 active:bg-emerald-50/70"
-                  accessibilityRole="button"
-                  accessibilityLabel="Upload metal image"
-                >
+                <View className="items-center justify-center rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/40 p-6">
                   <View className="h-12 w-12 items-center justify-center rounded-2xl border border-emerald-200 bg-white shadow-xs">
                     <MetalIcon name="gem" color="#004D40" size={24} />
                   </View>
@@ -361,10 +366,25 @@ function AddMetaltype({
                   <Text className="mt-1 text-center text-xs text-slate-500">
                     PNG or JPG • Up to 5 MB
                   </Text>
-                  <View className="mt-3 rounded-lg bg-primary px-3.5 py-1.5 shadow-xs">
-                    <Text className="text-xs font-bold text-white">Browse Gallery</Text>
+                  <View className="mt-3 w-full flex-row gap-2">
+                    <Pressable
+                      onPress={onTakeImage}
+                      className="min-h-11 flex-1 items-center justify-center rounded-lg bg-primary px-3 py-2 shadow-xs"
+                      accessibilityRole="button"
+                      accessibilityLabel="Take metal photo with camera"
+                    >
+                      <Text className="text-xs font-bold text-white">Take photo</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={onSelectImage}
+                      className="min-h-11 flex-1 items-center justify-center rounded-lg border border-primary bg-white px-3 py-2"
+                      accessibilityRole="button"
+                      accessibilityLabel="Choose metal image from gallery"
+                    >
+                      <Text className="text-xs font-bold text-primary">Gallery</Text>
+                    </Pressable>
                   </View>
-                </Pressable>
+                </View>
               )}
             </FormSection>
           </ScrollView>
