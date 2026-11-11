@@ -102,8 +102,6 @@ function WelcomeScreen({ onComplete, onHome, onSignIn }: WelcomeScreenProps) {
     : isSecondSlide
       ? require('../../Images/welcome2.png')
       : require('../../Images/welcome3.png');
-  const textColor = isLightSlide ? 'text-[#073b2f]' : 'text-white';
-
   return (
     <View
       {...swipeResponder.panHandlers}
@@ -128,25 +126,7 @@ function WelcomeScreen({ onComplete, onHome, onSignIn }: WelcomeScreenProps) {
       ) : null}
       <StatusBar barStyle={isLightSlide ? 'dark-content' : 'light-content'} />
       <SafeAreaView className="flex-1 px-6 pb-5">
-        <View className="flex-row items-center justify-between pt-2">
-          <View className="flex-row items-center">
-            <View className="h-12 w-12 items-center justify-center rounded-2xl border border-[#d6c8ad] bg-white p-1.5">
-              <Image
-                source={require('../../Images/logo.png')}
-                className="h-full w-full"
-                resizeMode="contain"
-                accessibilityLabel="Sri Golds logo"
-              />
-            </View>
-            <View className="ml-3">
-              <Text className={`text-base font-black tracking-wide ${textColor}`}>
-                SRI GOLDS
-              </Text>
-              <Text className="mt-0.5 text-[9px] font-bold tracking-[2px] text-[#b77a17]">
-                GOLD · JEWELLERY · LOANS
-              </Text>
-            </View>
-          </View>
+        <View className="flex-row justify-end pt-2">
           {!isLastSlide ? (
             <Pressable
               className={`rounded-full border px-4 py-2 ${
@@ -168,7 +148,6 @@ function WelcomeScreen({ onComplete, onHome, onSignIn }: WelcomeScreenProps) {
             </Pressable>
           ) : null}
         </View>
-
         <View className="flex-1 justify-center">
           <View className="items-center">
             <Image
