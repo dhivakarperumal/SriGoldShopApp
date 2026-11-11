@@ -590,33 +590,33 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
         })}
       </View>
 
-      <View className="mb-5 overflow-hidden rounded-3xl border border-[#145b52] bg-[#003f39] p-4">
+      <View className="mb-5 overflow-hidden rounded-3xl border border-[#d6b66e] bg-[#003b2d] p-3">
         <View className="flex-row items-center justify-between gap-2">
           <View className="min-w-0 flex-1 flex-row items-center">
-            <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl border border-accent/30 bg-white/10">
-              <Svg width={23} height={23} viewBox="0 0 24 24" fill="none">
+            <View className="mr-3 h-12 w-12 items-center justify-center rounded-full border border-emerald-500/60 bg-emerald-950">
+              <Svg width={27} height={27} viewBox="0 0 24 24" fill="none">
                 <Path
                   d="m3 9 4-5h10l4 5-9 12L3 9Z"
-                  stroke="#F5C45E"
+                  stroke="#f2d58a"
                   strokeWidth={1.8}
                   strokeLinejoin="round"
                 />
                 <Path
                   d="M3 9h18M7 4l5 17 5-17"
-                  stroke="#F5C45E"
+                  stroke="#f2d58a"
                   strokeWidth={1.4}
                   strokeLinejoin="round"
                 />
               </Svg>
             </View>
             <View className="min-w-0 flex-1">
-              <Text className="text-[9px] font-extrabold uppercase tracking-[1.5px] text-[#c5d9d4]">
+              <Text className="text-[10px] font-extrabold uppercase tracking-[1.5px] text-[#f2d58a]">
                 Daily market snapshot
               </Text>
-              <Text className="mt-1 text-[15px] font-extrabold text-white" numberOfLines={1}>
-                Precious metal rates
+              <Text className="mt-0.5 text-lg font-extrabold text-white" numberOfLines={1}>
+                Sri Golds Precious Rates
               </Text>
-              <Text className="mt-0.5 text-[10px] font-medium text-[#c5d9d4]">
+              <Text className="mt-1 text-xs font-medium text-emerald-50">
                 {goldRateSet
                   ? `Effective ${formatRateDate(goldRateSet.effective_from ?? goldRateSet.rate_date)}`
                   : 'Gold, silver, platinum & diamond'}
@@ -625,33 +625,33 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
           </View>
           <Pressable
             onPress={() => onNavigate?.('dailyGoldRates')}
-            className="flex-row items-center rounded-xl bg-white px-3 py-2.5"
+            className="flex-row items-center rounded-xl bg-[#fff1cb] px-3 py-2.5"
             accessibilityRole="button"
             accessibilityLabel="Manage daily gold rates"
           >
-            <Text className="text-[10px] font-extrabold text-primary-dark">Manage</Text>
-            <Text className="ml-1 text-sm font-bold text-primary-dark">›</Text>
+            <Text className="text-[10px] font-extrabold text-primary-dark">Manage rates</Text>
+            <Text className="ml-1 text-sm font-bold text-primary-dark">→</Text>
           </Pressable>
         </View>
 
         {isLoadingGoldRates ? (
-          <View className="mt-4 flex-row items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-5">
+          <View className="mt-4 flex-row items-center justify-center rounded-2xl bg-[#fff9e9] py-6">
             <ActivityIndicator size="small" color="#F5C45E" />
-            <Text className="ml-2 text-xs font-semibold text-emerald-100">Loading today’s rates…</Text>
+            <Text className="ml-2 text-xs font-semibold text-[#123c2d]">Loading today’s rates…</Text>
           </View>
         ) : goldRateError ? (
           <Pressable
             onPress={() => setRefreshVersion(version => version + 1)}
-            className="mt-4 items-center rounded-2xl border border-white/15 bg-white/5 px-4 py-4"
+            className="mt-4 items-center rounded-2xl bg-[#fff9e9] px-4 py-5"
             accessibilityRole="button"
             accessibilityLabel="Retry loading daily gold rates"
           >
-            <Text className="text-center text-xs font-semibold text-white">
+            <Text className="text-center text-xs font-semibold text-red-700">
               Could not load today’s rates. Tap to retry.
             </Text>
           </Pressable>
         ) : goldRateSet?.rates.length ? (
-          <View className="mt-4">
+          <View className="mt-4 gap-2.5">
             {GOLD_RATE_METALS.map(metal => {
               const metalRates = goldRateSet.rates
                 .filter(rate => rate.metal_type.toLowerCase() === metal.toLowerCase())
@@ -667,30 +667,61 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
               return (
                 <View
                   key={metal}
-                  className="flex-row items-center border-t border-white/15 py-3"
+                    className="rounded-2xl border border-[#f0dfb8] bg-[#fff9e9] p-2.5"
                 >
-                  <Text className="w-[66px] text-xs font-extrabold text-white">{metal}</Text>
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerClassName="gap-2 pr-1"
-                    className="flex-1"
-                  >
-                    {metalRates.map(rate => (
-                      <View
-                        key={`${rate.metal_type}-${rate.purity}-${rate.rate_unit ?? ''}`}
-                        className="min-w-[118px] rounded-xl border border-white/10 bg-white/[0.08] px-3 py-2"
-                      >
-                        <Text className="text-[9px] font-bold text-[#c5d9d4]" numberOfLines={1}>
-                          {getRatePurityLabel(rate)}
-                        </Text>
-                        <Text className="mt-1 text-[13px] font-extrabold text-white" numberOfLines={1}>
-                          {formatGoldRate(rate.rate_per_unit ?? rate.rate_per_gram)}
-                          <Text className="text-[9px] font-semibold text-[#c5d9d4]">
-                            {rate.rate_unit === 'carat' ? ' /ct' : ' /g'}
-                          </Text>
-                        </Text>
+                    <View className="mb-2 flex-row items-center">
+                      <View className="mr-2 h-7 w-7 items-center justify-center rounded-full bg-[#f8e9c2]">
+                        <Svg width={17} height={17} viewBox="0 0 24 24" fill="none">
+                            {metal === 'Diamond' ? (
+                              <>
+                                <Path
+                                  d="m3 9 4-5h10l4 5-9 12L3 9Z"
+                                  stroke="#bd8732"
+                                  strokeWidth={1.8}
+                                  strokeLinejoin="round"
+                                />
+                                <Path
+                                  d="M3 9h18M7 4l5 17 5-17"
+                                  stroke="#bd8732"
+                                  strokeWidth={1.4}
+                                  strokeLinejoin="round"
+                                />
+                              </>
+                            ) : (
+                              <Path
+                                d="M2.5 14h8l2 5h-12l2-5ZM8.5 5h9l2 6h-13l4-6ZM13 14h8l1.5 5h-9l-2-5Z"
+                                stroke="#bd8732"
+                                strokeWidth={1.5}
+                                strokeLinejoin="round"
+                              />
+                            )}
+                          </Svg>
                       </View>
+                      <Text className="text-base font-extrabold text-[#123c2d]">{metal}</Text>
+                    </View>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerClassName="gap-1.5"
+                    >
+                      {metalRates.map(rate => (
+                        <View
+                          key={`${rate.metal_type}-${rate.purity}-${rate.rate_unit ?? ''}`}
+                          className="min-w-[88px] items-center justify-center rounded-xl border border-[#d9a441] bg-[#004533] px-2 py-2.5"
+                        >
+                          <Text className="text-center text-[10px] font-bold text-white" numberOfLines={1}>
+                            {getRatePurityLabel(rate)}
+                          </Text>
+                          <Text className="mt-1 text-center text-xs font-extrabold text-white" numberOfLines={1}>
+                            {formatGoldRate(rate.rate_per_unit ?? rate.rate_per_gram)}
+                            <Text className="text-[9px] font-semibold text-emerald-50">
+                              {rate.rate_unit?.toLowerCase() === 'carat' ||
+                              rate.rate_unit?.toLowerCase() === 'ct'
+                                ? ' /ct'
+                                : ' /g'}
+                            </Text>
+                          </Text>
+                        </View>
                     ))}
                   </ScrollView>
                 </View>
@@ -698,8 +729,8 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
             })}
           </View>
         ) : (
-          <View className="mt-4 items-center rounded-2xl border border-white/10 bg-white/5 py-5">
-            <Text className="text-xs font-semibold text-emerald-100">
+          <View className="mt-4 items-center rounded-2xl bg-[#fff9e9] py-5">
+            <Text className="text-xs font-semibold text-[#123c2d]">
               {isLoadingGoldRates ? 'Loading rates…' : 'No rates have been configured yet.'}
             </Text>
           </View>
