@@ -34,14 +34,13 @@ export type AuthenticatedUser = {
 type LoginProps = {
   onLoginSuccess: (user: AuthenticatedUser) => void;
   onCancel?: () => void;
-  onShowWelcome?: () => void;
 };
 
 type ScrollViewHandle = {
   scrollToEnd: (options?: { animated?: boolean }) => void;
 };
 
-function Login({ onLoginSuccess, onCancel, onShowWelcome }: LoginProps) {
+function Login({ onLoginSuccess, onCancel }: LoginProps) {
   const scrollViewRef = useRef<ScrollViewHandle | null>(null);
   const isPasswordFocused = useRef(false);
   const [identifier, setIdentifier] = useState('');
@@ -328,19 +327,6 @@ function Login({ onLoginSuccess, onCancel, onShowWelcome }: LoginProps) {
                     </Text>
                   </Pressable>
                 </>
-              ) : null}
-              {onShowWelcome ? (
-                <Pressable
-                  className="mt-3 h-12 flex-row items-center justify-center rounded-full border border-primary/25 bg-white/70"
-                  onPress={onShowWelcome}
-                  accessibilityRole="button"
-                  accessibilityLabel="Go to welcome screen"
-                >
-                  <Ionicons name="sparkles-outline" size={17} color="#004D40" />
-                  <Text className="ml-2 text-sm font-bold text-primary">
-                    Go to Welcome Screen
-                  </Text>
-                </Pressable>
               ) : null}
             </View>
             {keyboardVisible ? <View className="h-32" /> : null}
