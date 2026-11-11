@@ -309,6 +309,22 @@ function Login({ onLoginSuccess, onCancel, onRegister }: LoginProps) {
                   </>
                 )}
               </Pressable>
+              {onRegister ? (
+                <View className="mt-4 flex-row justify-center">
+                  <Text className="text-sm text-slate-500">
+                    New to Sri Golds?{' '}
+                  </Text>
+                  <Pressable
+                    onPress={onRegister}
+                    accessibilityRole="button"
+                    accessibilityLabel="Create an account"
+                  >
+                    <Text className="text-sm font-bold text-primary">
+                      Register
+                    </Text>
+                  </Pressable>
+                </View>
+              ) : null}
               {onCancel ? (
                 <>
                   <View className="mt-4 flex-row items-center gap-3">
