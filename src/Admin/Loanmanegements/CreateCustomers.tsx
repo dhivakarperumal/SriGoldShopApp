@@ -18,7 +18,11 @@ import {
 import { Alert } from '../../Components/AppAlert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { errorCodes, isErrorWithCode, pick, types } from '@react-native-documents/picker';
-import { launchImageLibrary, type Asset } from 'react-native-image-picker';
+import {
+  launchCamera,
+  launchImageLibrary,
+  type Asset,
+} from 'react-native-image-picker';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
 
@@ -211,27 +215,18 @@ function CreateCustomers({ customer, onCancel, onSaved }: Props) {
     setDatePickerTarget(null);
   };
 
-  const uploadPhoto = async () => {
+  const uploadCustomerPhoto = async (asset: Asset | undefined) => {
+    if (!asset?.uri) return;
+    if (asset.type && !['image/png', 'image/jpeg'].includes(asset.type)) {
+      Alert.alert('Unsupported photo', 'Choose a PNG or JPG photo.');
+      return;
+    }
+    if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
+      Alert.alert('Photo too large', 'Customer photo must be 5 MB or smaller.');
+      return;
+    }
+
     try {
-      const result = await launchImageLibrary({
-        mediaType: 'photo',
-        selectionLimit: 1,
-        quality: 0.8,
-        maxWidth: 1200,
-        maxHeight: 1200,
-      });
-      if (result.didCancel) return;
-      if (result.errorCode) throw new Error(result.errorMessage || 'Could not choose a photo.');
-      const asset = result.assets?.[0];
-      if (!asset?.uri) return;
-      if (asset.type && !['image/png', 'image/jpeg'].includes(asset.type)) {
-        Alert.alert('Unsupported photo', 'Choose a PNG or JPG photo.');
-        return;
-      }
-      if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
-        Alert.alert('Photo too large', 'Customer photo must be 5 MB or smaller.');
-        return;
-      }
       setPhoto(asset);
       setUploadingPhoto(true);
       const data = new FormData();
@@ -256,6 +251,65 @@ function CreateCustomers({ customer, onCancel, onSaved }: Props) {
     }
   };
 
+  const uploadPhoto = async () => {
+    try {
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        selectionLimit: 1,
+        quality: 0.8,
+        maxWidth: 1200,
+        maxHeight: 1200,
+      });
+      if (result.didCancel) return;
+      if (result.errorCode) throw new Error(result.errorMessage || 'Could not choose a photo.');
+      await uploadCustomerPhoto(result.assets?.[0]);
+    } catch (error) {
+      console.error('Failed to select loan customer photo:', error);
+      Alert.alert('Photo selection failed', getErrorMessage(error, 'Could not choose a photo.'));
+    }
+  };
+
+  const takePhoto = async () => {
+    try {
+      const result = await launchCamera({
+        mediaType: 'photo',
+        quality: 0.8,
+        maxWidth: 1200,
+        maxHeight: 1200,
+      });
+      if (result.didCancel) return;
+      if (result.errorCode) throw new Error(result.errorMessage || 'Could not take a photo.');
+      await uploadCustomerPhoto(result.assets?.[0]);
+    } catch (error) {
+      console.error('Failed to capture loan customer photo:', error);
+      Alert.alert('Camera failed', getErrorMessage(error, 'Could not take a photo.'));
+    }
+  };
+
+  const stageDocument = (
+    side: 'front' | 'back',
+    file: { uri: string; name: string; type: string; size?: number | null },
+  ) => {
+    if (!['application/pdf', 'image/png', 'image/jpeg'].includes(file.type)) {
+      Alert.alert('Unsupported document', 'Choose or take a PDF, PNG, or JPG document.');
+      return;
+    }
+    if (file.size && file.size > 10 * 1024 * 1024) {
+      Alert.alert('Document too large', 'Each KYC document must be 10 MB or smaller.');
+      return;
+    }
+    const documentKey = `${documentType}:${side}`;
+    setUploadedDocumentKeys(current => current.filter(key => key !== documentKey));
+    setDocuments(current => [
+      ...current.filter(item => item.document_type !== documentType || item.document_side !== side),
+      {
+        document_type: documentType,
+        document_side: side,
+        ...file,
+      },
+    ]);
+  };
+
   const pickDocument = async (side: 'front' | 'back') => {
     try {
       const [file] = await pick({
@@ -265,31 +319,42 @@ function CreateCustomers({ customer, onCancel, onSaved }: Props) {
       });
       if (!file) return;
       const mimeType = file.type || '';
-      if (!['application/pdf', 'image/png', 'image/jpeg'].includes(mimeType)) {
-        Alert.alert('Unsupported document', 'Choose a PDF, PNG, or JPG document.');
-        return;
-      }
-      if (file.size && file.size > 10 * 1024 * 1024) {
-        Alert.alert('Document too large', 'Each KYC document must be 10 MB or smaller.');
-        return;
-      }
-      const documentKey = `${documentType}:${side}`;
-      setUploadedDocumentKeys(current => current.filter(key => key !== documentKey));
-      setDocuments(current => [
-        ...current.filter(item => item.document_type !== documentType || item.document_side !== side),
-        {
-          document_type: documentType,
-          document_side: side,
-          uri: file.uri,
-          name: file.name || `${documentType}-${side}.${mimeType === 'application/pdf' ? 'pdf' : 'jpg'}`,
-          type: mimeType,
-          size: file.size,
-        },
-      ]);
+      stageDocument(side, {
+        uri: file.uri,
+        name: file.name || `${documentType}-${side}.${mimeType === 'application/pdf' ? 'pdf' : 'jpg'}`,
+        type: mimeType,
+        size: file.size,
+      });
     } catch (error) {
       if (isErrorWithCode(error) && error.code === errorCodes.OPERATION_CANCELED) return;
       console.error('Failed to select loan customer KYC document:', error);
       Alert.alert('Document selection failed', getErrorMessage(error, 'Could not select document.'));
+    }
+  };
+
+  const captureDocument = async (side: 'front' | 'back') => {
+    try {
+      const result = await launchCamera({
+        mediaType: 'photo',
+        quality: 0.8,
+        maxWidth: 1600,
+        maxHeight: 1600,
+      });
+      if (result.didCancel) return;
+      if (result.errorCode) {
+        throw new Error(result.errorMessage || 'Could not take a document photo.');
+      }
+      const asset = result.assets?.[0];
+      if (!asset?.uri) return;
+      stageDocument(side, {
+        uri: asset.uri,
+        name: asset.fileName || `${documentType}-${side}-${Date.now()}.${asset.type === 'image/png' ? 'png' : 'jpg'}`,
+        type: asset.type || 'image/jpeg',
+        size: asset.fileSize,
+      });
+    } catch (error) {
+      console.error('Failed to capture loan customer KYC document:', error);
+      Alert.alert('Camera failed', getErrorMessage(error, 'Could not take a document photo.'));
     }
   };
 
@@ -446,9 +511,14 @@ function CreateCustomers({ customer, onCancel, onSaved }: Props) {
               ) : (
                 <Text className="text-xs text-slate-500">A customer photo is required. PNG/JPG, up to 5 MB.</Text>
               )}
-              <Pressable onPress={uploadPhoto} disabled={uploadingPhoto} accessibilityRole="button" className="items-center rounded-xl bg-primary px-4 py-3">
-                {uploadingPhoto ? <ActivityIndicator color="white" /> : <Text className="text-sm font-bold text-white">{form.photo_url ? 'Replace photo' : 'Choose photo'}</Text>}
-              </Pressable>
+              <View className="flex-row gap-2">
+                <Pressable onPress={takePhoto} disabled={uploadingPhoto} accessibilityRole="button" accessibilityLabel="Take customer photo with camera" className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl bg-primary px-3 py-3">
+                  {uploadingPhoto ? <ActivityIndicator color="white" /> : <Text className="text-sm font-bold text-white">Take photo</Text>}
+                </Pressable>
+                <Pressable onPress={uploadPhoto} disabled={uploadingPhoto} accessibilityRole="button" accessibilityLabel="Choose customer photo from gallery" className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-primary bg-white px-3 py-3">
+                  {uploadingPhoto ? <ActivityIndicator color={PRIMARY} /> : <Text className="text-sm font-bold text-primary">Gallery</Text>}
+                </Pressable>
+              </View>
             </FormSection>
 
             <FormSection title="KYC documents">
@@ -466,9 +536,14 @@ function CreateCustomers({ customer, onCancel, onSaved }: Props) {
                         {staged?.name || (typeof existing?.original_name === 'string' ? existing.original_name : 'No file selected')}
                       </Text>
                     </View>
-                    <Pressable onPress={() => pickDocument(side)} accessibilityRole="button" accessibilityLabel={`Choose ${side} KYC document`} className="rounded-lg bg-emerald-50 px-3 py-2">
-                      <Text className="text-xs font-bold text-primary">{staged || existing ? 'Replace' : 'Choose'}</Text>
-                    </Pressable>
+                    <View className="flex-row gap-2">
+                      <Pressable onPress={() => captureDocument(side)} accessibilityRole="button" accessibilityLabel={`Take ${side} KYC document photo`} className="rounded-lg bg-emerald-50 px-3 py-2">
+                        <Text className="text-xs font-bold text-primary">Camera</Text>
+                      </Pressable>
+                      <Pressable onPress={() => pickDocument(side)} accessibilityRole="button" accessibilityLabel={`${staged || existing ? 'Replace' : 'Choose'} ${side} KYC document`} className="rounded-lg bg-emerald-50 px-3 py-2">
+                        <Text className="text-xs font-bold text-primary">{staged || existing ? 'Replace' : 'Choose'}</Text>
+                      </Pressable>
+                    </View>
                   </View>
                 );
               })}
