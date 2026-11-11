@@ -95,7 +95,7 @@ function WelcomeScreen({ onComplete, onHome }: WelcomeScreenProps) {
   const isLastSlide = activeIndex === WELCOME_SLIDES.length - 1;
   const isFirstSlide = activeIndex === 0;
   const isSecondSlide = activeIndex === 1;
-  const isLightSlide = isFirstSlide || isLastSlide;
+  const isLightSlide = isFirstSlide || isSecondSlide || isLastSlide;
   const slideArtwork = isFirstSlide
     ? require('../../Images/welcome1.png')
     : isSecondSlide
@@ -105,18 +105,16 @@ function WelcomeScreen({ onComplete, onHome }: WelcomeScreenProps) {
     <View
       {...swipeResponder.panHandlers}
       className={`flex-1 ${
-        isLightSlide
-          ? 'bg-[#f4eadb]'
-          : 'bg-[#002f25]'
+        isSecondSlide
+          ? 'bg-white'
+          : isLightSlide
+            ? 'bg-[#f4eadb]'
+            : 'bg-[#002f25]'
       }`}
     >
-      {isLightSlide || isSecondSlide ? (
+      {isLightSlide ? (
         <Image
-          source={
-            isLightSlide
-              ? require('../../Images/welcome1bg.png')
-              : require('../../Images/welcomebg3.png')
-          }
+          source={require('../../Images/welcome1bg.png')}
           className="absolute inset-0 h-full w-full"
           resizeMode="cover"
           pointerEvents="none"
