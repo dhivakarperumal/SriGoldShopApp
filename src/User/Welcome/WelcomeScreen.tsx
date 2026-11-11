@@ -69,10 +69,9 @@ const WELCOME_SLIDES = [
 type WelcomeScreenProps = {
   onComplete: () => void;
   onHome: () => void;
-  onSignIn: () => void;
 };
 
-function WelcomeScreen({ onComplete, onHome, onSignIn }: WelcomeScreenProps) {
+function WelcomeScreen({ onComplete, onHome }: WelcomeScreenProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const swipeResponder = useMemo(
     () =>
@@ -252,20 +251,23 @@ function WelcomeScreen({ onComplete, onHome, onSignIn }: WelcomeScreenProps) {
                 : setActiveIndex(index => index + 1)
             }
             accessibilityRole="button"
+            accessibilityLabel={isLastSlide ? 'Go to Home' : 'Continue'}
             style={
               isLightSlide
                 ? styles.firstSlideButton
                 : styles.secondSlideButton
             }
           >
-            <Text
-              className={`text-base font-extrabold ${
-                isLightSlide ? 'text-white' : 'text-[#123c2d]'
-              }`}
-            >
-              {isLastSlide ? 'Go to Home' : 'Continue'}
-            </Text>
-            <View className="ml-2">
+            {!isLastSlide ? (
+              <Text
+                className={`text-base font-extrabold ${
+                  isLightSlide ? 'text-white' : 'text-[#123c2d]'
+                }`}
+              >
+                Continue
+              </Text>
+            ) : null}
+            <View className={isLastSlide ? '' : 'ml-2'}>
               <Ionicons
                 name="arrow-forward"
                 size={18}
@@ -273,18 +275,6 @@ function WelcomeScreen({ onComplete, onHome, onSignIn }: WelcomeScreenProps) {
               />
             </View>
           </Pressable>
-          {isLastSlide ? (
-            <Pressable
-              className="mt-4 items-center py-2"
-              onPress={onSignIn}
-              accessibilityRole="button"
-            >
-              <Text className="text-sm font-semibold text-white/80">
-                Already have an account?{' '}
-                <Text className="font-extrabold text-[#f2d58a]">Sign in</Text>
-              </Text>
-            </Pressable>
-          ) : null}
         </View>
       </SafeAreaView>
     </View>

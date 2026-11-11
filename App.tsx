@@ -524,7 +524,6 @@ function App() {
         <WelcomeScreen
           onComplete={() => completeWelcome()}
           onHome={() => completeWelcome()}
-          onSignIn={() => completeWelcome(true)}
         />
       ) : showLoginModal && showWelcomePreview ? (
         <WelcomeScreen
@@ -533,7 +532,6 @@ function App() {
             setShowWelcomePreview(false);
             setShowLoginModal(false);
           }}
-          onSignIn={() => setShowWelcomePreview(false)}
         />
       ) : showLoginModal ? (
         <Login
