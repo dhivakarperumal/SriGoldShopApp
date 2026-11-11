@@ -664,6 +664,10 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
                   return firstIndex - secondIndex;
                 });
               if (!metalRates.length) return null;
+              const rateRows: HomeGoldRate[][] = [];
+              for (let index = 0; index < metalRates.length; index += 3) {
+                rateRows.push(metalRates.slice(index, index + 3));
+              }
               return (
                 <View
                   key={metal}
@@ -701,37 +705,45 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
                       {metal}
                     </Text>
                   </View>
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerClassName="gap-1.5"
-                  >
-                    {metalRates.map(rate => (
+                  <View className="gap-1.5">
+                    {rateRows.map((row, rowIndex) => (
                       <View
-                        key={`${rate.metal_type}-${rate.purity}-${rate.rate_unit ?? ''}`}
-                        className="min-w-[88px] items-center justify-center rounded-xl border border-[#d9a441] bg-[#004533] px-2 py-2.5"
+                        key={`${metal}-${rowIndex}`}
+                        className="flex-row gap-1.5"
                       >
-                        <Text
-                          className="text-center text-[10px] font-bold text-white"
-                          numberOfLines={1}
-                        >
-                          {getRatePurityLabel(rate)}
-                        </Text>
-                        <Text
-                          className="mt-1 text-center text-xs font-extrabold text-white"
-                          numberOfLines={1}
-                        >
-                          {formatGoldRate(rate.rate_per_unit ?? rate.rate_per_gram)}
-                          <Text className="text-[9px] font-semibold text-emerald-50">
-                            {rate.rate_unit?.toLowerCase() === 'carat' ||
-                              rate.rate_unit?.toLowerCase() === 'ct'
-                                ? ' /ct'
-                                : ' /g'}
-                          </Text>
-                        </Text>
+                        {row.map(rate => (
+                          <View
+                              key={`${rate.metal_type}-${rate.purity}-${rate.rate_unit ?? ''}`}
+                              className="min-h-[58px] min-w-0 flex-1 items-center justify-center rounded-xl border border-[#d9a441] bg-[#004533] px-1.5 py-2.5"
+                          >
+                              <Text
+                                className="text-center text-[10px] font-bold text-white"
+                                numberOfLines={1}
+                                adjustsFontSizeToFit
+                              >
+                                {getRatePurityLabel(rate)}
+                              </Text>
+                              <Text
+                                className="mt-1 text-center text-xs font-extrabold text-white"
+                                numberOfLines={1}
+                                adjustsFontSizeToFit
+                              >
+                                {formatGoldRate(rate.rate_per_unit ?? rate.rate_per_gram)}
+                                <Text className="text-[9px] font-semibold text-emerald-50">
+                                  {rate.rate_unit?.toLowerCase() === 'carat' ||
+                                  rate.rate_unit?.toLowerCase() === 'ct'
+                                    ? ' /ct'
+                                    : ' /g'}
+                                </Text>
+                              </Text>
+                          </View>
+                        ))}
+                        {row.length === 1 ? (
+                          <View className="min-w-0 flex-1" />
+                        ) : null}
                       </View>
                     ))}
-                  </ScrollView>
+                  </View>
                 </View>
               );
             })}
