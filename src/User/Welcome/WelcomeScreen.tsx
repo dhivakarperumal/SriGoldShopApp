@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Image,
+  PanResponder,
   Pressable,
   StatusBar,
   StyleSheet,
@@ -72,6 +73,24 @@ type WelcomeScreenProps = {
 
 function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const swipeResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_event, gestureState) =>
+          Math.abs(gestureState.dx) > 20 &&
+          Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.2,
+        onPanResponderRelease: (_event, gestureState) => {
+          if (gestureState.dx < -50) {
+            setActiveIndex(index =>
+              Math.min(index + 1, WELCOME_SLIDES.length - 1),
+            );
+          } else if (gestureState.dx > 50) {
+            setActiveIndex(index => Math.max(index - 1, 0));
+          }
+        },
+      }),
+    [],
+  );
   const slide = WELCOME_SLIDES[activeIndex];
   const isLastSlide = activeIndex === WELCOME_SLIDES.length - 1;
   const isFirstSlide = activeIndex === 0;
@@ -86,6 +105,7 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
 
   return (
     <View
+      {...swipeResponder.panHandlers}
       className={`flex-1 ${
         isLightSlide
           ? 'bg-[#f4eadb]'
@@ -263,7 +283,7 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
                 isLightSlide ? 'text-white' : 'text-[#123c2d]'
               }`}
             >
-              {isLastSlide ? 'Explore Sri Golds' : 'Continue'}
+              {isLastSlide ? 'Go to Home' : 'Continue'}
             </Text>
             <View className="ml-2">
               <Ionicons
