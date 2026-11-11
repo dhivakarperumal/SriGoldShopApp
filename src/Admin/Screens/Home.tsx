@@ -667,61 +667,69 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
               return (
                 <View
                   key={metal}
-                    className="rounded-2xl border border-[#f0dfb8] bg-[#fff9e9] p-2.5"
+                  className="rounded-2xl border border-[#f0dfb8] bg-[#fff9e9] p-2.5"
                 >
-                    <View className="mb-2 flex-row items-center">
-                      <View className="mr-2 h-7 w-7 items-center justify-center rounded-full bg-[#f8e9c2]">
-                        <Svg width={17} height={17} viewBox="0 0 24 24" fill="none">
-                            {metal === 'Diamond' ? (
-                              <>
-                                <Path
-                                  d="m3 9 4-5h10l4 5-9 12L3 9Z"
-                                  stroke="#bd8732"
-                                  strokeWidth={1.8}
-                                  strokeLinejoin="round"
-                                />
-                                <Path
-                                  d="M3 9h18M7 4l5 17 5-17"
-                                  stroke="#bd8732"
-                                  strokeWidth={1.4}
-                                  strokeLinejoin="round"
-                                />
-                              </>
-                            ) : (
-                              <Path
-                                d="M2.5 14h8l2 5h-12l2-5ZM8.5 5h9l2 6h-13l4-6ZM13 14h8l1.5 5h-9l-2-5Z"
-                                stroke="#bd8732"
-                                strokeWidth={1.5}
-                                strokeLinejoin="round"
-                              />
-                            )}
-                          </Svg>
-                      </View>
-                      <Text className="text-base font-extrabold text-[#123c2d]">{metal}</Text>
+                  <View className="mb-2 flex-row items-center">
+                    <View className="mr-2 h-7 w-7 items-center justify-center rounded-full bg-[#f8e9c2]">
+                      <Svg width={17} height={17} viewBox="0 0 24 24" fill="none">
+                        {metal === 'Diamond' ? (
+                          <>
+                            <Path
+                              d="m3 9 4-5h10l4 5-9 12L3 9Z"
+                              stroke="#bd8732"
+                              strokeWidth={1.8}
+                              strokeLinejoin="round"
+                            />
+                            <Path
+                              d="M3 9h18M7 4l5 17 5-17"
+                              stroke="#bd8732"
+                              strokeWidth={1.4}
+                              strokeLinejoin="round"
+                            />
+                          </>
+                        ) : (
+                          <Path
+                            d="M2.5 14h8l2 5h-12l2-5ZM8.5 5h9l2 6h-13l4-6ZM13 14h8l1.5 5h-9l-2-5Z"
+                            stroke="#bd8732"
+                            strokeWidth={1.5}
+                            strokeLinejoin="round"
+                          />
+                        )}
+                      </Svg>
                     </View>
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerClassName="gap-1.5"
-                    >
-                      {metalRates.map(rate => (
-                        <View
-                          key={`${rate.metal_type}-${rate.purity}-${rate.rate_unit ?? ''}`}
-                          className="min-w-[88px] items-center justify-center rounded-xl border border-[#d9a441] bg-[#004533] px-2 py-2.5"
+                    <Text className="text-base font-extrabold text-[#123c2d]">
+                      {metal}
+                    </Text>
+                  </View>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerClassName="gap-1.5"
+                  >
+                    {metalRates.map(rate => (
+                      <View
+                        key={`${rate.metal_type}-${rate.purity}-${rate.rate_unit ?? ''}`}
+                        className="min-w-[88px] items-center justify-center rounded-xl border border-[#d9a441] bg-[#004533] px-2 py-2.5"
+                      >
+                        <Text
+                          className="text-center text-[10px] font-bold text-white"
+                          numberOfLines={1}
                         >
-                          <Text className="text-center text-[10px] font-bold text-white" numberOfLines={1}>
-                            {getRatePurityLabel(rate)}
-                          </Text>
-                          <Text className="mt-1 text-center text-xs font-extrabold text-white" numberOfLines={1}>
-                            {formatGoldRate(rate.rate_per_unit ?? rate.rate_per_gram)}
-                            <Text className="text-[9px] font-semibold text-emerald-50">
-                              {rate.rate_unit?.toLowerCase() === 'carat' ||
+                          {getRatePurityLabel(rate)}
+                        </Text>
+                        <Text
+                          className="mt-1 text-center text-xs font-extrabold text-white"
+                          numberOfLines={1}
+                        >
+                          {formatGoldRate(rate.rate_per_unit ?? rate.rate_per_gram)}
+                          <Text className="text-[9px] font-semibold text-emerald-50">
+                            {rate.rate_unit?.toLowerCase() === 'carat' ||
                               rate.rate_unit?.toLowerCase() === 'ct'
                                 ? ' /ct'
                                 : ' /g'}
-                            </Text>
                           </Text>
-                        </View>
+                        </Text>
+                      </View>
                     ))}
                   </ScrollView>
                 </View>
