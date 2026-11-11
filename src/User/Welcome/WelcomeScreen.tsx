@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Image,
+  NativeModules,
   PanResponder,
+  Platform,
   Pressable,
   StatusBar,
   StyleSheet,
@@ -10,6 +12,18 @@ import {
 } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+type SystemNavigationBarModule = {
+  setAppearance: (
+    navigationBarColor: string,
+    useDarkNavigationIcons: boolean,
+    statusBarColor: string,
+    useDarkStatusIcons: boolean,
+  ) => Promise<void>;
+};
+
+const systemNavigationBar = NativeModules
+  .SystemNavigationBar as SystemNavigationBarModule | undefined;
 
 const styles = StyleSheet.create({
   firstSlideArtwork: {
@@ -73,6 +87,30 @@ type WelcomeScreenProps = {
 
 function WelcomeScreen({ onComplete, onHome }: WelcomeScreenProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !systemNavigationBar) return undefined;
+
+    systemNavigationBar
+      .setAppearance('#FFFFFF', true, '#f4eadb', true)
+      .catch(systemBarError => {
+        console.error(
+          'Failed to set welcome screen system bar appearance:',
+          systemBarError,
+        );
+      });
+
+    return () => {
+      systemNavigationBar
+        .setAppearance('#004D40', false, '#003B2D', false)
+        .catch(systemBarError => {
+          console.error(
+            'Failed to restore system bar appearance:',
+            systemBarError,
+          );
+        });
+    };
+  }, []);
+
   const swipeResponder = useMemo(
     () =>
       PanResponder.create({
