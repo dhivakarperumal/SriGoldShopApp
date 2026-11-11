@@ -134,9 +134,14 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
             className="flex-1"
             contentContainerClassName={
               keyboardVisible
-              ? 'grow justify-center px-6 pb-32'
+              ? 'grow justify-start px-6 pt-2'
                 : 'grow justify-start px-6 pt-[90px] pb-0'
             }
+            onContentSizeChange={() => {
+              if (keyboardVisible && isPasswordFocused.current) {
+                scrollViewRef.current?.scrollToEnd({ animated: true });
+              }
+            }}
             keyboardShouldPersistTaps="handled"
             automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
             nestedScrollEnabled
@@ -324,6 +329,7 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
                 </>
               ) : null}
             </View>
+            {keyboardVisible ? <View className="h-32" /> : null}
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
