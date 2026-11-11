@@ -22,6 +22,7 @@ import {
 import AppAlertHost, { Alert } from './src/Components/AppAlert';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Login, { type AuthenticatedUser } from './src/Admin/Auth/Login';
+import Register from './src/Admin/Auth/Register';
 import AdminHome from './src/Admin/Screens/Home';
 import Profile from './src/Admin/Screens/Profile';
 import Loans from './src/Admin/Screens/Loans';
@@ -90,6 +91,7 @@ const ADMIN_BACK_ROUTES: Record<AdminRoute, AdminRoute | null> = {
 function App() {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [authScreen, setAuthScreen] = useState<'login' | 'register'>('login');
   const [showWelcomePreview, setShowWelcomePreview] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [shouldShowWelcome, setShouldShowWelcome] = useState(false);
@@ -217,6 +219,7 @@ function App() {
       setAdminRouteHistory([]);
       setVisitedAdminRoutes(new Set(['home']));
       setShowLoginModal(false);
+      setAuthScreen('login');
     } catch {
       Alert.alert('Sign out failed', 'Please try again.');
     } finally {
@@ -517,7 +520,10 @@ function App() {
             user={user}
             onUserUpdated={setUser}
             onLogout={handleLogout}
-            onShowLogin={() => setShowLoginModal(true)}
+            onShowLogin={() => {
+              setAuthScreen('login');
+              setShowLoginModal(true);
+            }}
           />
         )
       ) : shouldShowWelcome ? (
@@ -533,17 +539,26 @@ function App() {
             setShowLoginModal(false);
           }}
         />
+      ) : showLoginModal && authScreen === 'register' ? (
+        <Register
+          onLogin={() => setAuthScreen('login')}
+          onCancel={() => setShowLoginModal(false)}
+        />
       ) : showLoginModal ? (
         <Login
           onLoginSuccess={handleLoginSuccess}
           onCancel={() => setShowLoginModal(false)}
+          onRegister={() => setAuthScreen('register')}
         />
       ) : (
         <UserLayout
           user={null}
           onUserUpdated={setUser}
           onLogout={handleLogout}
-          onShowLogin={() => setShowLoginModal(true)}
+          onShowLogin={() => {
+            setAuthScreen('login');
+            setShowLoginModal(true);
+          }}
         />
       )}
     </SafeAreaProvider>
