@@ -714,7 +714,7 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
                         {row.map(rate => (
                           <View
                             key={`${rate.metal_type}-${rate.purity}-${rate.rate_unit ?? ''}`}
-                            className="min-h-[58px] min-w-0 flex-1 items-center justify-center rounded-xl border border-[#d9a441] bg-[#003b2d] px-1.5 py-2.5"
+                            className="min-h-[58px] min-w-0 flex-1 items-center justify-center rounded-xl bg-[#003b2d] px-1.5 py-2.5"
                           >
                             <Text
                               className="text-center text-[10px] font-bold text-white"
