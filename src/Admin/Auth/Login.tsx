@@ -40,6 +40,227 @@ type ScrollViewHandle = {
   scrollToEnd: (options?: { animated?: boolean }) => void;
 };
 
+type PreciousRate = {
+  metal_type: string;
+  purity: string;
+  rate_per_gram?: number | string;
+  rate_per_unit?: number | string;
+  rate_unit?: string;
+};
+
+type PreciousRateSet = {
+  rates: PreciousRate[];
+  rate_date?: string;
+  effective_from?: string;
+};
+
+const RATE_METALS = ['Gold', 'Silver', 'Platinum', 'Diamond'];
+const GOLD_PURITY_LABELS: Record<string, string> = {
+  '999': '24K (999)',
+  '24K': '24K (999)',
+  '916': '22K (916)',
+  '22K': '22K (916)',
+  '833': '20K (833)',
+  '20K': '20K (833)',
+  '750': '18K (750)',
+  '18K': '18K (750)',
+  '585': '14K (585)',
+  '14K': '14K (585)',
+};
+const GOLD_PURITY_ORDER = ['585', '750', '833', '916', '999'];
+
+const formatRateDate = (value?: string) => {
+  if (!value) return 'Today';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+};
+
+const formatRateAmount = (value?: number | string) => {
+  const amount = Number(value);
+  return Number.isFinite(amount)
+    ? `₹${amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+    : '—';
+};
+
+function PreciousRatesSnapshot() {
+  const [rateSet, setRateSet] = useState<PreciousRateSet | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [reloadVersion, setReloadVersion] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+    setLoadError('');
+
+    const fetchRates = async () => {
+      try {
+        const { data } = await api.get<PreciousRateSet>('/gold-rates/current');
+        if (!Array.isArray(data?.rates)) {
+          throw new Error('The server returned an invalid rate set.');
+        }
+        if (isMounted) {
+          setRateSet({
+            ...data,
+            rates: data.rates.filter(
+              rate =>
+                typeof rate?.metal_type === 'string' &&
+                typeof rate?.purity === 'string',
+            ),
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching precious metal rates:', error);
+        if (isMounted) {
+          setLoadError(
+            error instanceof Error
+              ? error.message
+              : 'Could not load precious metal rates.',
+          );
+        }
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchRates();
+    return () => {
+      isMounted = false;
+    };
+  }, [reloadVersion]);
+
+  return (
+    <View className="mt-8 rounded-3xl border border-[#d6b66e] bg-[#003b2d] p-3">
+      <View className="mb-3 flex-row items-center">
+        <View className="mr-3 h-12 w-12 items-center justify-center rounded-full border border-emerald-500/60 bg-emerald-950">
+          <Ionicons name="diamond-outline" size={27} color="#f2d58a" />
+        </View>
+        <View className="flex-1">
+          <Text className="text-[10px] font-bold uppercase tracking-[2px] text-[#f2d58a]">
+            Daily market snapshot
+          </Text>
+          <Text className="mt-0.5 text-lg font-extrabold text-white">
+            Sri Golds Precious Rates
+          </Text>
+          <View className="mt-1 flex-row items-center">
+            <Ionicons name="calendar-outline" size={13} color="#f2d58a" />
+            <Text className="ml-1 text-xs text-emerald-50">
+              Effective {formatRateDate(rateSet?.rate_date ?? rateSet?.effective_from)}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {isLoading ? (
+        <View className="items-center rounded-2xl bg-[#fff9e9] py-6">
+          <ActivityIndicator color="#004D40" />
+          <Text className="mt-2 text-sm text-slate-600">Loading today&apos;s rates...</Text>
+        </View>
+      ) : loadError ? (
+        <View className="rounded-2xl bg-[#fff9e9] px-4 py-5">
+          <Text className="text-center text-sm font-semibold text-red-700">
+            {loadError}
+          </Text>
+          <Pressable
+            className="mt-3 self-center rounded-lg bg-[#004533] px-4 py-2"
+            onPress={() => setReloadVersion(version => version + 1)}
+            accessibilityRole="button"
+          >
+            <Text className="text-xs font-bold text-white">Try again</Text>
+          </Pressable>
+        </View>
+      ) : rateSet?.rates.length ? (
+        <View className="gap-2.5">
+          {RATE_METALS.map(metal => {
+            const rates = rateSet.rates
+              .filter(
+                rate => rate.metal_type.toLowerCase() === metal.toLowerCase(),
+              )
+              .sort((first, second) => {
+                if (metal !== 'Gold') return 0;
+                const normalize = (purity: string) =>
+                  purity
+                    .trim()
+                    .toUpperCase()
+                    .replace(/\s+/g, '')
+                    .replace('14K', '585')
+                    .replace('18K', '750')
+                    .replace('20K', '833')
+                    .replace('22K', '916')
+                    .replace('24K', '999');
+                return (
+                  GOLD_PURITY_ORDER.indexOf(normalize(first.purity)) -
+                  GOLD_PURITY_ORDER.indexOf(normalize(second.purity))
+                );
+              });
+            if (!rates.length) return null;
+
+            return (
+              <View
+                key={metal}
+                className="rounded-2xl border border-[#f0dfb8] bg-[#fff9e9] p-2.5"
+              >
+                <Text className="mb-2 ml-1 text-lg font-extrabold text-[#123c2d]">
+                  {metal}
+                </Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerClassName="gap-1.5"
+                >
+                  {rates.map(rate => {
+                    const goldPurity = rate.purity
+                      .trim()
+                      .toUpperCase()
+                      .replace(/\s+/g, '');
+                    const label =
+                      metal === 'Gold'
+                        ? GOLD_PURITY_LABELS[goldPurity] ?? rate.purity
+                        : rate.purity;
+                    const unit = rate.rate_unit?.toLowerCase();
+
+                    return (
+                      <View
+                        key={`${rate.metal_type}-${rate.purity}-${rate.rate_unit ?? ''}`}
+                        className="min-w-[112px] items-center justify-center rounded-xl border border-[#d9a441] bg-[#004533] px-2 py-2.5"
+                      >
+                        <Text
+                          className="text-center text-xs font-bold text-white"
+                          numberOfLines={1}
+                        >
+                          {label}
+                        </Text>
+                        <Text className="mt-1 text-sm font-extrabold text-white">
+                          {formatRateAmount(rate.rate_per_unit ?? rate.rate_per_gram)}
+                        </Text>
+                        <Text className="text-[10px] font-semibold text-emerald-50">
+                          /{unit === 'carat' || unit === 'ct' ? 'ct' : 'g'}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            );
+          })}
+        </View>
+      ) : (
+        <View className="rounded-2xl bg-[#fff9e9] px-4 py-5">
+          <Text className="text-center text-sm font-semibold text-[#123c2d]">
+            No precious metal rates are configured yet.
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
 function Login({ onLoginSuccess, onCancel }: LoginProps) {
   const scrollViewRef = useRef<ScrollViewHandle | null>(null);
   const isPasswordFocused = useRef(false);
@@ -329,6 +550,7 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
                 </>
               ) : null}
             </View>
+            {!keyboardVisible ? <PreciousRatesSnapshot /> : null}
             {keyboardVisible ? <View className="h-32" /> : null}
           </ScrollView>
         </KeyboardAvoidingView>
