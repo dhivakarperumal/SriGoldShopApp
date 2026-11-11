@@ -625,28 +625,28 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
           </View>
           <Pressable
             onPress={() => onNavigate?.('dailyGoldRates')}
-            className="flex-row items-center rounded-xl bg-[#fff1cb] px-3 py-2.5"
+            className="flex-row items-center rounded-xl border border-[#d6b66e] bg-[#064c3d] px-3 py-2.5"
             accessibilityRole="button"
             accessibilityLabel="Manage daily gold rates"
           >
-            <Text className="text-[10px] font-extrabold text-primary-dark">Manage rates</Text>
-            <Text className="ml-1 text-sm font-bold text-primary-dark">→</Text>
+            <Text className="text-[10px] font-extrabold text-white">Manage rates</Text>
+            <Text className="ml-1 text-sm font-bold text-[#f2d58a]">→</Text>
           </Pressable>
         </View>
 
         {isLoadingGoldRates ? (
-          <View className="mt-4 flex-row items-center justify-center rounded-2xl bg-[#fff9e9] py-6">
+          <View className="mt-4 flex-row items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-6">
             <ActivityIndicator size="small" color="#F5C45E" />
-            <Text className="ml-2 text-xs font-semibold text-[#123c2d]">Loading today’s rates…</Text>
+            <Text className="ml-2 text-xs font-semibold text-emerald-100">Loading today’s rates…</Text>
           </View>
         ) : goldRateError ? (
           <Pressable
             onPress={() => setRefreshVersion(version => version + 1)}
-            className="mt-4 items-center rounded-2xl bg-[#fff9e9] px-4 py-5"
+            className="mt-4 items-center rounded-2xl border border-white/10 bg-white/5 px-4 py-5"
             accessibilityRole="button"
             accessibilityLabel="Retry loading daily gold rates"
           >
-            <Text className="text-center text-xs font-semibold text-red-700">
+            <Text className="text-center text-xs font-semibold text-rose-200">
               Could not load today’s rates. Tap to retry.
             </Text>
           </Pressable>
@@ -671,10 +671,10 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
               return (
                 <View
                   key={metal}
-                  className="rounded-2xl border border-[#f0dfb8] bg-[#fff9e9] p-2.5"
+                  className="rounded-2xl border border-[#a8894e] bg-[#064c3d] p-2.5"
                 >
                   <View className="mb-2 flex-row items-center">
-                    <View className="mr-2 h-7 w-7 items-center justify-center rounded-full bg-[#f8e9c2]">
+                    <View className="mr-2 h-7 w-7 items-center justify-center rounded-full border border-[#d6b66e]/50 bg-[#003b2d]">
                       <Svg width={17} height={17} viewBox="0 0 24 24" fill="none">
                         {metal === 'Diamond' ? (
                           <>
@@ -701,7 +701,7 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
                         )}
                       </Svg>
                     </View>
-                    <Text className="text-base font-extrabold text-[#123c2d]">
+                    <Text className="text-base font-extrabold text-white">
                       {metal}
                     </Text>
                   </View>
@@ -713,29 +713,29 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
                       >
                         {row.map(rate => (
                           <View
-                              key={`${rate.metal_type}-${rate.purity}-${rate.rate_unit ?? ''}`}
-                              className="min-h-[58px] min-w-0 flex-1 items-center justify-center rounded-xl border border-[#d9a441] bg-[#004533] px-1.5 py-2.5"
+                            key={`${rate.metal_type}-${rate.purity}-${rate.rate_unit ?? ''}`}
+                            className="min-h-[58px] min-w-0 flex-1 items-center justify-center rounded-xl border border-[#d9a441] bg-[#003b2d] px-1.5 py-2.5"
                           >
-                              <Text
-                                className="text-center text-[10px] font-bold text-white"
-                                numberOfLines={1}
-                                adjustsFontSizeToFit
-                              >
-                                {getRatePurityLabel(rate)}
-                              </Text>
-                              <Text
-                                className="mt-1 text-center text-xs font-extrabold text-white"
-                                numberOfLines={1}
-                                adjustsFontSizeToFit
-                              >
-                                {formatGoldRate(rate.rate_per_unit ?? rate.rate_per_gram)}
-                                <Text className="text-[9px] font-semibold text-emerald-50">
-                                  {rate.rate_unit?.toLowerCase() === 'carat' ||
+                            <Text
+                              className="text-center text-[10px] font-bold text-white"
+                              numberOfLines={1}
+                              adjustsFontSizeToFit
+                            >
+                              {getRatePurityLabel(rate)}
+                            </Text>
+                            <Text
+                              className="mt-1 text-center text-xs font-extrabold text-white"
+                              numberOfLines={1}
+                              adjustsFontSizeToFit
+                            >
+                              {formatGoldRate(rate.rate_per_unit ?? rate.rate_per_gram)}
+                              <Text className="text-[9px] font-semibold text-emerald-50">
+                                {rate.rate_unit?.toLowerCase() === 'carat' ||
                                   rate.rate_unit?.toLowerCase() === 'ct'
                                     ? ' /ct'
                                     : ' /g'}
-                                </Text>
                               </Text>
+                            </Text>
                           </View>
                         ))}
                         {row.length === 1 ? (
@@ -749,8 +749,8 @@ function Home({ user, onNavigate, isActive = false }: HomeProps) {
             })}
           </View>
         ) : (
-          <View className="mt-4 items-center rounded-2xl bg-[#fff9e9] py-5">
-            <Text className="text-xs font-semibold text-[#123c2d]">
+          <View className="mt-4 items-center rounded-2xl border border-white/10 bg-white/5 py-5">
+            <Text className="text-xs font-semibold text-emerald-100">
               {isLoadingGoldRates ? 'Loading rates…' : 'No rates have been configured yet.'}
             </Text>
           </View>
