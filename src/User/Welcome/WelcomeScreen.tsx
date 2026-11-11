@@ -251,22 +251,20 @@ function WelcomeScreen({ onComplete, onHome }: WelcomeScreenProps) {
                 : setActiveIndex(index => index + 1)
             }
             accessibilityRole="button"
-            accessibilityLabel={isLastSlide ? 'Go to Home' : 'Continue'}
+            accessibilityLabel="Continue"
             style={
               isLightSlide
                 ? styles.firstSlideButton
                 : styles.secondSlideButton
             }
           >
-            {!isLastSlide ? (
-              <Text
-                className={`text-base font-extrabold ${
-                  isLightSlide ? 'text-white' : 'text-[#123c2d]'
-                }`}
-              >
-                Continue
-              </Text>
-            ) : null}
+            <Text
+              className={`text-base font-extrabold ${
+                isLightSlide ? 'text-white' : 'text-[#123c2d]'
+              }`}
+            >
+              Continue
+            </Text>
             <View className={isLastSlide ? '' : 'ml-2'}>
               <Ionicons
                 name="arrow-forward"
