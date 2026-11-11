@@ -527,7 +527,7 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
       });
 
       Alert.alert(
-        'Enquiry sent âœ“',
+        'Enquiry sent',
         'Thank you! Our team will contact you shortly.',
         [{ text: 'Done', onPress: onSuccess }],
       );
@@ -550,7 +550,7 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* â”€â”€ Customer Information â”€â”€ */}
+        {/* Customer Information */}
         <View className="rounded-2xl border border-slate-100 bg-white p-4">
           <SectionHeading
             title="Customer Information"
@@ -593,7 +593,7 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
           </View>
         </View>
 
-        {/* â”€â”€ Enquiry Details â”€â”€ */}
+        {/* Enquiry Details */}
         <View className="rounded-2xl border border-slate-100 bg-white p-4">
           <SectionHeading
             title="Enquiry Details"
@@ -677,7 +677,7 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
               />
             </View>
             <EnquiryInput
-              label="Approx. Budget (â‚¹)"
+              label="Approx. Budget (₹)"
               value={form.approx_budget}
               onChangeText={v => updateField('approx_budget', v)}
               keyboardType="decimal-pad"
@@ -712,7 +712,7 @@ export function EnquiryForm({ user, product, onSuccess }: EnquiryFormProps) {
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : null}
           <Text className="ml-2 text-sm font-bold text-white">
-            {isSubmitting ? 'Sendingâ€¦' : 'Send Enquiry'}
+            {isSubmitting ? 'Sending...' : 'Send Enquiry'}
           </Text>
         </Pressable>
       </ScrollView>

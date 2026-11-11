@@ -14,7 +14,7 @@ type UserEnquiryProps = {
 function UserEnquiry({ user, product, onSuccess }: UserEnquiryProps) {
   return (
     <View className="flex-1 bg-slate-50">
-      {/* Shared form â€” pre-filled with product when available */}
+      {/* Shared form, pre-filled with product when available */}
       <EnquiryForm
         key={
           product

@@ -475,7 +475,7 @@ function App() {
       {isRestoringSession ? (
         <View className="flex-1 items-center justify-center bg-background">
           <ActivityIndicator size="large" color="#004D40" />
-          <Text className="mt-3 text-sm font-medium text-muted">Restoring your sessionâ€¦</Text>
+          <Text className="mt-3 text-sm font-medium text-muted">Restoring your session...</Text>
         </View>
       ) : user ? (
         isAdmin ? (

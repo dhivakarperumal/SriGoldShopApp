@@ -134,21 +134,26 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
             className="flex-1"
             contentContainerClassName={
               keyboardVisible
-              ? 'grow justify-center px-6 pb-20'
-                : 'grow justify-center px-6 py-8'
+              ? 'grow justify-start px-6 pt-2'
+                : 'grow justify-start px-6 pt-[90px] pb-0'
             }
+            onContentSizeChange={() => {
+              if (keyboardVisible && isPasswordFocused.current) {
+                scrollViewRef.current?.scrollToEnd({ animated: true });
+              }
+            }}
             keyboardShouldPersistTaps="handled"
             automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
             nestedScrollEnabled
           >
             <View className="z-10 w-full self-center">
               <View
-                className={`items-center ${keyboardVisible ? 'mb-3' : 'mb-6'}`}
+                className={`items-center ${keyboardVisible ? 'mb-3' : 'mb-4'}`}
               >
                 <Image
                   source={require('../../Images/logo.png')}
                   className={`self-center ${
-                    keyboardVisible ? 'h-16 w-48' : 'mb-2 h-[100px] w-60'
+                    keyboardVisible ? 'h-16 w-48' : 'mb-2 h-20 w-52'
                   }`}
                   resizeMode="contain"
                   accessibilityLabel="Sri Golds"
@@ -157,14 +162,14 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
                   <View className="-mt-2 flex-row items-center">
                     <View className="mr-2 h-0.5 w-6 bg-accent" />
                     <Text className="text-sm font-medium text-slate-800">
-                      Gold Â· Jewellery Â· Loans
+                      Gold · Jewellery · Loans
                     </Text>
                     <View className="ml-2 h-0.5 w-6 bg-accent" />
                   </View>
                 ) : null}
                 <Text
                   className={`text-2xl font-bold text-slate-950 ${
-                    keyboardVisible ? 'mt-2' : 'mt-5'
+                    keyboardVisible ? 'mt-2' : 'mt-3'
                   }`}
                 >
                   Login
@@ -253,12 +258,12 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
 
               <View
                 className={`flex-row items-center justify-between px-1 ${
-                  keyboardVisible ? 'my-3' : 'my-5'
+                  keyboardVisible ? 'my-3' : 'my-4'
                 }`}
               >
                 <View className="flex-row items-center">
                   <View className="mr-2.5 h-5 w-5 items-center justify-center rounded border-2 border-primary bg-primary/10">
-                    <Text className="-mt-1 text-base font-bold text-primary">âœ“</Text>
+                    <Ionicons name="checkmark" size={14} color="#004D40" />
                   </View>
                   <Text className="text-sm font-medium text-slate-800">
                     Stay signed in
@@ -293,22 +298,25 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <>
-                    <Text className="mr-3 text-2xl font-semibold text-white">
-                      â†ª
-                    </Text>
+                    <Ionicons
+                      name="log-in-outline"
+                      size={22}
+                      color="#FFFFFF"
+                      style={{ marginRight: 12 }}
+                    />
                     <Text className="text-lg font-bold text-white">Login</Text>
                   </>
                 )}
               </Pressable>
               {onCancel ? (
                 <>
-                  <View className="mt-5 flex-row items-center gap-3">
+                  <View className="mt-4 flex-row items-center gap-3">
                     <View className="h-px flex-1 bg-slate-200" />
                     <Text className="text-xs font-medium text-slate-400">or</Text>
                     <View className="h-px flex-1 bg-slate-200" />
                   </View>
                   <Pressable
-                    className="mt-4 h-14 flex-row items-center justify-center rounded-full border-2 border-primary/30 bg-white/80 shadow-sm active:bg-primary/5"
+                    className="mt-3 h-14 flex-row items-center justify-center rounded-full border-2 border-primary/30 bg-white/80 shadow-sm active:bg-primary/5"
                     onPress={onCancel}
                     accessibilityRole="button"
                     accessibilityLabel="Go to Home"
@@ -321,6 +329,7 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
                 </>
               ) : null}
             </View>
+            {keyboardVisible ? <View className="h-32" /> : null}
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>

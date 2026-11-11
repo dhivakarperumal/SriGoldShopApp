@@ -57,7 +57,7 @@ function number(value: unknown): number {
 }
 
 function money(value: unknown): string {
-  return `â‚¹${number(value).toLocaleString('en-IN', {
+  return `₹${number(value).toLocaleString('en-IN', {
     maximumFractionDigits: 2,
   })}`;
 }
@@ -85,7 +85,7 @@ function displayValue(value: unknown): string {
         return content ? `${key}: ${content}` : '';
       })
       .filter(Boolean)
-      .join(' Â· ');
+      .join(' · ');
   }
   return String(value);
 }
@@ -472,7 +472,7 @@ function UserProductDetails({
                 />
               ) : (
                 <View className="items-center px-4">
-                  <Text className="text-4xl text-[#bd913e]">â—‡</Text>
+                  <Ionicons name="image-outline" size={40} color="#bd913e" />
                   <Text className="mt-2 text-sm text-slate-500">
                     Product image unavailable
                   </Text>
@@ -490,7 +490,7 @@ function UserProductDetails({
                     accessibilityRole="button"
                     accessibilityLabel="Previous image"
                   >
-                    <Text className="text-xl text-primary">â€¹</Text>
+                    <Ionicons name="chevron-back" size={20} color="#004D40" />
                   </Pressable>
                   <Pressable
                     className="h-9 w-9 items-center justify-center rounded-full bg-white/95"
@@ -500,7 +500,7 @@ function UserProductDetails({
                     accessibilityRole="button"
                     accessibilityLabel="Next image"
                   >
-                    <Text className="text-xl text-primary">â€º</Text>
+                    <Ionicons name="chevron-forward" size={20} color="#004D40" />
                   </Pressable>
                 </View>
               ) : null}
@@ -548,7 +548,7 @@ function UserProductDetails({
                   {[product.category, product.metal_type, product.purity]
                     .map(text)
                     .filter(Boolean)
-                    .join(' Â· ') || 'Jewellery'}
+                    .join(' · ') || 'Jewellery'}
                 </Text>
               </View>
               <Text
@@ -565,12 +565,15 @@ function UserProductDetails({
             {product.rating != null || productCode ? (
               <View className="mt-3 flex-row flex-wrap gap-x-3 gap-y-1">
                 {product.rating != null ? (
-                  <Text className="text-xs font-bold text-[#a66b00]">
-                    â˜… {number(product.rating).toFixed(1)} / 5
-                    {product.total_reviews != null
-                      ? ` (${text(product.total_reviews)} reviews)`
-                      : ''}
-                  </Text>
+                  <View className="flex-row items-center">
+                    <Ionicons name="star" size={13} color="#a66b00" />
+                    <Text className="ml-1 text-xs font-bold text-[#a66b00]">
+                      {number(product.rating).toFixed(1)} / 5
+                      {product.total_reviews != null
+                        ? ` (${text(product.total_reviews)} reviews)`
+                        : ''}
+                    </Text>
+                  </View>
                 ) : null}
                 {productCode ? (
                   <Text className="text-xs text-slate-500">
