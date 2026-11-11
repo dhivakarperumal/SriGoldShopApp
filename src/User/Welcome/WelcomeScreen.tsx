@@ -65,6 +65,15 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
 
   return (
     <View className={`flex-1 ${isFirstSlide ? 'bg-[#f4eadb]' : 'bg-[#003b2d]'}`}>
+      {isFirstSlide ? (
+        <Image
+          source={require('../../Images/welcome1bg.png')}
+          className="absolute inset-0 h-full w-full"
+          resizeMode="cover"
+          pointerEvents="none"
+          accessible={false}
+        />
+      ) : null}
       <StatusBar barStyle={isFirstSlide ? 'dark-content' : 'light-content'} />
       <SafeAreaView className="flex-1 px-6 pb-5">
         <View className="flex-row items-center justify-between pt-2">
