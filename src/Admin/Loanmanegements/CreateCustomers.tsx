@@ -516,7 +516,7 @@ function CreateCustomers({ customer, onCancel, onSaved }: Props) {
                   {uploadingPhoto ? <ActivityIndicator color="white" /> : <Text className="text-sm font-bold text-white">Take photo</Text>}
                 </Pressable>
                 <Pressable onPress={uploadPhoto} disabled={uploadingPhoto} accessibilityRole="button" accessibilityLabel="Choose customer photo from gallery" className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-primary bg-white px-3 py-3">
-                  {uploadingPhoto ? <ActivityIndicator color={PRIMARY} /> : <Text className="text-sm font-bold text-primary">Gallery</Text>}
+                  {uploadingPhoto ? <ActivityIndicator color="#004D40" /> : <Text className="text-sm font-bold text-primary">Gallery</Text>}
                 </Pressable>
               </View>
             </FormSection>

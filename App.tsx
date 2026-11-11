@@ -537,7 +537,6 @@ function App() {
         <Login
           onLoginSuccess={handleLoginSuccess}
           onCancel={() => setShowLoginModal(false)}
-          onShowWelcome={() => setShowWelcomePreview(true)}
         />
       ) : (
         <UserLayout
