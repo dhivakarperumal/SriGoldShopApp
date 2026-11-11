@@ -53,6 +53,7 @@ import More from './src/Admin/Screens/More';
 import AdminLayout from './src/Admin/Navigations/AdminLayout';
 import type { AdminRoute } from './src/Admin/Navigations/TopHeader';
 import UserLayout from './src/User/UserLayout';
+import WelcomeScreen from './src/User/Welcome/WelcomeScreen';
 import { clearTokenCache, setTokenCache } from './src/api';
 
 const ADMIN_BACK_ROUTES: Record<AdminRoute, AdminRoute | null> = {
@@ -90,6 +91,7 @@ function App() {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
+  const [shouldShowWelcome, setShouldShowWelcome] = useState(false);
   const [adminRoute, setAdminRoute] = useState<AdminRoute>('home');
   const [adminRouteHistory, setAdminRouteHistory] = useState<AdminRoute[]>([]);
   const [visitedAdminRoutes, setVisitedAdminRoutes] = useState<Set<AdminRoute>>(
@@ -107,9 +109,14 @@ function App() {
   useEffect(() => {
     const restoreSession = async () => {
       try {
-        const values = await AsyncStorage.getMany(['userToken', 'authUser']);
+        const values = await AsyncStorage.getMany([
+          'userToken',
+          'authUser',
+          'hasSeenWelcome',
+        ]);
         const token = values.userToken;
         const savedUser = values.authUser;
+        setShouldShowWelcome(values.hasSeenWelcome !== 'true');
 
         if (token) {
           setTokenCache(token);
@@ -183,6 +190,7 @@ function App() {
           setUser(restoredUser);
         }
       } catch {
+        setShouldShowWelcome(true);
         Alert.alert(
           'Session error',
           'Your saved session could not be read. Please check your device storage and try again.',
@@ -249,6 +257,20 @@ function App() {
     setAdminRoute('home');
     setAdminRouteHistory([]);
     setVisitedAdminRoutes(new Set(['home']));
+  };
+
+  const completeWelcome = async (openLogin = false) => {
+    try {
+      await AsyncStorage.setItem('hasSeenWelcome', 'true');
+      setShouldShowWelcome(false);
+      if (openLogin) setShowLoginModal(true);
+    } catch (error) {
+      console.error('Failed to save welcome screen completion:', error);
+      Alert.alert(
+        'Could not save your preference',
+        'Please try again to continue.',
+      );
+    }
   };
 
   const isAdmin = (() => {
@@ -497,6 +519,11 @@ function App() {
             onShowLogin={() => setShowLoginModal(true)}
           />
         )
+      ) : shouldShowWelcome ? (
+        <WelcomeScreen
+          onComplete={() => completeWelcome()}
+          onSignIn={() => completeWelcome(true)}
+        />
       ) : showLoginModal ? (
         <Login onLoginSuccess={handleLoginSuccess} onCancel={() => setShowLoginModal(false)} />
       ) : (
