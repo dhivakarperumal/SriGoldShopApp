@@ -159,13 +159,10 @@ function Register({ onLogin, onCancel }: RegisterProps) {
   );
 
   return (
-    <View className="flex-1 bg-[#f4eadb]">
-      <Image
-        source={require('../../Images/welcome1bg.png')}
-        className="absolute inset-0 h-full w-full"
-        resizeMode="cover"
-        accessible={false}
-      />
+    <View className="flex-1 bg-[#f8f6f1]">
+      <View className="absolute left-0 right-0 top-0 h-72 rounded-b-[48px] bg-[#004D40]" />
+      <View className="absolute -right-12 top-16 h-48 w-48 rounded-full border border-white/10" />
+      <View className="absolute -left-16 top-32 h-52 w-52 rounded-full border border-white/10" />
       <SafeAreaView className="flex-1">
         <KeyboardAvoidingView
           className="flex-1"
@@ -173,67 +170,64 @@ function Register({ onLogin, onCancel }: RegisterProps) {
         >
           <ScrollView
             className="flex-1"
-            contentContainerClassName="grow justify-center px-5 py-6"
+            contentContainerClassName="grow px-5 pb-8"
             keyboardShouldPersistTaps="handled"
             automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+            showsVerticalScrollIndicator={false}
           >
-            <View className="w-full max-w-[480px] self-center rounded-3xl border border-[#eadfc9] bg-white/95 px-5 py-6 shadow-xl">
-              <View className="mb-5 flex-row items-center">
-                <Pressable
-                  className="h-10 w-10 items-center justify-center rounded-full bg-[#f4eadb]"
-                  onPress={onLogin}
-                  accessibilityRole="button"
-                  accessibilityLabel="Back to login"
-                >
-                  <Ionicons name="arrow-back" size={20} color="#004D40" />
-                </Pressable>
-                <View className="ml-3 flex-1">
-                  <Text className="text-xs font-bold uppercase tracking-[2px] text-[#A66B00]">
-                    Sri Golds
-                  </Text>
-                  <Text className="mt-0.5 text-sm text-slate-500">
-                    Gold · Jewellery · Loans
-                  </Text>
-                </View>
-                <Ionicons name="diamond-outline" size={25} color="#D4A017" />
-              </View>
+            
 
-              <View className="mb-5 items-center">
+            <View className="items-center pb-8 pt-5">
+              <View className="overflow-hidden rounded-full bg-white">
                 <Image
                   source={require('../../Images/logo.png')}
-                  className="h-16 w-44"
+                  className="h-20 w-20"
                   resizeMode="contain"
                   accessibilityLabel="Sri Golds"
                 />
-                <Text className="mt-2 text-2xl font-bold text-primary-dark">
-                  Create Your Account
+              </View>
+              <View className="mt-1 flex-row items-center">
+                <View className="mr-2 h-px w-7 bg-[#E8BC59]" />
+                <Text className="text-[11px] font-bold tracking-[2px] text-[#F5D98D]">
+                  GOLD · JEWELLERY · LOANS
+                </Text>
+                <View className="ml-2 h-px w-7 bg-[#E8BC59]" />
+              </View>
+            </View>
+
+            <View className="w-full self-center rounded-[28px] border border-[#eee8dc] bg-white px-3 pb-6 pt-6 shadow-lg">
+              <View className="mb-5 items-center">
+               
+                <Text className="text-center text-2xl font-bold text-slate-900">
+                  Create your account
                 </Text>
                 <Text className="mt-1 text-center text-sm leading-5 text-slate-500">
-                  Join us and discover jewellery for every occasion.
+                  Join us and find something special for every moment.
                 </Text>
               </View>
 
-              <View className="gap-y-3">
+              <View className="gap-y-3.5">
                 <RegisterField
-                  label="Full Name"
+                  label="Full name"
                   icon="person-outline"
                   value={username}
                   placeholder="Enter your full name"
                   onChangeText={setUsername}
+                  autoCapitalize="words"
                   accessibilityLabel="Full name"
                 />
                 <RegisterField
-                  label="Email Address"
+                  label="Email address"
                   icon="mail-outline"
                   value={email}
-                  placeholder="Enter your email address"
+                  placeholder="you@example.com"
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   accessibilityLabel="Email address"
                 />
                 <RegisterField
-                  label="Mobile Number"
+                  label="Mobile number"
                   icon="call-outline"
                   value={phone}
                   placeholder="Enter your mobile number"
@@ -256,7 +250,7 @@ function Register({ onLogin, onCancel }: RegisterProps) {
                   )}
                 />
                 <RegisterField
-                  label="Confirm Password"
+                  label="Confirm password"
                   icon="shield-checkmark-outline"
                   value={confirmPassword}
                   placeholder="Enter your password again"
@@ -272,17 +266,24 @@ function Register({ onLogin, onCancel }: RegisterProps) {
               </View>
 
               {errorMessage ? (
-                <Text
-                  className="mt-4 text-center text-sm leading-5 text-red-600"
-                  accessibilityRole="alert"
-                >
-                  {errorMessage}
-                </Text>
+                <View className="mt-4 flex-row items-center rounded-xl bg-red-50 px-3 py-2.5">
+                  <Ionicons
+                    name="alert-circle-outline"
+                    size={18}
+                    color="#DC2626"
+                  />
+                  <Text
+                    className="ml-2 flex-1 text-sm text-red-700"
+                    accessibilityRole="alert"
+                  >
+                    {errorMessage}
+                  </Text>
+                </View>
               ) : null}
 
               <Pressable
-                className={`mt-5 h-14 flex-row items-center justify-center rounded-full bg-primary px-6 shadow-lg ${
-                  isLoading ? 'opacity-70' : ''
+                className={`mt-5 h-14 flex-row items-center justify-center rounded-full bg-primary px-6 shadow-md ${
+                  isLoading ? 'opacity-70' : 'active:bg-primary-dark'
                 }`}
                 onPress={handleRegister}
                 disabled={isLoading}
@@ -298,8 +299,8 @@ function Register({ onLogin, onCancel }: RegisterProps) {
                       size={20}
                       color="#FFFFFF"
                     />
-                    <Text className="ml-2 text-base font-bold text-white">
-                      Create Account
+                    <Text className="ml-2.5 text-base font-bold text-white">
+                      Create account
                     </Text>
                   </>
                 )}
@@ -314,14 +315,12 @@ function Register({ onLogin, onCancel }: RegisterProps) {
                   accessibilityRole="button"
                   accessibilityLabel="Go to login"
                 >
-                  <Text className="text-sm font-bold text-primary">
-                    Login
-                  </Text>
+                  <Text className="text-sm font-bold text-primary">Login</Text>
                 </Pressable>
               </View>
               {onCancel ? (
                 <Pressable
-                  className="mt-4 items-center py-2"
+                  className="mt-3 items-center py-2"
                   onPress={onCancel}
                   accessibilityRole="button"
                   accessibilityLabel="Go to Home"
@@ -331,6 +330,17 @@ function Register({ onLogin, onCancel }: RegisterProps) {
                   </Text>
                 </Pressable>
               ) : null}
+            </View>
+
+            <View className="mt-5 flex-row items-center justify-center">
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={16}
+                color="#64748B"
+              />
+              <Text className="ml-2 text-xs text-slate-500">
+                Your details are kept safe and secure
+              </Text>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>

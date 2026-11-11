@@ -552,7 +552,7 @@ function UserLayout({ user, onUserUpdated, onLogout, onShowLogin }: UserLayoutPr
                 onContact={() => setMorePage('contact')}
               />
             ) : morePage === 'profile' ? null : (
-              <MoreMenu onSelect={selectMorePage} />
+              <MoreMenu onSelect={selectMorePage} isLoggedIn={Boolean(user)} />
             )}
             {hasVisitedProfile && user ? (
               <View className={morePage === 'profile' ? 'flex-1' : 'hidden'}>

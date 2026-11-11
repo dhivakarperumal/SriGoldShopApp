@@ -5,6 +5,7 @@ export type MorePage = 'about' | 'contact' | 'privacy' | 'profile' | null;
 
 type MoreMenuProps = {
   onSelect: (page: MorePage) => void;
+  isLoggedIn: boolean;
 };
 
 const MORE_ITEMS: {
@@ -39,7 +40,11 @@ const MORE_ITEMS: {
   },
 ];
 
-function MoreMenu({ onSelect }: MoreMenuProps) {
+function MoreMenu({ onSelect, isLoggedIn }: MoreMenuProps) {
+  const visibleItems = isLoggedIn
+    ? MORE_ITEMS
+    : MORE_ITEMS.filter(item => item.id !== 'profile');
+
   return (
     <ScrollView
       className="flex-1 bg-white"
@@ -52,7 +57,7 @@ function MoreMenu({ onSelect }: MoreMenuProps) {
           Get to know Sri Golds or reach our team.
         </Text>
       </View> */}
-      {MORE_ITEMS.map(item => (
+      {visibleItems.map(item => (
         <Pressable
           key={item.id}
           className="min-h-24 flex-row items-center rounded-2xl border border-[#e7e0d5] bg-white p-4 active:bg-[#f2f7f4]"
