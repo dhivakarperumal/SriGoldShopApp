@@ -175,11 +175,11 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   rateCardGlow: {
-    shadowColor: '#f5c45e',
+    shadowColor: '#ffd84d',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.55,
-    shadowRadius: 5,
-    elevation: 4,
+    shadowOpacity: 0.9,
+    shadowRadius: 9,
+    elevation: 8,
   },
 });
 
