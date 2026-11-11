@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { AuthenticatedUser } from '../../Admin/Auth/Login';
 import LogoutConfirmation from './LogoutConfirmation';
@@ -108,7 +109,7 @@ function UserHeader({
               className="text-[8px] font-bold text-accent-light"
               numberOfLines={1}
             >
-              GOLD Â· JEWELLERY Â· LOANS
+              GOLD · JEWELLERY · LOANS
             </Text>
           </View>
         </View>
@@ -254,7 +255,7 @@ function UserHeader({
               <Text className="ml-4 flex-1 text-base font-semibold text-primary-dark">
                 My Profile
               </Text>
-              <Text className="text-2xl text-primary-dark">â€º</Text>
+              <Ionicons name="chevron-forward" size={20} color="#003B2D" />
             </Pressable>
 
             <Pressable

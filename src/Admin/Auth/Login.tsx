@@ -157,7 +157,7 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
                   <View className="-mt-2 flex-row items-center">
                     <View className="mr-2 h-0.5 w-6 bg-accent" />
                     <Text className="text-sm font-medium text-slate-800">
-                      Gold Â· Jewellery Â· Loans
+                      Gold · Jewellery · Loans
                     </Text>
                     <View className="ml-2 h-0.5 w-6 bg-accent" />
                   </View>
@@ -258,7 +258,7 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
               >
                 <View className="flex-row items-center">
                   <View className="mr-2.5 h-5 w-5 items-center justify-center rounded border-2 border-primary bg-primary/10">
-                    <Text className="-mt-1 text-base font-bold text-primary">âœ“</Text>
+                    <Ionicons name="checkmark" size={14} color="#004D40" />
                   </View>
                   <Text className="text-sm font-medium text-slate-800">
                     Stay signed in
@@ -293,9 +293,12 @@ function Login({ onLoginSuccess, onCancel }: LoginProps) {
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <>
-                    <Text className="mr-3 text-2xl font-semibold text-white">
-                      â†ª
-                    </Text>
+                    <Ionicons
+                      name="log-in-outline"
+                      size={22}
+                      color="#FFFFFF"
+                      style={{ marginRight: 12 }}
+                    />
                     <Text className="text-lg font-bold text-white">Login</Text>
                   </>
                 )}
