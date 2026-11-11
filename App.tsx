@@ -523,11 +523,16 @@ function App() {
       ) : shouldShowWelcome ? (
         <WelcomeScreen
           onComplete={() => completeWelcome()}
+          onHome={() => completeWelcome()}
           onSignIn={() => completeWelcome(true)}
         />
       ) : showLoginModal && showWelcomePreview ? (
         <WelcomeScreen
           onComplete={() => setShowWelcomePreview(false)}
+          onHome={() => {
+            setShowWelcomePreview(false);
+            setShowLoginModal(false);
+          }}
           onSignIn={() => setShowWelcomePreview(false)}
         />
       ) : showLoginModal ? (

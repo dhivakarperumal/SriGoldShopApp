@@ -68,10 +68,11 @@ const WELCOME_SLIDES = [
 
 type WelcomeScreenProps = {
   onComplete: () => void;
+  onHome: () => void;
   onSignIn: () => void;
 };
 
-function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
+function WelcomeScreen({ onComplete, onHome, onSignIn }: WelcomeScreenProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const swipeResponder = useMemo(
     () =>
@@ -268,7 +269,7 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
             }`}
             onPress={() =>
               isLastSlide
-                ? onComplete()
+                ? onHome()
                 : setActiveIndex(index => index + 1)
             }
             accessibilityRole="button"
