@@ -64,7 +64,7 @@ function WelcomeScreen({ onComplete, onSignIn }: WelcomeScreenProps) {
   const textColor = isFirstSlide ? 'text-[#073b2f]' : 'text-white';
 
   return (
-    <View className={`flex-1 ${isFirstSlide ? 'bg-[#fffaf3]' : 'bg-[#003b2d]'}`}>
+    <View className={`flex-1 ${isFirstSlide ? 'bg-[#f4eadb]' : 'bg-[#003b2d]'}`}>
       <StatusBar barStyle={isFirstSlide ? 'dark-content' : 'light-content'} />
       <SafeAreaView className="flex-1 px-6 pb-5">
         <View className="flex-row items-center justify-between pt-2">
