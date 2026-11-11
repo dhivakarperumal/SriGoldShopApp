@@ -21,7 +21,11 @@ import {
 import { Alert } from '../../Components/AppAlert';
 import Svg, { Path } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { launchImageLibrary, type Asset } from 'react-native-image-picker';
+import {
+  launchCamera,
+  launchImageLibrary,
+  type Asset,
+} from 'react-native-image-picker';
 import api from '../../api';
 import type { CurrentRateSet, GoldRate } from '../DailyGoldRate/AllGoldRate';
 
@@ -472,6 +476,19 @@ function CreateLoan({ onCancel, onCreated }: Props) {
     }
   };
 
+  const setPledgedGoldImage = (asset: Asset | undefined) => {
+    if (!asset?.uri) return;
+    if (asset.type && !['image/png', 'image/jpeg'].includes(asset.type)) {
+      Alert.alert('Unsupported image', 'Choose a PNG or JPG pledged-gold image.');
+      return;
+    }
+    if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
+      Alert.alert('Image too large', 'Gold image must be 5 MB or smaller.');
+      return;
+    }
+    setImage(asset);
+  };
+
   const selectImage = async () => {
     try {
       const result = await launchImageLibrary({
@@ -485,20 +502,29 @@ function CreateLoan({ onCancel, onCreated }: Props) {
       if (result.errorCode) {
         throw new Error(result.errorMessage || 'Could not choose an image.');
       }
-      const asset = result.assets?.[0];
-      if (!asset?.uri) return;
-      if (asset.type && !['image/png', 'image/jpeg'].includes(asset.type)) {
-        Alert.alert('Unsupported image', 'Choose a PNG or JPG pledged-gold image.');
-        return;
-      }
-      if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
-        Alert.alert('Image too large', 'Gold image must be 5 MB or smaller.');
-        return;
-      }
-      setImage(asset);
+      setPledgedGoldImage(result.assets?.[0]);
     } catch (error) {
       console.error('Failed to select pledged gold image:', error);
       Alert.alert('Image selection failed', errorMessage(error, 'Could not choose an image.'));
+    }
+  };
+
+  const takeImage = async () => {
+    try {
+      const result = await launchCamera({
+        mediaType: 'photo',
+        quality: 0.8,
+        maxWidth: 1200,
+        maxHeight: 1200,
+      });
+      if (result.didCancel) return;
+      if (result.errorCode) {
+        throw new Error(result.errorMessage || 'Could not take a photo.');
+      }
+      setPledgedGoldImage(result.assets?.[0]);
+    } catch (error) {
+      console.error('Failed to capture pledged gold image:', error);
+      Alert.alert('Camera failed', errorMessage(error, 'Could not take a photo.'));
     }
   };
 
@@ -754,18 +780,37 @@ function CreateLoan({ onCancel, onCreated }: Props) {
               <MetricRow label="Net weight" value={`${netWeight.toFixed(3)} ${weightUnit}`} />
               <MetricRow label="Estimated valuation" value={currency(valuation)} />
             </View>
-            <Pressable
-              onPress={selectImage}
-              className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3"
-              accessibilityRole="button"
-            >
-              <Text className="text-xs font-bold text-slate-700">
-                {image ? 'Change pledged-gold image' : 'Add pledged-gold image (optional)'}
+            <View className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3">
+              <Text className="mb-2 text-xs font-bold text-slate-700">
+                Pledged-gold image (optional)
               </Text>
+              <View className="flex-row gap-2">
+                <Pressable
+                  onPress={takeImage}
+                  className="min-h-11 flex-1 flex-row items-center justify-center rounded-lg border border-slate-200 bg-white px-2"
+                  accessibilityRole="button"
+                  accessibilityLabel="Take pledged-gold photo with camera"
+                >
+                  <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+                    <Path d="M14 4h-4L8 7H4v13h16V7h-4zM12 11a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" stroke={PRIMARY} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+                  </Svg>
+                  <Text className="ml-2 text-xs font-bold text-slate-700">Take photo</Text>
+                </Pressable>
+                <Pressable
+                  onPress={selectImage}
+                  className="min-h-11 flex-1 flex-row items-center justify-center rounded-lg border border-slate-200 bg-white px-2"
+                  accessibilityRole="button"
+                  accessibilityLabel="Choose pledged-gold photo from gallery"
+                >
+                  <Text className="text-xs font-bold text-slate-700">
+                    {image ? 'Change from gallery' : 'Choose from gallery'}
+                  </Text>
+                </Pressable>
+              </View>
               {image?.uri ? (
                 <Image source={{ uri: image.uri }} className="mt-3 h-40 w-full rounded-lg" resizeMode="cover" />
               ) : null}
-            </Pressable>
+            </View>
           </FormSection>
 
           <FormSection title="Loan amount">

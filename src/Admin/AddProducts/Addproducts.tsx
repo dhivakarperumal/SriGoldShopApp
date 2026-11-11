@@ -22,7 +22,11 @@ import {
   pick,
   types,
 } from '@react-native-documents/picker';
-import { launchImageLibrary } from 'react-native-image-picker';
+import {
+  launchCamera,
+  launchImageLibrary,
+  type Asset,
+} from 'react-native-image-picker';
 import Svg, { Path } from 'react-native-svg';
 import api from '../../api';
 import { getProductImageUrl } from '../../utils/productImage';
@@ -526,25 +530,17 @@ function AddProducts({ onCancel, onSaved, productId }: Props) {
     setPicker(null);
   };
 
-  const selectImages = async () => {
-    try {
-      const result = await launchImageLibrary({
-        mediaType: 'photo',
-        selectionLimit: 10 - form.images.length,
-        quality: 0.8,
-      });
-      if (result.didCancel) return;
-      if (result.errorCode) {
-        Alert.alert('Image selection failed', result.errorMessage || 'Could not select images.');
-        return;
-      }
-      const assets = (result.assets ?? []).filter(asset => Boolean(asset.uri));
-      if (!assets.length) return;
+  const uploadProductImages = async (assets: Asset[]) => {
+    const selectedAssets = assets.filter(
+      (asset): asset is Asset & { uri: string } => Boolean(asset.uri),
+    );
+    if (!selectedAssets.length) return;
 
+    try {
       const body = new FormData();
-      assets.forEach((asset, index) => {
+      selectedAssets.forEach((asset, index) => {
         body.append('images', {
-          uri: asset.uri!,
+          uri: asset.uri,
           name: asset.fileName || `product-${Date.now()}-${index}.jpg`,
           type: asset.type || 'image/jpeg',
         } as unknown as Blob);
@@ -562,6 +558,43 @@ function AddProducts({ onCancel, onSaved, productId }: Props) {
       Alert.alert('Upload failed', getErrorMessage(error, 'Could not upload product images.'));
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const selectImages = async () => {
+    try {
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        selectionLimit: 10 - form.images.length,
+        quality: 0.8,
+      });
+      if (result.didCancel) return;
+      if (result.errorCode) {
+        Alert.alert('Image selection failed', result.errorMessage || 'Could not select images.');
+        return;
+      }
+      await uploadProductImages(result.assets ?? []);
+    } catch (error) {
+      console.error('Product image selection failed:', error);
+      Alert.alert('Image selection failed', getErrorMessage(error, 'Could not select images.'));
+    }
+  };
+
+  const takeProductPhoto = async () => {
+    try {
+      const result = await launchCamera({
+        mediaType: 'photo',
+        quality: 0.8,
+      });
+      if (result.didCancel) return;
+      if (result.errorCode) {
+        Alert.alert('Camera failed', result.errorMessage || 'Could not take a photo.');
+        return;
+      }
+      await uploadProductImages(result.assets ?? []);
+    } catch (error) {
+      console.error('Product photo capture failed:', error);
+      Alert.alert('Camera failed', getErrorMessage(error, 'Could not take a photo.'));
     }
   };
 
@@ -639,6 +672,20 @@ function AddProducts({ onCancel, onSaved, productId }: Props) {
     }
   };
 
+  const uploadProductVideoAsset = async (asset: Asset | undefined) => {
+    if (!asset?.uri) return;
+    if (asset.type !== 'video/mp4') {
+      Alert.alert('Unsupported video', 'Choose or record an MP4 video.');
+      return;
+    }
+    await uploadSingleMedia('video', {
+      uri: asset.uri,
+      name: asset.fileName || `product-video-${Date.now()}.mp4`,
+      type: 'video/mp4',
+      size: asset.fileSize,
+    }, 25 * 1024 * 1024);
+  };
+
   const selectProductVideo = async () => {
     try {
       const result = await launchImageLibrary({
@@ -650,21 +697,29 @@ function AddProducts({ onCancel, onSaved, productId }: Props) {
         Alert.alert('Video selection failed', result.errorMessage || 'Could not select a video.');
         return;
       }
-      const asset = result.assets?.find(item => Boolean(item.uri));
-      if (!asset?.uri) return;
-      if (asset.type !== 'video/mp4') {
-        Alert.alert('Unsupported video', 'Choose an MP4 video.');
-        return;
-      }
-      await uploadSingleMedia('video', {
-        uri: asset.uri,
-        name: asset.fileName || `product-video-${Date.now()}.mp4`,
-        type: 'video/mp4',
-        size: asset.fileSize,
-      }, 25 * 1024 * 1024);
+      await uploadProductVideoAsset(result.assets?.find(item => Boolean(item.uri)));
     } catch (error) {
       console.error('Product video selection failed:', error);
       Alert.alert('Video selection failed', getErrorMessage(error, 'Could not select a video.'));
+    }
+  };
+
+  const recordProductVideo = async () => {
+    try {
+      const result = await launchCamera({
+        mediaType: 'video',
+        videoQuality: 'low',
+        formatAsMp4: true,
+      });
+      if (result.didCancel) return;
+      if (result.errorCode) {
+        Alert.alert('Camera failed', result.errorMessage || 'Could not record a video.');
+        return;
+      }
+      await uploadProductVideoAsset(result.assets?.find(item => Boolean(item.uri)));
+    } catch (error) {
+      console.error('Product video recording failed:', error);
+      Alert.alert('Camera failed', getErrorMessage(error, 'Could not record a video.'));
     }
   };
 
@@ -695,6 +750,35 @@ function AddProducts({ onCancel, onSaved, productId }: Props) {
     } catch (error) {
       console.error('Certificate image selection failed:', error);
       Alert.alert('Image selection failed', getErrorMessage(error, 'Could not select an image.'));
+    }
+  };
+
+  const captureCertificateImage = async () => {
+    try {
+      const result = await launchCamera({
+        mediaType: 'photo',
+        quality: 0.8,
+      });
+      if (result.didCancel) return;
+      if (result.errorCode) {
+        Alert.alert('Camera failed', result.errorMessage || 'Could not take a certificate photo.');
+        return;
+      }
+      const asset = result.assets?.find(item => Boolean(item.uri));
+      if (!asset?.uri) return;
+      if (asset.type !== 'image/png' && asset.type !== 'image/jpeg') {
+        Alert.alert('Unsupported image', 'Choose a PNG or JPG certificate.');
+        return;
+      }
+      await uploadSingleMedia('certificate', {
+        uri: asset.uri,
+        name: asset.fileName || `certificate-${Date.now()}.${asset.type === 'image/png' ? 'png' : 'jpg'}`,
+        type: asset.type,
+        size: asset.fileSize,
+      }, 5 * 1024 * 1024);
+    } catch (error) {
+      console.error('Certificate photo capture failed:', error);
+      Alert.alert('Camera failed', getErrorMessage(error, 'Could not take a certificate photo.'));
     }
   };
 
@@ -745,6 +829,35 @@ function AddProducts({ onCancel, onSaved, productId }: Props) {
     } catch (error) {
       console.error('Size guide image selection failed:', error);
       Alert.alert('Image selection failed', getErrorMessage(error, 'Could not select an image.'));
+    }
+  };
+
+  const captureSizeGuideImage = async () => {
+    try {
+      const result = await launchCamera({
+        mediaType: 'photo',
+        quality: 0.8,
+      });
+      if (result.didCancel) return;
+      if (result.errorCode) {
+        Alert.alert('Camera failed', result.errorMessage || 'Could not take a size guide photo.');
+        return;
+      }
+      const asset = result.assets?.find(item => Boolean(item.uri));
+      if (!asset?.uri) return;
+      if (asset.type !== 'image/png' && asset.type !== 'image/jpeg') {
+        Alert.alert('Unsupported image', 'Choose a PNG or JPG size guide image.');
+        return;
+      }
+      await uploadSizeGuide({
+        uri: asset.uri,
+        name: asset.fileName || `size-guide-${Date.now()}.${asset.type === 'image/png' ? 'png' : 'jpg'}`,
+        type: asset.type,
+        size: asset.fileSize,
+      });
+    } catch (error) {
+      console.error('Size guide photo capture failed:', error);
+      Alert.alert('Camera failed', getErrorMessage(error, 'Could not take a size guide photo.'));
     }
   };
 
@@ -1013,10 +1126,16 @@ function AddProducts({ onCancel, onSaved, productId }: Props) {
         </FormSection>
 
         <FormSection step="06" title="Product images">
-          <Pressable onPress={selectImages} disabled={isUploading || form.images.length >= 10} className="min-h-12 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-4 py-3" accessibilityRole="button">
-            {isUploading ? <ActivityIndicator color="#004D40" /> : <FormIcon name="image" color="#004D40" />}
-            <Text className="ml-2 text-sm font-bold text-primary">{isUploading ? 'Uploading…' : `Choose images (${form.images.length}/10)`}</Text>
-          </Pressable>
+          <View className="flex-row gap-2">
+            <Pressable onPress={takeProductPhoto} disabled={isUploading || form.images.length >= 10} className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button" accessibilityLabel="Take product photo with camera">
+              {isUploading ? <ActivityIndicator color="#004D40" /> : <FormIcon name="camera" color="#004D40" />}
+              <Text className="ml-2 text-sm font-bold text-primary">{isUploading ? 'Uploading…' : 'Take photo'}</Text>
+            </Pressable>
+            <Pressable onPress={selectImages} disabled={isUploading || form.images.length >= 10} className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button" accessibilityLabel={`Choose product photos from gallery (${form.images.length} of 10)`}>
+              {isUploading ? <ActivityIndicator color="#004D40" /> : <FormIcon name="image" color="#004D40" />}
+              <Text className="ml-2 text-sm font-bold text-primary">{isUploading ? 'Uploading…' : `Gallery (${form.images.length}/10)`}</Text>
+            </Pressable>
+          </View>
           <View className="flex-row flex-wrap gap-3">
             {form.images.map((image, index) => {
               const uri = getProductImageUrl({ image });
@@ -1051,15 +1170,19 @@ function AddProducts({ onCancel, onSaved, productId }: Props) {
             Upload one size guide as a PNG/JPG image or PDF. Maximum file size: 5 MB.
           </Text>
           <View className="flex-row gap-2">
-            <Pressable onPress={selectSizeGuideImage} disabled={isUploading} className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button">
-              <FormIcon name="image" color="#004D40" />
-              <Text className="ml-2 text-center text-xs font-bold text-primary">Upload image</Text>
+            <Pressable onPress={captureSizeGuideImage} disabled={isUploading} className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button" accessibilityLabel="Take size guide photo with camera">
+              <FormIcon name="camera" color="#004D40" />
+              <Text className="ml-2 text-center text-xs font-bold text-primary">Take photo</Text>
             </Pressable>
-            <Pressable onPress={selectSizeGuidePdf} disabled={isUploading} className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button">
-              <FormIcon name="file" color="#004D40" />
-              <Text className="ml-2 text-center text-xs font-bold text-primary">Upload PDF</Text>
+            <Pressable onPress={selectSizeGuideImage} disabled={isUploading} className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button" accessibilityLabel="Choose size guide image from gallery">
+              <FormIcon name="image" color="#004D40" />
+              <Text className="ml-2 text-center text-xs font-bold text-primary">Gallery image</Text>
             </Pressable>
           </View>
+          <Pressable onPress={selectSizeGuidePdf} disabled={isUploading} className="min-h-12 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button">
+              <FormIcon name="file" color="#004D40" />
+              <Text className="ml-2 text-center text-xs font-bold text-primary">Upload PDF</Text>
+          </Pressable>
           {isUploading ? <ActivityIndicator color="#004D40" /> : null}
           {form.size_guide_chart ? (
             <View className="flex-row items-center rounded-xl border border-border bg-background p-3">
@@ -1098,10 +1221,16 @@ function AddProducts({ onCancel, onSaved, productId }: Props) {
           <Text className="text-xs leading-5 text-muted">
             Upload one MP4 video, up to 25 MB.
           </Text>
-          <Pressable onPress={selectProductVideo} disabled={isUploading} className="min-h-12 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-4 py-3" accessibilityRole="button">
-            <FormIcon name="video" color="#004D40" />
-            <Text className="ml-2 text-sm font-bold text-primary">Choose MP4 video</Text>
-          </Pressable>
+          <View className="flex-row gap-2">
+            <Pressable onPress={recordProductVideo} disabled={isUploading} className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button" accessibilityLabel="Record product video with camera">
+              <FormIcon name="camera" color="#004D40" />
+              <Text className="ml-2 text-center text-xs font-bold text-primary">Record video</Text>
+            </Pressable>
+            <Pressable onPress={selectProductVideo} disabled={isUploading} className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button" accessibilityLabel="Choose product video from gallery">
+              <FormIcon name="video" color="#004D40" />
+              <Text className="ml-2 text-center text-xs font-bold text-primary">Gallery video</Text>
+            </Pressable>
+          </View>
           {form.video ? (
             <View className="flex-row items-center rounded-xl border border-border bg-background p-3">
               <Text className="flex-1 text-xs font-medium text-slate-700" numberOfLines={1}>
@@ -1120,15 +1249,19 @@ function AddProducts({ onCancel, onSaved, productId }: Props) {
             Upload one certificate as a PNG/JPG image or PDF, up to 5 MB.
           </Text>
           <View className="flex-row gap-2">
-            <Pressable onPress={selectCertificateImage} disabled={isUploading} className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button">
-              <FormIcon name="image" color="#004D40" />
-              <Text className="ml-2 text-center text-xs font-bold text-primary">Upload image</Text>
+            <Pressable onPress={captureCertificateImage} disabled={isUploading} className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button" accessibilityLabel="Take certificate photo with camera">
+              <FormIcon name="camera" color="#004D40" />
+              <Text className="ml-2 text-center text-xs font-bold text-primary">Take photo</Text>
             </Pressable>
-            <Pressable onPress={selectCertificatePdf} disabled={isUploading} className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button">
-              <FormIcon name="file" color="#004D40" />
-              <Text className="ml-2 text-center text-xs font-bold text-primary">Upload PDF</Text>
+            <Pressable onPress={selectCertificateImage} disabled={isUploading} className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button" accessibilityLabel="Choose certificate image from gallery">
+              <FormIcon name="image" color="#004D40" />
+              <Text className="ml-2 text-center text-xs font-bold text-primary">Gallery image</Text>
             </Pressable>
           </View>
+          <Pressable onPress={selectCertificatePdf} disabled={isUploading} className="min-h-12 flex-row items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-3" accessibilityRole="button">
+              <FormIcon name="file" color="#004D40" />
+              <Text className="ml-2 text-center text-xs font-bold text-primary">Upload PDF</Text>
+          </Pressable>
           {form.certificate ? (
             <View className="flex-row items-center rounded-xl border border-border bg-background p-3">
               {certificateIsImage ? (
@@ -1277,10 +1410,11 @@ function PriceLine({ label, value, strong = false }: { label: string; value: str
   );
 }
 
-function FormIcon({ name, color }: { name: 'back' | 'image' | 'file' | 'video' | 'chevron' | 'check' | 'close'; color: string }) {
+function FormIcon({ name, color }: { name: 'back' | 'image' | 'camera' | 'file' | 'video' | 'chevron' | 'check' | 'close'; color: string }) {
   const iconPaths: Record<typeof name, string[]> = {
     back: ['m15 18-6-6 6-6', 'M20 12H9'],
     image: ['M4 4h16v16H4z', 'm4 16 5-5 4 4 3-3 4 4', 'M9 9h.01'],
+    camera: ['M14 4h-4L8 7H4v13h16V7h-4z', 'M12 11a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'],
     file: ['M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z', 'M14 2v6h6', 'M8 13h8', 'M8 17h8'],
     video: ['m22 8-6 4 6 4V8z', 'M2 6h14v12H2z'],
     chevron: ['m9 18 6-6-6-6'],

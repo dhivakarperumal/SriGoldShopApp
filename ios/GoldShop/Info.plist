@@ -36,6 +36,10 @@
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
+	<key>NSCameraUsageDescription</key>
+	<string>Take photos to add product images to your inventory.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Record audio with product videos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Select product photos to add them to your inventory.</string>
 	<key>RCTNewArchEnabled</key>
