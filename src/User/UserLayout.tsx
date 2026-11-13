@@ -161,6 +161,7 @@ function UserLayout({ user, onUserUpdated, onLogout, onShowLogin }: UserLayoutPr
     () => new Set(),
   );
   const [loginPromptReason, setLoginPromptReason] = useState('');
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const showLoginPrompt = (reason: string) => {
     setLoginPromptReason(reason);
@@ -349,6 +350,42 @@ function UserLayout({ user, onUserUpdated, onLogout, onShowLogin }: UserLayoutPr
   const refreshFavorites = () => {
     setIsRefreshingFavorites(true);
     setFavoritesRequestVersion(version => version + 1);
+  };
+
+  const deleteAccount = async () => {
+    if (!user || isDeletingAccount) return;
+
+    setIsDeletingAccount(true);
+    try {
+      await api.put('/auth/me/status', { status: 'Inactive' });
+      Alert.alert(
+        'Account deactivated',
+        'Your account has been marked inactive and you will be signed out.',
+        [{ text: 'OK', onPress: onLogout }],
+      );
+    } catch (error) {
+      console.error('Failed to deactivate account:', error);
+      Alert.alert('Could not delete account', getErrorMessage(error));
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
+  const confirmDeleteAccount = () => {
+    if (!user || isDeletingAccount) return;
+
+    Alert.alert(
+      'Delete account?',
+      'This will mark your account inactive and sign you out. Contact the store if you need to reactivate it.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Account',
+          style: 'destructive',
+          onPress: deleteAccount,
+        },
+      ],
+    );
   };
 
   const openEnquiry = (product?: ProductCardData | null) => {
@@ -552,7 +589,12 @@ function UserLayout({ user, onUserUpdated, onLogout, onShowLogin }: UserLayoutPr
                 onContact={() => setMorePage('contact')}
               />
             ) : morePage === 'profile' ? null : (
-              <MoreMenu onSelect={selectMorePage} isLoggedIn={Boolean(user)} />
+              <MoreMenu
+                onSelect={selectMorePage}
+                isLoggedIn={Boolean(user)}
+                isDeletingAccount={isDeletingAccount}
+                onDeleteAccount={confirmDeleteAccount}
+              />
             )}
             {hasVisitedProfile && user ? (
               <View className={morePage === 'profile' ? 'flex-1' : 'hidden'}>
