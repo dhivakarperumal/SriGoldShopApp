@@ -1,4 +1,4 @@
-package com.goldshop
+package com.qtechx.goldshop
 
 import android.graphics.Color
 import android.os.Build

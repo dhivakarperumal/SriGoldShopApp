@@ -1,4 +1,4 @@
-package com.goldshop
+package com.qtechx.goldshop
 
 import android.app.Application
 import com.facebook.react.PackageList

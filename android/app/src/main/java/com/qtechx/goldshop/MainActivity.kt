@@ -1,4 +1,4 @@
-package com.goldshop
+package com.qtechx.goldshop
 
 import android.os.Build
 import android.os.Bundle
