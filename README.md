@@ -4,6 +4,35 @@ This is a new [**React Native**](https://reactnative.dev) project, bootstrapped 
 
 > **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
 
+## Android signed release APK
+
+The release build uses a separate upload key; it does not use the checked-in debug key. Keep the key and its passwords backed up securely and never commit them.
+
+1. Generate a release key from the project root (choose and securely record your own passwords):
+
+   ```sh
+   keytool -genkeypair -v -storetype PKCS12 -keystore android/app/release.keystore -alias srigoldshop -keyalg RSA -keysize 2048 -validity 10000
+   ```
+
+2. Create `android/key.properties` (ignored by Git) with the matching values:
+
+   ```properties
+   storeFile=app/release.keystore
+   storePassword=YOUR_STORE_PASSWORD
+   keyAlias=srigoldshop
+   keyPassword=YOUR_KEY_PASSWORD
+   ```
+
+3. Confirm that the production API in `src/api.js` is reachable over HTTPS and is the correct server for this release.
+4. From the project root, build the APK yourself:
+
+   ```sh
+   cd android
+   gradlew.bat :app:assembleRelease
+   ```
+
+   The signed APK is written to `android/app/build/outputs/apk/release/app-release.apk`.
+
 ## Step 1: Start Metro
 
 First, you will need to run **Metro**, the JavaScript build tool for React Native.

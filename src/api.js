@@ -4,6 +4,7 @@ import axios from "axios";
 // export const API_BASE_URL = "https://srigold.qtechx.com/api";
 export const API_BASE_URL = "http://192.168.1.5:5000/api";
 
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: { "Content-Type": "application/json" },
