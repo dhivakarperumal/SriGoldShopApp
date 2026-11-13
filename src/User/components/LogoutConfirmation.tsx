@@ -49,7 +49,10 @@ function LogoutConfirmation({
             </Pressable>
             <Pressable
               className="min-h-12 flex-1 items-center justify-center rounded-xl bg-[#c53b25] px-4 py-3"
-              onPress={onConfirm}
+              onPress={() => {
+                onCancel();
+                onConfirm();
+              }}
               accessibilityRole="button"
               accessibilityLabel="Confirm logout"
             >

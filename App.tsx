@@ -206,7 +206,7 @@ function App() {
     restoreSession();
   }, []);
 
-  const handleLogout = async () => {
+  const handleLogout = async (showSuccessMessage = true) => {
     if (isLoggingOut.current) {
       return;
     }
@@ -220,6 +220,9 @@ function App() {
       setVisitedAdminRoutes(new Set(['home']));
       setShowLoginModal(false);
       setAuthScreen('login');
+      if (showSuccessMessage) {
+        Alert.alert('Logged out', 'You have been logged out successfully.');
+      }
     } catch {
       Alert.alert('Sign out failed', 'Please try again.');
     } finally {
@@ -229,7 +232,7 @@ function App() {
 
   const handleAccountDeleted = async () => {
     setShouldShowWelcome(false);
-    await handleLogout();
+    await handleLogout(false);
   };
 
   const confirmLogout = () => {
