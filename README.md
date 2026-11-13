@@ -8,7 +8,7 @@ This is a new [**React Native**](https://reactnative.dev) project, bootstrapped 
 
 The release build uses a separate upload key; it does not use the checked-in debug key. Keep the key and its passwords backed up securely and never commit them.
 
-1. Generate a release key from the project root (choose and securely record your own passwords):
+1. This workspace already has a release key and local signing properties. Do not generate another key for this app; losing or replacing it can prevent future updates. For a fresh checkout or a new app, generate a key from the project root (choose and securely record your own passwords):
 
    ```sh
    keytool -genkeypair -v -storetype PKCS12 -keystore android/app/release.keystore -alias srigoldshop -keyalg RSA -keysize 2048 -validity 10000
