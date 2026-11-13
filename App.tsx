@@ -227,6 +227,11 @@ function App() {
     }
   };
 
+  const handleAccountDeleted = async () => {
+    setShouldShowWelcome(false);
+    await handleLogout();
+  };
+
   const confirmLogout = () => {
     Alert.alert('Log out?', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
@@ -520,6 +525,7 @@ function App() {
             user={user}
             onUserUpdated={setUser}
             onLogout={handleLogout}
+            onAccountDeleted={handleAccountDeleted}
             onShowLogin={() => {
               setAuthScreen('login');
               setShowLoginModal(true);
@@ -558,6 +564,7 @@ function App() {
           user={null}
           onUserUpdated={setUser}
           onLogout={handleLogout}
+          onAccountDeleted={handleAccountDeleted}
           onShowLogin={() => {
             setAuthScreen('login');
             setShowLoginModal(true);

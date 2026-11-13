@@ -125,10 +125,17 @@ type UserLayoutProps = {
   user: AuthenticatedUser | null;
   onUserUpdated: (user: AuthenticatedUser) => void;
   onLogout: () => void;
+  onAccountDeleted: () => void;
   onShowLogin: () => void;
 };
 
-function UserLayout({ user, onUserUpdated, onLogout, onShowLogin }: UserLayoutProps) {
+function UserLayout({
+  user,
+  onUserUpdated,
+  onLogout,
+  onAccountDeleted,
+  onShowLogin,
+}: UserLayoutProps) {
   const [activeTab, setActiveTab] = useState<UserTab>('home');
   const [visitedTabs, setVisitedTabs] = useState<Set<UserTab>>(
     () => new Set(['home']),
@@ -360,9 +367,9 @@ function UserLayout({ user, onUserUpdated, onLogout, onShowLogin }: UserLayoutPr
       await api.put('/auth/me/status', { status: 'Inactive' });
       Alert.alert(
         'Account deactivated',
-        'Your account has been marked inactive and you will be signed out.',
-        [{ text: 'OK', onPress: onLogout }],
+        'Your account has been marked inactive. You are being returned to the home page.',
       );
+      onAccountDeleted();
     } catch (error) {
       console.error('Failed to deactivate account:', error);
       Alert.alert('Could not delete account', getErrorMessage(error));
